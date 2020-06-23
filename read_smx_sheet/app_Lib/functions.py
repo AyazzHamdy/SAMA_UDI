@@ -81,26 +81,6 @@ def get_file_name(file):
     return os.path.splitext(os.path.basename(file))[0]
 
 
-def get_core_table_columns(Core_tables, Table_name):
-    Core_tables_df = Core_tables.loc[(Core_tables['Layer'] == 'CORE')
-                                     & (Core_tables['Table name'] == Table_name)
-                                     ].reset_index()
-    return Core_tables_df
-
-
-def get_core_tables(Core_tables):
-    return Core_tables.loc[Core_tables['Layer'] == 'CORE'][['Table name', 'Fallback']].drop_duplicates()
-
-
-def get_stg_tables(STG_tables, source_name=None):
-    if source_name:
-        stg_table_names = STG_tables.loc[STG_tables['Source system name'] == source_name][
-            ['Table name', 'Fallback']].drop_duplicates()
-    else:
-        stg_table_names = STG_tables[['Table name', 'Fallback']].drop_duplicates()
-    return stg_table_names
-
-
 def get_sama_stg_tables(STG_tables, source_name=None):
     if source_name:
         stg_table_names = STG_tables.loc[STG_tables['Source System'] == source_name][
@@ -108,39 +88,6 @@ def get_sama_stg_tables(STG_tables, source_name=None):
     else:
         stg_table_names = STG_tables[['Table_Name', 'Schema_Name']].drop_duplicates()
     return stg_table_names
-
-
-def get_src_code_set_names(STG_tables, source_name):
-    code_set_names = list()
-    for stg_tables_index, stg_tables_row in STG_tables.iterrows():
-        if stg_tables_row['Source system name'] == source_name and str(
-                stg_tables_row['Column name']).upper().startswith('BM_') and stg_tables_row['Code set name'] != '':
-            code_set_names.append(str(stg_tables_row['Code set name']))
-    return pd.unique(code_set_names)
-
-
-def get_stg_table_nonNK_columns(STG_tables, source_name, Table_name, with_sk_columns=False):
-    STG_tables_df = STG_tables.loc[(STG_tables['Source system name'] == source_name)
-                                   & (STG_tables['Table name'] == Table_name)
-                                   & (STG_tables['Natural key'].isnull())
-                                   ].reset_index()
-    return STG_tables_df
-
-
-def get_stg_table_columns(STG_tables, source_name, Table_name, with_sk_columns=False):
-    if source_name:
-        STG_tables_df = STG_tables.loc[(STG_tables['Source system name'] == source_name)
-                                       & (STG_tables['Table name'].str.upper() == Table_name.upper())
-                                       ].reset_index()
-    else:
-        STG_tables_df = STG_tables.loc[STG_tables['Table name'].str.upper() == Table_name.upper()].reset_index()
-
-    if not with_sk_columns:
-        STG_tables_df = STG_tables_df.loc[(STG_tables_df['Key set name'] == '')
-                                          & (STG_tables_df['Code set name'] == '')
-                                          ].reset_index()
-
-    return STG_tables_df
 
 
 def get_sama_stg_table_columns(STG_tables, Table_name):
@@ -165,6 +112,7 @@ def get_sama_stg_table_columns_pk(STG_tables, Table_name):
                                    ].reset_index()
 
     return STG_tables_df
+
 
 def single_quotes(string):
     return "'%s'" % string
@@ -307,7 +255,7 @@ def get_config_file_path():
     return config_file_path
 
 
-def get_config_file_values(project_name, config_file_path=None):
+def get_config_file_values(config_file_path=None):
     separator = "$$$"
     parameters = ""
     # config_file_path = os.path.dirname(sys.modules['__main__'].__file__)
@@ -332,68 +280,17 @@ def get_config_file_values(project_name, config_file_path=None):
                     parameters = parameters + line + separator
 
         param_dic = string_to_dict(parameters, separator)
-        if project_name == 'Project Sama':
-            dt_now = dt.datetime.now()
-            dt_folder = dt_now.strftime("%Y") + "_" + \
-                        dt_now.strftime("%b").upper() + "_" + \
-                        dt_now.strftime("%d") + "_" + \
-                        dt_now.strftime("%H") + "_" + \
-                        dt_now.strftime("%M") + "_" + \
-                        dt_now.strftime("%S")
-            param_dic['output_path'] = param_dic["home_output_folder"] + "/" + dt_folder
-            param_dic['read_sheets_parallel'] = 1
-
-        elif project_name == 'Project ACA':
-            source_names = param_dic['source_names'].split(',')
-            source_names = None if source_names[0] == "" and len(source_names) > 0 else source_names
-            param_dic['source_names'] = source_names
-
-            ################################################################################################
-            dt_now = dt.datetime.now()
-            dt_folder = dt_now.strftime("%Y") + "_" + \
-                        dt_now.strftime("%b").upper() + "_" + \
-                        dt_now.strftime("%d") + "_" + \
-                        dt_now.strftime("%H") + "_" + \
-                        dt_now.strftime("%M") + "_" + \
-                        dt_now.strftime("%S")
-            param_dic['output_path'] = param_dic["home_output_folder"] + "/" + dt_folder
-
-            db_prefix = param_dic['db_prefix']
-
-            param_dic['T_STG'] = db_prefix + "T_STG"
-            param_dic['t_WRK'] = db_prefix + "T_WRK"
-            param_dic['v_stg'] = db_prefix + "V_STG"
-            param_dic['v_base'] = db_prefix + "V_BASE"
-            param_dic['INPUT_VIEW_DB'] = db_prefix + "V_INP"
-
-            param_dic['MACRO_DB'] = db_prefix + "M_GCFR"
-            param_dic['UT_DB'] = db_prefix + "P_UT"
-            param_dic['UTLFW_v'] = db_prefix + "V_UTLFW"
-            param_dic['UTLFW_t'] = db_prefix + "T_UTLFW"
-
-            param_dic['TMP_DB'] = db_prefix + "T_TMP"
-            param_dic['APPLY_DB'] = db_prefix + "P_PP"
-            param_dic['base_DB'] = db_prefix + "T_BASE"
-
-            param_dic['SI_DB'] = db_prefix + "T_SRCI"
-            param_dic['SI_VIEW'] = db_prefix + "V_SRCI"
-
-            param_dic['GCFR_t'] = db_prefix + "t_GCFR"
-            param_dic['GCFR_V'] = db_prefix + "V_GCFR"
-            param_dic['keycol_override_base'] = db_prefix + "T_GCFR.GCFR_TRANSFORM_KEYCOL_OVERRIDE"
-            param_dic['M_GCFR'] = db_prefix + "M_GCFR"
-            param_dic['P_UT'] = db_prefix + "P_UT"
-
-            param_dic['core_table'] = db_prefix + "T_BASE"
-            param_dic['core_view'] = db_prefix + "V_BASE"
-
-            online_source_t = param_dic['online_source_t']
-            offline_source_t = param_dic['offline_source_t']
-
-            param_dic['online_source_v'] = db_prefix + "V_" + online_source_t
-            param_dic['offline_source_v'] = db_prefix + "V_" + offline_source_t
-        else:
-            param_dic = {}
+        dt_now = dt.datetime.now()
+        dt_folder = dt_now.strftime("%Y") + "_" + \
+                    dt_now.strftime("%b").upper() + "_" + \
+                    dt_now.strftime("%d") + "_" + \
+                    dt_now.strftime("%H") + "_" + \
+                    dt_now.strftime("%M") + "_" + \
+                    dt_now.strftime("%S")
+        param_dic['output_path'] = param_dic["home_output_folder"] + "/" + dt_folder
+        param_dic['read_sheets_parallel'] = 1
+    else:
+        param_dic = {}
     return param_dic
 
 
