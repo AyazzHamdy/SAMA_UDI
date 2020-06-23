@@ -61,9 +61,7 @@ class FrontEnd:
         self.server_info_label = Label(frame_row2_r,width=50,height=2)
         self.server_info_label.grid(column=1, row=0,sticky='e')
 
-        script_dir = os.path.dirname(__file__)
-        rel_path = "/images/Teradata_logo-two_color.png"
-        abs_file_path = script_dir+rel_path
+        abs_file_path = os.path.join(md.get_dirs()[0], 'Teradata_logo-two_color.png')
         img = Image.open(abs_file_path, 'r')
         resized = img.resize((146,45), Image.ANTIALIAS)
         resized_image = ImageTk.PhotoImage(resized)

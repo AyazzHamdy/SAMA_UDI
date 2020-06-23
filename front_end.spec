@@ -3,10 +3,10 @@
 block_cipher = None
 
 
-a = Analysis(['C:\\Users\\TDInstaller\\PycharmProjects\\new_udi\\read_smx_sheet\\front_end.py'],
-             pathex=['C:\\Users\\TDInstaller\\PycharmProjects\\new_udi'],
+a = Analysis(['C:\\Users\\TDInstaller\\PycharmProjects\\SAMA_UDI\\read_smx_sheet\\front_end.py'],
+             pathex=['C:\\Users\\TDInstaller\\PycharmProjects\\SAMA_UDI'],
              binaries=[],
-             datas=[('C:\\Users\\TDInstaller\\Anaconda3\\envs\\conda_p37\\Lib\\site-packages\\dask\\dask.yaml', './dask'), ('C:\\Users\\TDInstaller\\Anaconda3\\envs\\conda_p37\\Lib\\site-packages\\distributed\\distributed.yaml', './distributed'),('C:\\Users\\TDInstaller\\PycharmProjects\\new_udi\\read_smx_sheet\\app_Lib\\script_icon.png', '.')],
+             datas=[('C:\\Users\\TDInstaller\\Anaconda3\\envs\\conda_p37\\Lib\\site-packages\\dask\\dask.yaml', './dask'),('C:\\Users\\TDInstaller\\Anaconda3\\envs\\conda_p37\\Lib\\site-packages\\distributed\\distributed.yaml', './distributed'),('C:\\Users\\TDInstaller\\PycharmProjects\\SAMA_UDI\\read_smx_sheet\\app_Lib\\script_icon.png', '.'),('C:\\Users\\TDInstaller\\PycharmProjects\\SAMA_UDI\\read_smx_sheet\\app_Lib\\Teradata_logo-two_color.png', '.')],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
@@ -23,10 +23,10 @@ exe = EXE(pyz,
           a.zipfiles,
           a.datas,
           [],
-          name='generate_smx_scripts',
+          name='Generate_SAMA_smx_scripts',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
           runtime_tmpdir=None,
-          console=False )
+          console=False)
