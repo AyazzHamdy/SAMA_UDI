@@ -32,7 +32,7 @@ class FrontEnd:
         self.color_msg_done_with_error = "red"
         self.color_error_messager = "red"
 
-        frame_row0 = Frame(self.root, borderwidth="2", relief="ridge",width=70)
+        frame_row0 = Frame(self.root, borderwidth="2", relief="ridge",width=72)
         frame_row0.grid(column=0, row=0, sticky=W)
 
         frame_row1 = Frame(self.root, borderwidth="2", relief="ridge",width=30)
@@ -58,14 +58,14 @@ class FrontEnd:
         self.status_label.grid(column=0, row=0,sticky='e')
 
         self.server_info_label_text = StringVar()
-        self.server_info_label = Label(frame_row2_r,width=49,height=2)
+        self.server_info_label = Label(frame_row2_r,width=50,height=2)
         self.server_info_label.grid(column=1, row=0,sticky='e')
 
         script_dir = os.path.dirname(__file__)
         rel_path = "/images/Teradata_logo-two_color.png"
         abs_file_path = script_dir+rel_path
         img = Image.open(abs_file_path, 'r')
-        resized = img.resize((150,45), Image.ANTIALIAS)
+        resized = img.resize((146,45), Image.ANTIALIAS)
         resized_image = ImageTk.PhotoImage(resized)
         self.image_label = Label(frame_row2_rr,image=resized_image,height=35)
         self.image_label.grid(column=2, row=0,  sticky=S+W+N+E)
@@ -77,7 +77,7 @@ class FrontEnd:
         self.config_file_browse_button.grid(row=0, column=3, sticky='w')
 
         self.config_file_entry_txt = StringVar()
-        self.config_file_entry = Entry(frame_row0, textvariable=self.config_file_entry_txt, width=102)
+        self.config_file_entry = Entry(frame_row0, textvariable=self.config_file_entry_txt, width=104)
         config_file_path = os.path.join(funcs.get_config_file_path(), pm.default_config_file_name)
         try:
             x = open(config_file_path)
@@ -100,7 +100,7 @@ class FrontEnd:
         frame_checkboxes_values.grid(column=1, row=6, sticky="W")
 
         self.get_config_file_values()
-        frame_config_file_values_entry_width = 86
+        frame_config_file_values_entry_width = 88
 
         read_from_smx_label = Label(frame_config_file_values, text="SMXs Folder")
         read_from_smx_label.grid(row=0, column=0, sticky='e')
