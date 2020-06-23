@@ -3,7 +3,8 @@ sys.path.append(os.getcwd())
 from read_smx_sheet.app_Lib import manage_directories as md, functions as funcs
 from dask import compute, delayed, config
 from dask.diagnostics import ProgressBar
-from read_smx_sheet.templates import SAMA_staging,SAMA_data_mart,SAMA_bteq
+from read_smx_sheet.templates import Staging,Data_Mart,BTEQ_Scripts
+from read_smx_sheet.templates import  Data_mart_template
 from read_smx_sheet.parameters import parameters as pm
 import traceback
 import datetime as dt
@@ -79,9 +80,11 @@ class GenerateScripts:
                     self.parallel_create_output_source_path.append(delayed(md.create_folder)(bteq_output_path))
                     Data_Types = delayed(funcs.read_excel)(smx_file_path, sheet_name=self.Data_types_sht)
                     STG_tables = delayed(funcs.read_excel)(smx_file_path, sheet_name=self.STG_tables_sht)
-                    self.parallel_templates.append(delayed(SAMA_staging.stg_tables_DDL)(self.cf, main_output_path, STG_tables,Data_Types))
-                    self.parallel_templates.append(delayed(SAMA_data_mart.data_mart_DDL)(self.cf, main_output_path,STG_tables, Data_Types))
-                    self.parallel_templates.append(delayed(SAMA_bteq.bteq_script)(self.cf, bteq_output_path,STG_tables))
+                    self.parallel_templates.append(delayed(Staging.stg_tables_DDL)(self.cf, main_output_path, STG_tables, Data_Types))
+                    self.parallel_templates.append(delayed(Data_Mart.data_mart_DDL)(self.cf, main_output_path, STG_tables, Data_Types))
+                    self.parallel_templates.append(delayed(BTEQ_Scripts.bteq_script)(self.cf, bteq_output_path, STG_tables))
+                    #self.parallel_templates.append(delayed(Data_mart_template.data_mart_temp_DDL)(self.cf, main_output_path,STG_tables,Data_Types))
+
 
                 except Exception as e_smx_file:
                     # print(error)
