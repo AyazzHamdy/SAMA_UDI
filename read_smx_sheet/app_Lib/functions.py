@@ -98,6 +98,22 @@ def get_sama_stg_table_columns(STG_tables, Table_name):
     return STG_tables_df
 
 
+def get_sama_stg_table_columns_comma_separated(STG_tables, Table_name,alias=None):
+    STG_tables_df = STG_tables.loc[
+        (STG_tables['Table_Name'].str.upper() == Table_name.upper())
+    ].reset_index()
+    columns_comma = ""
+    if alias is None:
+        alias = ''
+    else:
+        alias = alias+'.'
+    for stg_tbl_indx, stg_tbl_row in STG_tables_df.iterrows():
+        comma = ' , ' if stg_tbl_indx > 0 else ' '
+        columns_comma += comma+alias+stg_tbl_row['Column_Name'] +'\n'
+    columns_comma = columns_comma[0:len(columns_comma) - 1]
+    return columns_comma
+
+
 def get_sama_stg_table_columns_minus_pk(STG_tables, Table_name):
     STG_tables_df = STG_tables.loc[(STG_tables['Table_Name'].str.upper() == Table_name.upper())
                                    & (STG_tables['Primary_Key_Flag'].str.upper() != 'Y')
@@ -113,6 +129,30 @@ def get_sama_stg_table_columns_pk(STG_tables, Table_name):
 
     return STG_tables_df
 
+
+def get_conditional_stamenet(STG_tables, Table_name,columns_type,operational_symbol,alias1=None,alias2=None):
+    conditional_statement = ''
+    if columns_type == 'pk':
+        STG_table_columns = get_sama_stg_table_columns_pk(STG_tables,Table_name)
+    else:
+        STG_table_columns = get_sama_stg_table_columns_minus_pk(STG_tables,Table_name)
+    if alias1 is None:
+        alias1 = ''
+    else:
+        alias1 = alias1+'.'
+    if alias2 is None:
+        alias2 = ''
+    else:
+        alias2 = alias2 + '.'
+    for column_name_index, column_name_row in STG_table_columns.iterrows():
+        Column_name = column_name_row['Column_Name']
+        on_statement = alias1 + Column_name + ' ' + operational_symbol + '' + alias2 + Column_name
+        if operational_symbol == 'NULL':
+            on_statement = alias1 + Column_name + 'is NULL'
+        and_statement = ' and ' if column_name_index > 0 else ' '
+        and_Column_name = and_statement + on_statement + "\n"
+        conditional_statement = conditional_statement + and_Column_name
+    return conditional_statement
 
 def single_quotes(string):
     return "'%s'" % string

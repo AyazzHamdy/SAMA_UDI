@@ -80,7 +80,8 @@ def stg_temp_DDL(cf, source_output_path, STG_tables, Data_types, script_flag):
             if STG_table_columns_row['Primary_Key_Flag'].upper() == 'Y':
                 pi_columns = pi_columns + ',' + Column_name if pi_columns != "" else Column_name
                 if STG_table_columns_row['Teradata partition'].upper() == 'Y':
-                    partition_columns = partition_columns + ',' + Column_name if partition_columns != "" else Column_name
+                    partition_columns = partition_columns + ',' + Column_name if partition_columns != "" \
+                        else Column_name
 
             if partition_columns != "":
                 partition_by = "\nPartition by (" + partition_columns + ");" + "\n" + "\n"
