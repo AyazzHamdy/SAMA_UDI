@@ -58,12 +58,12 @@ class FrontEnd:
         self.status_label.grid(column=0, row=0,sticky='e')
 
         self.server_info_label_text = StringVar()
-        self.server_info_label = Label(frame_row2_r,width=50,height=2)
+        self.server_info_label = Label(frame_row2_r,width=51,height=2)
         self.server_info_label.grid(column=1, row=0,sticky='e')
 
         abs_file_path = os.path.join(md.get_dirs()[0], 'Teradata_logo-two_color.png')
         img = Image.open(abs_file_path, 'r')
-        resized = img.resize((146,45), Image.ANTIALIAS)
+        resized = img.resize((138,45), Image.ANTIALIAS)
         resized_image = ImageTk.PhotoImage(resized)
         self.image_label = Label(frame_row2_rr,image=resized_image,height=35)
         self.image_label.grid(column=2, row=0,  sticky=S+W+N+E)
@@ -84,11 +84,12 @@ class FrontEnd:
         self.config_file_entry.insert(END, config_file_path)
         self.config_file_entry.grid(row=0, column=1)
 
-        frame_buttons = Frame(frame_row1, borderwidth="2", relief="ridge")
-        frame_buttons.grid(column=1, row=0)
-        self.generate_button = Button(frame_buttons, text="Start", width=15, height=2, command=self.start)
+        frame_buttons = Frame(frame_row1, borderwidth="1", relief="ridge")
+        frame_buttons.grid(column=1, row=0 , sticky="w")
+
+        self.generate_button = Button(frame_buttons, text="Start", width=15,height=2, command=self.start)
         self.generate_button.grid(row=2, column=0)
-        close_button = Button(frame_buttons, text="Exit", width=15, height=2, command=self.close)
+        close_button = Button(frame_buttons, text="Exit", width=15,height=1, command=self.close)
         close_button.grid(row=3, column=0)
 
         frame_config_file_values = Frame(frame_row1, borderwidth="2", relief="ridge")
