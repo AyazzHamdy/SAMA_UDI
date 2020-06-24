@@ -14,22 +14,19 @@ def stg_temp_DDL(cf, source_output_path, STG_tables, Data_types, script_flag):
         f = funcs.WriteFile(source_output_path, file_name, "sql")
         template_path = cf.smx_path + "/" + "Templates" + "/" + pm.default_staging_template_file_name
 
-    separator = "$$$"
     oi_prefix = cf.oi_prefix
     stg_prefix = cf.stg_prefix
     dup_suffix = cf.duplicate_table_suffix
     data_mart_prefix = cf.dm_prefix
-    template_path.replace(separator, "\n")
     template_string = ""
     try:
         template_file = open(template_path, "r")
     except:
         template_file = None
     for i in template_file.readlines():
-        line = i.strip()
-        if line != "":
+        if i != "":
             if i[0] != '#':
-                template_string = template_string + line + "\n"
+                template_string = template_string + i
 
     stg_tables_df = funcs.get_sama_stg_tables(STG_tables, None)
     for stg_tables_df_index, stg_tables_df_row in stg_tables_df.iterrows():
@@ -43,7 +40,7 @@ def stg_temp_DDL(cf, source_output_path, STG_tables, Data_types, script_flag):
 
         for STG_table_columns_index, STG_table_columns_row in STG_table_columns.iterrows():
             Column_name = STG_table_columns_row['Column_Name']
-            comma = ',' if STG_table_columns_index > 0 else ' '
+            comma = '\t' + ',' if STG_table_columns_index > 0 else ' '
             comma_Column_name = comma + Column_name
 
             source_data_type = STG_table_columns_row['Data_Type']

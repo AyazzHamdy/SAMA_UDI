@@ -6,22 +6,19 @@ from read_smx_sheet.parameters import parameters as pm
 @Logging_decorator
 def bteq_temp_script(cf, source_output_path, STG_tables):
     template_path = cf.smx_path + "/" + "Templates" + "/" + pm.default_bteq_template_file_name
-    separator = "$$$"
     stg_prefix = cf.stg_prefix
     dup_suffix = cf.duplicate_table_suffix
     data_mart_prefix = cf.dm_prefix
     bteq_run_file = cf.bteq_run_file
-    template_path.replace(separator, "\n")
     template_string = ""
     try:
         template_file = open(template_path, "r")
     except:
         template_file = None
     for i in template_file.readlines():
-        line = i.strip()
-        if line != "":
+        if i != "":
             if i[0] != '#':
-                template_string = template_string + line + "\n"
+                template_string = template_string + i
 
     stg_tables_df = funcs.get_sama_stg_tables(STG_tables, None)
     for stg_tables_df_index, stg_tables_df_row in stg_tables_df.iterrows():
@@ -38,6 +35,11 @@ def bteq_temp_script(cf, source_output_path, STG_tables):
                                                                      'datamart')
         stg_equal_updt_cols = funcs.get_conditional_stamenet(STG_tables, Table_name, 'stg', '=', None, 'updt')
         data_mart_pks_null = funcs.get_conditional_stamenet(STG_tables, Table_name, 'pk', 'NULL', 'datamart', None)
+
+        if stg_equal_datamart_pk != '':
+            stg_equal_datamart_pk = "ON " + stg_equal_datamart_pk
+            data_mart_pks_null = "WHERE " + data_mart_pks_null
+            table_equal_updt_pk = "WHERE " + table_equal_updt_pk
 
         bteq_script = template_string.format(bteq_run_file=bteq_run_file, stg_prefix=stg_prefix,
                                              dm_prefix=data_mart_prefix,

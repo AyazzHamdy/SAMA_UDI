@@ -108,7 +108,7 @@ def get_sama_stg_table_columns_comma_separated(STG_tables, Table_name,alias=None
     else:
         alias = alias+'.'
     for stg_tbl_indx, stg_tbl_row in STG_tables_df.iterrows():
-        comma = ' , ' if stg_tbl_indx > 0 else ' '
+        comma = '\t' + ',' if stg_tbl_indx > 0 else ''
         columns_comma += comma+alias+stg_tbl_row['Column_Name'] +'\n'
     columns_comma = columns_comma[0:len(columns_comma) - 1]
     return columns_comma
@@ -126,7 +126,6 @@ def get_sama_stg_table_columns_pk(STG_tables, Table_name):
     STG_tables_df = STG_tables.loc[(STG_tables['Table_Name'].str.upper() == Table_name.upper())
                                    & (STG_tables['Primary_Key_Flag'].str.upper() == 'Y')
                                    ].reset_index()
-
     return STG_tables_df
 
 
@@ -139,7 +138,7 @@ def get_conditional_stamenet(STG_tables, Table_name,columns_type,operational_sym
     if alias1 is None:
         alias1 = ''
     else:
-        alias1 = alias1+'.'
+        alias1 = alias1 + '.'
     if alias2 is None:
         alias2 = ''
     else:
@@ -148,11 +147,13 @@ def get_conditional_stamenet(STG_tables, Table_name,columns_type,operational_sym
         Column_name = column_name_row['Column_Name']
         on_statement = alias1 + Column_name + ' ' + operational_symbol + '' + alias2 + Column_name
         if operational_symbol == 'NULL':
-            on_statement = alias1 + Column_name + 'is NULL'
-        and_statement = ' and ' if column_name_index > 0 else ' '
-        and_Column_name = and_statement + on_statement + "\n"
+            on_statement = alias1 + Column_name + ' IS NULL'
+        and_statement = '\t' + ' and ' if column_name_index > 0 else ' '
+        on_statement = on_statement if column_name_index == len(STG_table_columns) - 1 else on_statement + '\n'
+        and_Column_name = and_statement + on_statement
         conditional_statement = conditional_statement + and_Column_name
     return conditional_statement
+
 
 def single_quotes(string):
     return "'%s'" % string
