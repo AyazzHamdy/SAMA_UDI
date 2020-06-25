@@ -23,6 +23,7 @@ class ConfigFile:
         self.config_file_values = funcs.get_config_file_values(config_file) if config_file_values is None else config_file_values
         self.output_path = self.config_file_values["output_path"]
         self.smx_path = self.config_file_values["smx_path"]
+        self.templates_path = self.config_file_values["templates_path"]
         self.oi_prefix = self.config_file_values["oi_prefix"]
         self.stg_prefix = self.config_file_values["stg_prefix"]
         self.dm_prefix = self.config_file_values["dm_prefix"]

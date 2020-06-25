@@ -87,9 +87,9 @@ class FrontEnd:
         frame_buttons = Frame(frame_row1, borderwidth="1", relief="ridge")
         frame_buttons.grid(column=1, row=0 , sticky="w")
 
-        self.generate_button = Button(frame_buttons, text="Start", width=15,height=2, command=self.start)
+        self.generate_button = Button(frame_buttons, text="Start", width=13,height=3, command=self.start)
         self.generate_button.grid(row=2, column=0)
-        close_button = Button(frame_buttons, text="Exit", width=15,height=1, command=self.close)
+        close_button = Button(frame_buttons, text="Exit", width=13,height=2, command=self.close)
         close_button.grid(row=3, column=0)
 
         frame_config_file_values = Frame(frame_row1, borderwidth="2", relief="ridge")
@@ -108,12 +108,20 @@ class FrontEnd:
         self.entry_field_read_from_smx = Entry(frame_config_file_values, textvariable=self.text_field_read_from_smx, width=frame_config_file_values_entry_width)
         self.entry_field_read_from_smx.grid(row=0, column=1, sticky="w")
 
+        templates_path_label = Label(frame_config_file_values, text="Templates Folder")
+        templates_path_label.grid(row=1, column=0, sticky='e')
+
+        self.text_field_templates_path = StringVar()
+        self.entry_field_templates_path = Entry(frame_config_file_values, textvariable=self.text_field_templates_path,
+                                             width=frame_config_file_values_entry_width)
+        self.entry_field_templates_path.grid(row=1, column=1, sticky="w")
+
         output_path_label = Label(frame_config_file_values, text="Output Folder")
-        output_path_label.grid(row=1, column=0, sticky='e')
+        output_path_label.grid(row=2, column=0, sticky='e')
 
         self.text_field_output_path = StringVar()
         self.entry_field_output_path = Entry(frame_config_file_values, textvariable=self.text_field_output_path, width=frame_config_file_values_entry_width)
-        self.entry_field_output_path.grid(row=1, column=1, sticky="w")
+        self.entry_field_output_path.grid(row=2, column=1, sticky="w")
 
         self.excel_sheet = StringVar()
         self.populate_config_file_values()
@@ -141,6 +149,12 @@ class FrontEnd:
         try:
             self.config_file_values = funcs.get_config_file_values(self.config_file_entry_txt.get())
             self.smx_path = self.config_file_values["smx_path"]
+            try:
+                self.templates_path = self.config_file_values["templates_path"]
+            except:
+                self.templates_path = self.smx_path
+            if self.templates_path == "":
+                self.templates_path = self.smx_path
             self.output_path = self.config_file_values["output_path"]
             self.oi_prefix = self.config_file_values["oi_prefix"]
             self.stg_prefix = self.config_file_values["stg_prefix"]
@@ -154,6 +168,13 @@ class FrontEnd:
             self.generate_button.config(state=DISABLED)
             self.smx_path = ""
             self.output_path = ""
+            self.templates_path = ""
+            self.output_path = ""
+            self.oi_prefix = ""
+            self.stg_prefix = ""
+            self.dm_prefix = ""
+            self.duplicate_table_suffix = ""
+            self.bteq_run_file = ""
 
     def refresh_config_file_values(self, *args):
         self.get_config_file_values()
@@ -164,6 +185,11 @@ class FrontEnd:
         self.entry_field_read_from_smx.delete(0, END)
         self.entry_field_read_from_smx.insert(END, self.smx_path)
         self.entry_field_read_from_smx.config(state=DISABLED)
+
+        self.entry_field_templates_path.config(state=NORMAL)
+        self.entry_field_templates_path.delete(0, END)
+        self.entry_field_templates_path.insert(END, self.templates_path)
+        self.entry_field_templates_path.config(state=DISABLED)
 
         self.entry_field_output_path.config(state=NORMAL)
         self.entry_field_output_path.delete(0, END)

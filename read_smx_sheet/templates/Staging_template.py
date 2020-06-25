@@ -8,11 +8,13 @@ def stg_temp_DDL(cf, source_output_path, STG_tables, Data_types, script_flag):
     if script_flag == 'Data_mart':
         file_name = 'Data_mart_template'
         f = funcs.WriteFile(source_output_path, file_name, "sql")
-        template_path = cf.smx_path + "/" + "Templates" + "/" + pm.default_data_mart_template_file_name
+        template_path = cf.templates_path + "/" + pm.default_data_mart_template_file_name
+        template_smx_path = cf.smx_path + "/" + "Templates" + "/" + pm.default_data_mart_template_file_name
     else:
         file_name = funcs.get_file_name(__file__)
         f = funcs.WriteFile(source_output_path, file_name, "sql")
-        template_path = cf.smx_path + "/" + "Templates" + "/" + pm.default_staging_template_file_name
+        template_path = cf.templates_path + "/" + pm.default_staging_template_file_name
+        template_smx_path = cf.smx_path + "/" + "Templates" + "/" + pm.default_staging_template_file_name
 
     oi_prefix = cf.oi_prefix
     stg_prefix = cf.stg_prefix
@@ -22,7 +24,8 @@ def stg_temp_DDL(cf, source_output_path, STG_tables, Data_types, script_flag):
     try:
         template_file = open(template_path, "r")
     except:
-        template_file = None
+        template_file = open(template_smx_path, "r")
+
     for i in template_file.readlines():
         if i != "":
             if i[0] != '#':

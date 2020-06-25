@@ -5,7 +5,8 @@ from read_smx_sheet.parameters import parameters as pm
 
 @Logging_decorator
 def bteq_temp_script(cf, source_output_path, STG_tables):
-    template_path = cf.smx_path + "/" + "Templates" + "/" + pm.default_bteq_template_file_name
+    template_path = cf.templates_path + "/" + pm.default_bteq_template_file_name
+    template_smx_path = cf.smx_path + "/" + "Templates" + "/" + pm.default_bteq_template_file_name
     stg_prefix = cf.stg_prefix
     dup_suffix = cf.duplicate_table_suffix
     data_mart_prefix = cf.dm_prefix
@@ -14,7 +15,8 @@ def bteq_temp_script(cf, source_output_path, STG_tables):
     try:
         template_file = open(template_path, "r")
     except:
-        template_file = None
+        template_file = open(template_smx_path, "r")
+
     for i in template_file.readlines():
         if i != "":
             if i[0] != '#':
