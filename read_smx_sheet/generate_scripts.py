@@ -83,9 +83,9 @@ class GenerateScripts:
                     self.parallel_templates.append(delayed(Staging.stg_tables_DDL)(self.cf, main_output_path, STG_tables, Data_Types))
                     self.parallel_templates.append(delayed(Data_Mart.data_mart_DDL)(self.cf, main_output_path, STG_tables, Data_Types))
                     self.parallel_templates.append(delayed(BTEQ_Scripts.bteq_script)(self.cf, bteq_output_path, STG_tables))
-                    #self.parallel_templates.append(delayed(Staging_template.stg_temp_DDL)(self.cf, main_output_path,STG_tables,Data_Types,'Staging'))
-                    #self.parallel_templates.append(delayed(Staging_template.stg_temp_DDL)(self.cf, main_output_path,STG_tables,Data_Types,'Data_mart'))
-                    #self.parallel_templates.append(delayed(BTEQ_template.bteq_temp_script)(self.cf, bteq_output_path,STG_tables))
+                    self.parallel_templates.append(delayed(Staging_template.stg_temp_DDL)(self.cf, main_output_path,STG_tables,Data_Types,'Staging'))
+                    self.parallel_templates.append(delayed(Staging_template.stg_temp_DDL)(self.cf, main_output_path,STG_tables,Data_Types,'Data_mart'))
+                    self.parallel_templates.append(delayed(BTEQ_template.bteq_temp_script)(self.cf, bteq_output_path,STG_tables))
 
 
                 except Exception as e_smx_file:
