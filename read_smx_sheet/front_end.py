@@ -34,7 +34,7 @@ class FrontEnd:
         self.project_generation_flag = "Project ACA"
 
         frame_row0 = Frame(self.root, borderwidth="2", relief="ridge")
-        frame_row0.grid(column=0, row=0)
+        frame_row0.grid(column=0, row=0, sticky=W)
 
         frame_row1 = Frame(self.root, borderwidth="2", relief="ridge")
         frame_row1.grid(column=0, row=1, sticky=W)
@@ -53,7 +53,7 @@ class FrontEnd:
         frame_row2_r.grid(column=1, row=3, sticky=W + E)
 
         frame_row2_rr = Frame(frame_row2,relief="ridge")
-        frame_row2_rr.grid(column=2, row=3, sticky=E+N)
+        frame_row2_rr.grid(column=2, row=3, sticky=W + E)
 
         abs_file_path = os.path.join(md.get_dirs()[0], 'Teradata_logo-two_color.png')
         img = Image.open(abs_file_path, 'r')
@@ -63,11 +63,11 @@ class FrontEnd:
         self.image_label.grid(column=2, row=0,  sticky=S+W+N+E)
 
         self.status_label_text = StringVar()
-        self.status_label = Label(frame_row2_l,width=44,height=2)
+        self.status_label = Label(frame_row2_l,height=2)
         self.status_label.grid(column=0, row=0, sticky=W)
 
         self.server_info_label_text = StringVar()
-        self.server_info_label = Label(frame_row2_r,width=43,height=2)
+        self.server_info_label = Label(frame_row2_r,height=2)
         self.server_info_label.grid(column=1, row=0, sticky=E)
 
         config_file_label = Label(frame_row0, text="Config File")
