@@ -31,42 +31,44 @@ class FrontEnd:
         self.color_msg_done = "green"
         self.color_msg_done_with_error = "red"
         self.color_error_messager = "red"
+        self.project_generation_flag = "Project ACA"
 
-        frame_row0 = Frame(self.root, borderwidth="2", relief="ridge",width=72)
-        frame_row0.grid(column=0, row=0, sticky=W)
+        frame_row0 = Frame(self.root, borderwidth="2", relief="ridge")
+        frame_row0.grid(column=0, row=0)
 
-        frame_row1 = Frame(self.root, borderwidth="2", relief="ridge",width=30)
+        frame_row1 = Frame(self.root, borderwidth="2", relief="ridge")
         frame_row1.grid(column=0, row=1, sticky=W)
 
-        frame_row2 = Frame(self.root, borderwidth="1", relief="ridge")
+        frame_row2 = Frame(self.root, borderwidth="2", relief="ridge")
         frame_row2.grid(column=0, row=2, sticky=W + E)
 
-        frame_processing_values = Frame(frame_row2, borderwidth="1", relief="ridge")
-        frame_processing_values.grid(column=0, row=0, sticky="w")
+        frame_row2.grid_columnconfigure(0, weight=1, uniform="group1")
+        frame_row2.grid_columnconfigure(1, weight=1, uniform="group1")
+        frame_row2.grid_rowconfigure(0, weight=1)
 
-        frame_row2_l = Frame(frame_processing_values, borderwidth="2", relief="ridge")
-        frame_row2_l.grid(column=0, row=3, sticky=W+E+N+S)
+        frame_row2_l = Frame(frame_row2, borderwidth="2", relief="ridge")
+        frame_row2_l.grid(column=0, row=3, sticky=W + E)
 
-        frame_row2_r = Frame(frame_processing_values, borderwidth="2", relief="ridge")
-        frame_row2_r.grid(column=1, row=3, sticky=W+E+N+S)
+        frame_row2_r = Frame(frame_row2, borderwidth="2", relief="ridge")
+        frame_row2_r.grid(column=1, row=3, sticky=W + E)
 
-        frame_row2_rr = Frame(frame_processing_values,relief="ridge")
+        frame_row2_rr = Frame(frame_row2,relief="ridge")
         frame_row2_rr.grid(column=2, row=3, sticky=E+N)
-
-        self.status_label_text = StringVar()
-        self.status_label = Label(frame_row2_l,width=47,height=2)
-        self.status_label.grid(column=0, row=0,sticky='e')
-
-        self.server_info_label_text = StringVar()
-        self.server_info_label = Label(frame_row2_r,width=51,height=2)
-        self.server_info_label.grid(column=1, row=0,sticky='e')
 
         abs_file_path = os.path.join(md.get_dirs()[0], 'Teradata_logo-two_color.png')
         img = Image.open(abs_file_path, 'r')
-        resized = img.resize((138,45), Image.ANTIALIAS)
+        resized = img.resize((110,45), Image.ANTIALIAS)
         resized_image = ImageTk.PhotoImage(resized)
         self.image_label = Label(frame_row2_rr,image=resized_image,height=35)
         self.image_label.grid(column=2, row=0,  sticky=S+W+N+E)
+
+        self.status_label_text = StringVar()
+        self.status_label = Label(frame_row2_l,width=44,height=2)
+        self.status_label.grid(column=0, row=0, sticky=W)
+
+        self.server_info_label_text = StringVar()
+        self.server_info_label = Label(frame_row2_r,width=43,height=2)
+        self.server_info_label.grid(column=1, row=0, sticky=E)
 
         config_file_label = Label(frame_row0, text="Config File")
         config_file_label.grid(row=0, column=0, sticky='e')
@@ -75,7 +77,7 @@ class FrontEnd:
         self.config_file_browse_button.grid(row=0, column=3, sticky='w')
 
         self.config_file_entry_txt = StringVar()
-        self.config_file_entry = Entry(frame_row0, textvariable=self.config_file_entry_txt, width=104)
+        self.config_file_entry = Entry(frame_row0, textvariable=self.config_file_entry_txt, width=100)
         config_file_path = os.path.join(funcs.get_config_file_path(), pm.default_config_file_name)
         try:
             x = open(config_file_path)
@@ -84,12 +86,11 @@ class FrontEnd:
         self.config_file_entry.insert(END, config_file_path)
         self.config_file_entry.grid(row=0, column=1)
 
-        frame_buttons = Frame(frame_row1, borderwidth="1", relief="ridge")
-        frame_buttons.grid(column=1, row=0 , sticky="w")
-
-        self.generate_button = Button(frame_buttons, text="Start", width=13,height=3, command=self.start)
+        frame_buttons = Frame(frame_row1, borderwidth="2", relief="ridge")
+        frame_buttons.grid(column=1, row=0)
+        self.generate_button = Button(frame_buttons, text="Start", width=12, height=3, command=self.start)
         self.generate_button.grid(row=2, column=0)
-        close_button = Button(frame_buttons, text="Exit", width=13,height=2, command=self.close)
+        close_button = Button(frame_buttons, text="Exit", width=12, height=2, command=self.close)
         close_button.grid(row=3, column=0)
 
         frame_config_file_values = Frame(frame_row1, borderwidth="2", relief="ridge")
@@ -98,8 +99,11 @@ class FrontEnd:
         frame_checkboxes_values = Frame(frame_config_file_values, relief="ridge")
         frame_checkboxes_values.grid(column=1, row=6, sticky="W")
 
+        frame_radiobuttons_values = Frame(frame_config_file_values, relief="ridge")
+        frame_radiobuttons_values.grid(column=1, row=5, sticky="W")
+
         self.get_config_file_values()
-        frame_config_file_values_entry_width = 88
+        frame_config_file_values_entry_width = 84
 
         read_from_smx_label = Label(frame_config_file_values, text="SMXs Folder")
         read_from_smx_label.grid(row=0, column=0, sticky='e')
@@ -108,24 +112,21 @@ class FrontEnd:
         self.entry_field_read_from_smx = Entry(frame_config_file_values, textvariable=self.text_field_read_from_smx, width=frame_config_file_values_entry_width)
         self.entry_field_read_from_smx.grid(row=0, column=1, sticky="w")
 
-        templates_path_label = Label(frame_config_file_values, text="Templates Folder")
-        templates_path_label.grid(row=1, column=0, sticky='e')
-
-        self.text_field_templates_path = StringVar()
-        self.entry_field_templates_path = Entry(frame_config_file_values, textvariable=self.text_field_templates_path,
-                                             width=frame_config_file_values_entry_width)
-        self.entry_field_templates_path.grid(row=1, column=1, sticky="w")
-
         output_path_label = Label(frame_config_file_values, text="Output Folder")
-        output_path_label.grid(row=2, column=0, sticky='e')
+        output_path_label.grid(row=1, column=0, sticky='e')
 
         self.text_field_output_path = StringVar()
         self.entry_field_output_path = Entry(frame_config_file_values, textvariable=self.text_field_output_path, width=frame_config_file_values_entry_width)
-        self.entry_field_output_path.grid(row=2, column=1, sticky="w")
+        self.entry_field_output_path.grid(row=1, column=1, sticky="w")
 
-        self.excel_sheet = StringVar()
+        templates_path_label = Label(frame_config_file_values, text="Templates Folder")
+        templates_path_label.grid(row=2, column=0, sticky='e')
+
+        self.text_field_templates_path = StringVar()
+        self.entry_field_templates_path = Entry(frame_config_file_values, textvariable=self.text_field_templates_path, width=frame_config_file_values_entry_width)
+        self.entry_field_templates_path.grid(row=2, column=1, sticky="w", columnspan=1)
+
         self.populate_config_file_values()
-
         self.config_file_entry_txt.trace("w", self.refresh_config_file_values)
 
         thread0 = GenerateScriptsThread(0, "Thread-0", self)
@@ -186,16 +187,15 @@ class FrontEnd:
         self.entry_field_read_from_smx.insert(END, self.smx_path)
         self.entry_field_read_from_smx.config(state=DISABLED)
 
-        self.entry_field_templates_path.config(state=NORMAL)
-        self.entry_field_templates_path.delete(0, END)
-        self.entry_field_templates_path.insert(END, self.templates_path)
-        self.entry_field_templates_path.config(state=DISABLED)
-
         self.entry_field_output_path.config(state=NORMAL)
         self.entry_field_output_path.delete(0, END)
         self.entry_field_output_path.insert(END, self.output_path)
         self.entry_field_output_path.config(state=DISABLED)
 
+        self.entry_field_templates_path.config(state=NORMAL)
+        self.entry_field_templates_path.delete(0, END)
+        self.entry_field_templates_path.insert(END, self.templates_path)
+        self.entry_field_templates_path.config(state=DISABLED)
 
     def browsefunc(self):
         current_file = self.config_file_entry_txt.get()

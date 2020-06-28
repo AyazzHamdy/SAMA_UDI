@@ -15,5 +15,5 @@ Data_types_sht = "Data type"
 SAMA_sheets = [Data_types_sht,STG_tables_sht]
 
 # AppName_<Major>.<Minor>.<BuildNo>
-ver_no = "| Build #2.11.3"
+ver_no = "| Build #2.11.4"
 # ################################################################################################

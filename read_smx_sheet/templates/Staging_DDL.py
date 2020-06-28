@@ -6,7 +6,7 @@ from read_smx_sheet.parameters import parameters as pm
 @Logging_decorator
 def stg_temp_DDL(cf, source_output_path, STG_tables, Data_types, script_flag):
     if script_flag == 'Data_mart':
-        file_name = 'Data_mart_template'
+        file_name = 'Data_mart_DDL'
         f = funcs.WriteFile(source_output_path, file_name, "sql")
         template_path = cf.templates_path + "/" + pm.default_data_mart_template_file_name
         template_smx_path = cf.smx_path + "/" + "Templates" + "/" + pm.default_data_mart_template_file_name
