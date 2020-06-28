@@ -59,7 +59,7 @@ class FrontEnd:
         img = Image.open(abs_file_path, 'r')
         resized = img.resize((110,45), Image.ANTIALIAS)
         resized_image = ImageTk.PhotoImage(resized)
-        self.image_label = Label(frame_row2_rr,image=resized_image,height=35)
+        self.image_label = Label(frame_row2_rr,image=resized_image)
         self.image_label.grid(column=2, row=0,  sticky=S+W+N+E)
 
         self.status_label_text = StringVar()
@@ -77,7 +77,7 @@ class FrontEnd:
         self.config_file_browse_button.grid(row=0, column=3, sticky='w')
 
         self.config_file_entry_txt = StringVar()
-        self.config_file_entry = Entry(frame_row0, textvariable=self.config_file_entry_txt, width=100)
+        self.config_file_entry = Entry(frame_row0, textvariable=self.config_file_entry_txt, width=105)
         config_file_path = os.path.join(funcs.get_config_file_path(), pm.default_config_file_name)
         try:
             x = open(config_file_path)
@@ -88,9 +88,9 @@ class FrontEnd:
 
         frame_buttons = Frame(frame_row1, borderwidth="2", relief="ridge")
         frame_buttons.grid(column=1, row=0)
-        self.generate_button = Button(frame_buttons, text="Start", width=12, height=3, command=self.start)
+        self.generate_button = Button(frame_buttons, text="Start", width=12, height=2, command=self.start)
         self.generate_button.grid(row=2, column=0)
-        close_button = Button(frame_buttons, text="Exit", width=12, height=2, command=self.close)
+        close_button = Button(frame_buttons, text="Exit", width=12, height=1, command=self.close)
         close_button.grid(row=3, column=0)
 
         frame_config_file_values = Frame(frame_row1, borderwidth="2", relief="ridge")
