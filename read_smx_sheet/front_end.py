@@ -88,9 +88,9 @@ class FrontEnd:
 
         frame_buttons = Frame(frame_row1, borderwidth="2", relief="ridge")
         frame_buttons.grid(column=1, row=0)
-        self.generate_button = Button(frame_buttons, text="Start", width=12, height=2, command=self.start)
+        self.generate_button = Button(frame_buttons, text="Start", width=14, height=2, command=self.start)
         self.generate_button.grid(row=2, column=0)
-        close_button = Button(frame_buttons, text="Exit", width=12, height=1, command=self.close)
+        close_button = Button(frame_buttons, text="Exit", width=14, height=1, command=self.close)
         close_button.grid(row=3, column=0)
 
         frame_config_file_values = Frame(frame_row1, borderwidth="2", relief="ridge")
