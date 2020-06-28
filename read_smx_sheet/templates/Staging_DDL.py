@@ -21,17 +21,25 @@ def stg_temp_DDL(cf, source_output_path, STG_tables, Data_types, script_flag):
     dup_suffix = cf.duplicate_table_suffix
     data_mart_prefix = cf.dm_prefix
     template_string = ""
+    template_head = ""
     try:
         template_file = open(template_path, "r")
     except:
         template_file = open(template_smx_path, "r")
+    template_start = 0
+    template_head_line = 0
 
     for i in template_file.readlines():
         if i != "":
-            if i[0] != '#':
+            if i[0] == '#' and template_head_line >= template_start:
+                template_head = template_head+i
+                template_head_line = template_head_line + 1
+            else:
                 template_string = template_string + i
+                template_start = template_head_line+1
 
     stg_tables_df = funcs.get_sama_stg_tables(STG_tables, None)
+    f.write(template_head)
     for stg_tables_df_index, stg_tables_df_row in stg_tables_df.iterrows():
         Table_name = stg_tables_df_row['Table_Name']
         schema_name = stg_tables_df_row['Schema_Name']
@@ -110,5 +118,4 @@ def stg_temp_DDL(cf, source_output_path, STG_tables, Data_types, script_flag):
                                                       pi_columns=pi_columns, partition_statement=partition_by,
                                                       primary_index=primary_index, Table_name_pk=Table_name_pk)
         f.write(create_stg_table)
-
     f.close()

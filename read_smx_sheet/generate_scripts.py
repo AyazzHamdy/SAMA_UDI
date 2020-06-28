@@ -4,7 +4,7 @@ from read_smx_sheet.app_Lib import manage_directories as md, functions as funcs
 from dask import compute, delayed, config
 from dask.diagnostics import ProgressBar
 from read_smx_sheet.templates import Staging,Data_Mart,BTEQ_Scripts
-from read_smx_sheet.templates import Staging_DDL , BTEQ_template
+from read_smx_sheet.templates import Staging_DDL , BTEQ_Script
 from read_smx_sheet.parameters import parameters as pm
 import traceback
 import datetime as dt
@@ -86,7 +86,7 @@ class GenerateScripts:
                     #self.parallel_templates.append(delayed(BTEQ_Scripts.bteq_script)(self.cf, bteq_output_path, STG_tables))
                     self.parallel_templates.append(delayed(Staging_DDL.stg_temp_DDL)(self.cf, main_output_path, STG_tables, Data_Types, 'Staging'))
                     self.parallel_templates.append(delayed(Staging_DDL.stg_temp_DDL)(self.cf, main_output_path, STG_tables, Data_Types, 'Data_mart'))
-                    self.parallel_templates.append(delayed(BTEQ_template.bteq_temp_script)(self.cf, bteq_output_path,STG_tables))
+                    self.parallel_templates.append(delayed(BTEQ_Script.bteq_temp_script)(self.cf, bteq_output_path, STG_tables))
 
 
                 except Exception as e_smx_file:

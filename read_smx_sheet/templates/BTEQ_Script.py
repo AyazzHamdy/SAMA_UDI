@@ -12,15 +12,23 @@ def bteq_temp_script(cf, source_output_path, STG_tables):
     data_mart_prefix = cf.dm_prefix
     bteq_run_file = cf.bteq_run_file
     template_string = ""
+    template_head = ""
     try:
         template_file = open(template_path, "r")
     except:
         template_file = open(template_smx_path, "r")
 
+    template_start = 0
+    template_head_line = 0
+
     for i in template_file.readlines():
         if i != "":
-            if i[0] != '#':
+            if i[0] == '#' and template_head_line >= template_start:
+                template_head = template_head+i
+                template_head_line = template_head_line + 1
+            else:
                 template_string = template_string + i
+                template_start = template_head_line+1
 
     stg_tables_df = funcs.get_sama_stg_tables(STG_tables, None)
     for stg_tables_df_index, stg_tables_df_row in stg_tables_df.iterrows():
@@ -54,5 +62,6 @@ def bteq_temp_script(cf, source_output_path, STG_tables):
                                              table_columns=table_columns,
                                              data_mart_pks_null=data_mart_pks_null
                                              )
+        f.write(template_head)
         f.write(bteq_script)
         f.close()
