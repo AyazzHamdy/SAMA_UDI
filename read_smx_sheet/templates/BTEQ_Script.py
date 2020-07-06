@@ -63,5 +63,6 @@ def bteq_temp_script(cf, source_output_path, STG_tables):
                                              data_mart_pks_null=data_mart_pks_null
                                              )
         f.write(template_head)
+        bteq_script = bteq_script.upper()
         f.write(bteq_script)
         f.close()

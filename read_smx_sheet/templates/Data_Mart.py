@@ -68,6 +68,7 @@ def data_mart_DDL(cf,source_output_path,STG_tables, Data_types):
 
         create_stg_table = create_stg_table + table_technical_columns + Primary_Index + partition_by
         create_stg_table = create_stg_table + ";\n\n"
+        create_stg_table.upper()
         f.write(create_stg_table)
 
     f.close()
