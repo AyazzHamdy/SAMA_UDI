@@ -148,7 +148,7 @@ def get_conditional_stamenet(STG_tables, Table_name,columns_type,operational_sym
         on_statement = alias1 + Column_name + ' ' + operational_symbol + '' + alias2 + Column_name
         if operational_symbol == 'NULL':
             on_statement = alias1 + Column_name + ' IS NULL'
-        and_statement = '\t' + ' and ' if column_name_index > 0 else ' '
+        and_statement = '\t' + ' and ' if column_name_index > 0 else '\t'
         on_statement = on_statement if column_name_index == len(STG_table_columns) - 1 else on_statement + '\n'
         and_Column_name = and_statement + on_statement
         conditional_statement = conditional_statement + and_Column_name

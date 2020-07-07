@@ -5,7 +5,8 @@ stg_cols_separator = "||'_'||"
 oi_staging_template_file_name = "OI_staging_template.txt"
 default_data_mart_template_file_name = "Data_mart_template.txt"
 default_staging_template_file_name = "Staging_template.txt"
-default_bteq_template_file_name = "Bteq_template.txt"
+default_bteq_stg_datamart_template_file_name = "BTEQ_stg_datamart_template.txt"
+default_bteq_oi_stg_template_file_name = "BTEQ_oi_stg_template.txt"
 
 
 smx_ext = "xlsx"

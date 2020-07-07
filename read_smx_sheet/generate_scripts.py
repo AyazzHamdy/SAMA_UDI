@@ -3,7 +3,7 @@ sys.path.append(os.getcwd())
 from read_smx_sheet.app_Lib import manage_directories as md, functions as funcs
 from dask import compute, delayed, config
 from dask.diagnostics import ProgressBar
-from read_smx_sheet.templates import Staging_DDL , BTEQ_Script
+from read_smx_sheet.templates import Staging_DDL , BTEQ_Scripts
 from read_smx_sheet.parameters import parameters as pm
 import traceback
 import datetime as dt
@@ -78,16 +78,18 @@ class GenerateScripts:
                     home_output_path = self.cf.output_path + "/" + smx_file_name + "/"
                     self.parallel_create_output_home_path.append(delayed(md.create_folder)(home_output_path))
                     main_output_path = home_output_path + "/" + "DDLs"
-                    bteq_output_path = home_output_path + "/" + "BTEQ Scripts"
+                    bteq_stg_dm_scripts_output_path = home_output_path + "/" + "BTEQ_Scrtipts" + "/" + "BTEQ_STG_TO_DATAMARAT_SCRIPTS"
+                    bteq_stg_oi_scripts_output_path = home_output_path + "/" + "BTEQ_Scrtipts" + "/" + "BTEQ_STG_TO_OI_SCRIPTS"
                     self.parallel_create_output_source_path.append(delayed(md.create_folder)(main_output_path))
-                    self.parallel_create_output_source_path.append(delayed(md.create_folder)(bteq_output_path))
+                    self.parallel_create_output_source_path.append(delayed(md.create_folder)(bteq_stg_dm_scripts_output_path))
+                    self.parallel_create_output_source_path.append(delayed(md.create_folder)(bteq_stg_oi_scripts_output_path))
                     Data_Types = delayed(funcs.read_excel)(smx_file_path, sheet_name=self.Data_types_sht)
                     STG_tables = delayed(funcs.read_excel)(smx_file_path, sheet_name=self.STG_tables_sht)
                     self.parallel_templates.append(delayed(Staging_DDL.stg_temp_DDL)(self.cf, main_output_path, STG_tables, Data_Types, 'Staging'))
                     self.parallel_templates.append(delayed(Staging_DDL.stg_temp_DDL)(self.cf, main_output_path, STG_tables, Data_Types, 'Data_mart'))
                     self.parallel_templates.append(delayed(Staging_DDL.stg_temp_DDL)(self.cf, main_output_path, STG_tables, Data_Types, 'OI_staging'))
-                    self.parallel_templates.append(delayed(BTEQ_Script.bteq_temp_script)(self.cf, bteq_output_path, STG_tables))
-
+                    self.parallel_templates.append(delayed(BTEQ_Scripts.bteq_temp_script)(self.cf, bteq_stg_dm_scripts_output_path, STG_tables, 'from stg to datamart'))
+                    self.parallel_templates.append(delayed(BTEQ_Scripts.bteq_temp_script)(self.cf, bteq_stg_oi_scripts_output_path, STG_tables, 'from stg to oi'))
 
                 except Exception as e_smx_file:
                     # print(error)
