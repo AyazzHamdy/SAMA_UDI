@@ -85,6 +85,7 @@ class GenerateScripts:
                     STG_tables = delayed(funcs.read_excel)(smx_file_path, sheet_name=self.STG_tables_sht)
                     self.parallel_templates.append(delayed(Staging_DDL.stg_temp_DDL)(self.cf, main_output_path, STG_tables, Data_Types, 'Staging'))
                     self.parallel_templates.append(delayed(Staging_DDL.stg_temp_DDL)(self.cf, main_output_path, STG_tables, Data_Types, 'Data_mart'))
+                    self.parallel_templates.append(delayed(Staging_DDL.stg_temp_DDL)(self.cf, main_output_path, STG_tables, Data_Types, 'OI_staging'))
                     self.parallel_templates.append(delayed(BTEQ_Script.bteq_temp_script)(self.cf, bteq_output_path, STG_tables))
 
 

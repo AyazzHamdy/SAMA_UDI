@@ -6,12 +6,17 @@ from read_smx_sheet.parameters import parameters as pm
 @Logging_decorator
 def stg_temp_DDL(cf, source_output_path, STG_tables, Data_types, script_flag):
     if script_flag == 'Data_mart':
-        file_name = 'Data_mart_DDL'
+        file_name = 'DATA_MART_DDL'
         f = funcs.WriteFile(source_output_path, file_name, "sql")
         template_path = cf.templates_path + "/" + pm.default_data_mart_template_file_name
         template_smx_path = cf.smx_path + "/" + pm.default_data_mart_template_file_name
+    elif script_flag == 'OI_staging':
+        file_name = 'OI_STAGING_DDL'
+        f = funcs.WriteFile(source_output_path, file_name, "sql")
+        template_path = cf.templates_path + "/" + pm.oi_staging_template_file_name
+        template_smx_path = cf.smx_path + "/" + pm.oi_staging_template_file_name
     else:
-        file_name = funcs.get_file_name(__file__)
+        file_name = 'STAGING_DDL'
         f = funcs.WriteFile(source_output_path, file_name, "sql")
         template_path = cf.templates_path + "/" + pm.default_staging_template_file_name
         template_smx_path = cf.smx_path + "/" + pm.default_staging_template_file_name
@@ -47,7 +52,6 @@ def stg_temp_DDL(cf, source_output_path, STG_tables, Data_types, script_flag):
         pi_columns = ""
         partition_columns = ""
         columns = ""
-        partition_by = ""
 
         for STG_table_columns_index, STG_table_columns_row in STG_table_columns.iterrows():
             Column_name = STG_table_columns_row['Column_Name']
@@ -56,20 +60,19 @@ def stg_temp_DDL(cf, source_output_path, STG_tables, Data_types, script_flag):
 
             source_data_type = STG_table_columns_row['Data_Type']
             Data_type = source_data_type
+            for data_type_index, data_type_row in Data_types.iterrows():
+                if data_type_row['Source Data Type'].upper() == source_data_type.upper():
+                    Data_type = str(data_type_row['Teradata Data Type'].upper())
             if str(STG_table_columns_row['Data_Length']) != '' and str(STG_table_columns_row['Data_Precision']) == '':
-                source_data_type = source_data_type + "(" + str(STG_table_columns_row['Data_Length']) + ")"
-                Data_type = source_data_type
+                Data_type = Data_type + "(" + str(STG_table_columns_row['Data_Length']) + ")"
+
             elif str(STG_table_columns_row['Data_Length']) != '' and str(STG_table_columns_row['Data_Precision']) != '':
                 source_data_type = source_data_type + "(" + str(STG_table_columns_row['Data_Length']) + ',' + str(
                     STG_table_columns_row['Data_Precision']) + ")"
                 Data_type = source_data_type.replace("NUMBER", "DECIMAL")
 
-            for data_type_index, data_type_row in Data_types.iterrows():
-                if data_type_row['Source Data Type'].upper() == source_data_type.upper():
-                    Data_type = str(data_type_row['Teradata Data Type'].upper())
-
             if source_data_type == 'VARCHAR2':
-                if STG_table_columns_row['Data_Type'] == 'Y':
+                if STG_table_columns_row['Unicode_Flag'] == 'Y':
                     character_set = " CHARACTER SET UNICODE NOT CASESPECIFIC "
                 else:
                     character_set = " CHARACTER SET LATIN NOT CASESPECIFIC "
@@ -113,12 +116,17 @@ def stg_temp_DDL(cf, source_output_path, STG_tables, Data_types, script_flag):
                                                       pi_columns=pi_columns, partition_statement=partition_by,
                                                       primary_index=unique_primary_index,
                                                       Table_name_pk=Table_name_pk)
+        elif script_flag == 'OI_staging':
+            create_stg_table = template_string.format(oi_prefix=oi_prefix,  schema_name=schema_name,
+                                                      table_name=Table_name, columns=columns,
+                                                      pi_columns=pi_columns, primary_index=primary_index,
+                                                      Table_name_pk=Table_name_pk)
         else:
-            create_stg_table = template_string.format(oi_prefix=oi_prefix, stg_prefix=stg_prefix,
+            create_stg_table = template_string.format(stg_prefix=stg_prefix,
                                                       dup_suffix=dup_suffix, schema_name=schema_name,
                                                       table_name=Table_name, columns=columns,
-                                                      pi_columns=pi_columns, partition_statement=partition_by,
-                                                    primary_index=primary_index, Table_name_pk=Table_name_pk)
-        create_stg_table = create_stg_table.upper()
+                                                      pi_columns=pi_columns, primary_index=primary_index,
+                                                      Table_name_pk=Table_name_pk)
+        create_stg_table = create_stg_table.upper() + '\n' +'\n'
         f.write(create_stg_table)
     f.close()
