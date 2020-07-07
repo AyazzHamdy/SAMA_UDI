@@ -303,7 +303,9 @@ def get_config_file_values(config_file_path=None):
     if config_file_path is None:
         try:
             config_file_path = get_config_file_path()
+            print("ana hna ", config_file_path)
             config_file = open(config_file_path + "/" + pm.default_config_file_name, "r")
+
         except:
             config_file_path = input("Enter config.txt path please:")
             config_file = open(config_file_path + "/" + pm.default_config_file_name, "r")
@@ -401,3 +403,7 @@ class TemplateLogError(WriteFile):
         self.write(self.error_file_name)
         self.write(self.error)
         self.write(error_separator)
+
+
+if __name__ == "__main__":
+   get_config_file_values()
