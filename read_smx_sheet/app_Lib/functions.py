@@ -146,9 +146,7 @@ def get_conditional_stamenet(STG_tables, Table_name,columns_type,operational_sym
     for column_name_index, column_name_row in STG_table_columns.iterrows():
         Column_name = column_name_row['Column_Name']
         on_statement = alias1 + Column_name + ' ' + operational_symbol + '' + alias2 + Column_name
-        if operational_symbol == 'NULL':
-            on_statement = alias1 + Column_name + ' IS NULL'
-        and_statement = '\t' + ' and ' if column_name_index > 0 else '\t'
+        and_statement = '\t' + ' and ' if column_name_index > 0 else ' '
         on_statement = on_statement if column_name_index == len(STG_table_columns) - 1 else on_statement + '\n'
         and_Column_name = and_statement + on_statement
         conditional_statement = conditional_statement + and_Column_name
