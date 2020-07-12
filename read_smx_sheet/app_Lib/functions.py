@@ -151,8 +151,9 @@ def get_sama_table_columns_comma_separated(tables_sheet, Table_name, alias=None,
 
 def get_comparison_columns(tables_sheet, Table_name,operational_symbol,alias1=None,alias2=None,record_id=None):
     conditional_statement = ''
+    columns_comma = ""
     tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
-                                 & ((tables_sheet['PK'].str.upper() == 'PK') |(tables_sheet['Historization column'] == 'E'))
+                                 & ((tables_sheet['PK'].str.upper() == 'PK')|(tables_sheet['Historization column'].str.upper() == 'E'))
                                  & (tables_sheet['Record_ID'] == record_id)
                                  ].reset_index()
     if alias1 is None:
@@ -163,24 +164,20 @@ def get_comparison_columns(tables_sheet, Table_name,operational_symbol,alias1=No
         alias2 = ''
     else:
         alias2 = alias2 + '.'
-    for column_name_index, column_name_row in tables_df.iterrows():
-        Column_name = column_name_row['Column']
-        data_type = column_name_row['Datatype']
+
+    for stg_tbl_indx, stg_tbl_row in tables_df.iterrows():
+        data_type = stg_tbl_row['Datatype'].upper()
+        column_name = str(stg_tbl_row['Column'])
         if data_type == 'INTEGER':
-            first_clause = 'COALESCE('+alias1 + Column_name+',-1)'
-            second_clause = 'COALESCE('+alias2 + Column_name+',-1)'
+            column_name = 'COALESCE('+alias1 + column_name + ',-1)' + operational_symbol + 'COALESCE('+alias2 + column_name + ',-1)'
+        elif data_type == 'VARCHAR(50)':
+            column_name = 'COALESCE('+alias1 + column_name + ",'-')" + operational_symbol + 'COALESCE('+alias2 + column_name + ",'-')"
         elif data_type == 'TIMESTAMP':
-            first_clause = 'COALESCE('+alias1 + Column_name+",CAST('1001-01-01 00:00:00' AS TIMESTAMP(0)))"
-            second_clause = 'COALESCE('+alias2 + Column_name+",CAST('1001-01-01 00:00:00' AS TIMESTAMP(0)))"
-        elif 'VARCHAR' in data_type:
-            first_clause = 'COALESCE('+alias1 + Column_name+",'-')"
-            second_clause = 'COALESCE('+alias2 + Column_name+",'-')"
-        on_statement = first_clause + ' ' + operational_symbol + '' + second_clause
-        and_statement = '\t\t' + ' , ' if column_name_index > 0 else '  '
-        on_statement = on_statement if column_name_index == len(tables_df) - 1 else on_statement + '\n'
-        and_Column_name = and_statement + on_statement
-        conditional_statement = conditional_statement + and_Column_name
-    return conditional_statement
+            column_name = 'COALESCE('+alias1 + column_name + ",CAST('1001-01-01 00:00:00' AS TIMESTAMP(0)))" + operational_symbol + 'COALESCE('+alias2 + column_name + ",CAST('1001-01-01 00:00:00' AS TIMESTAMP(0)))"
+        comma = '\t\t' + ',' if stg_tbl_indx > 0 else ' '
+        columns_comma += comma+column_name+'\n'
+    columns_comma = columns_comma[0:len(columns_comma) - 1]
+    return columns_comma
 
 
 def get_sama_pk_columns_comma_separated(tables_sheet, Table_name, alias='', record_id=None):
