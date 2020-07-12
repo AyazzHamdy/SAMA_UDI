@@ -3,7 +3,7 @@ sys.path.append(os.getcwd())
 from read_smx_sheet.app_Lib import manage_directories as md, functions as funcs
 from dask import compute, delayed, config
 from dask.diagnostics import ProgressBar
-from read_smx_sheet.templates import Staging_DDL, BTEQ_Scripts, Apply_Insert_Upsert
+from read_smx_sheet.templates import Staging_DDL, BTEQ_Scripts, Apply_Insert_Upsert,History_Apply
 from read_smx_sheet.parameters import parameters as pm
 import traceback
 import datetime as dt
@@ -101,11 +101,10 @@ class GenerateScripts:
                         self.parallel_templates.append(delayed(BTEQ_Scripts.bteq_temp_script)(self.cf, bteq_stg_dm_scripts_output_path, STG_tables, 'from stg to datamart'))
                         self.parallel_templates.append(delayed(BTEQ_Scripts.bteq_temp_script)(self.cf, bteq_stg_oi_scripts_output_path, STG_tables, 'from stg to oi'))
                     elif self.scripts_generation_flag == 'SMX':
-                        print("ana hna")
                         main_output_path_apply = home_output_path + "/" + "APPLY SCRIPTS"
-                        print("cccccccccccc" , main_output_path_apply)
                         smx_sheet = delayed(funcs.read_excel)(smx_file_path, sheet_name=self.smx_sheet)
                         self.parallel_templates.append(delayed(Apply_Insert_Upsert.apply_insert_upsert)(self.cf, main_output_path_apply, smx_sheet, "Apply_Insert"))
+                        self.parallel_templates.append(delayed(History_Apply.history_apply)(self.cf, main_output_path_apply, smx_sheet))
 
 
                 except Exception as e_smx_file:
