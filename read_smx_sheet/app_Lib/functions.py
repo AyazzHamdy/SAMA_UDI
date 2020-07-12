@@ -81,6 +81,11 @@ def get_file_name(file):
     return os.path.splitext(os.path.basename(file))[0]
 
 
+def get_history_handled_processes(smx_table):
+    History_transformations = smx_table.loc[smx_table['Load Type'] == 'History Handled'].reset_index()
+    return History_transformations
+
+
 def get_sama_stg_tables(STG_tables, source_name=None):
     if source_name:
         stg_table_names = STG_tables.loc[STG_tables['Source System'] == source_name][
@@ -117,46 +122,39 @@ def get_fsdm_tbl_columns(SMX_SHEET, alias_name, R_id):
     return columns_list
 
 
-
-
-
-def get_sama_stg_table_columns_comma_separated(STG_tables, Table_name,alias=None):
-    STG_tables_df = STG_tables.loc[
-        (STG_tables['Table_Name'].str.upper() == Table_name.upper())
-    ].reset_index()
+def get_sama_table_columns_comma_separated(tables_sheet, Table_name, alias=None, record_id=None):
+    if record_id is None:
+        tables_df = tables_sheet.loc[
+            (tables_sheet['Table_Name'].str.upper() == Table_name.upper())
+        ].reset_index()
+    else:
+        tables_df = tables_sheet.loc[
+            (tables_sheet['Entity'].str.upper() == Table_name.upper())
+            & (tables_sheet['Record_ID'] == record_id)].reset_index()
     columns_comma = ""
     if alias is None:
         alias = ''
     else:
         alias = alias+'.'
-    for stg_tbl_indx, stg_tbl_row in STG_tables_df.iterrows():
-        comma = '\t' + ',' if stg_tbl_indx > 0 else ''
-        columns_comma += comma+alias+stg_tbl_row['Column_Name'] +'\n'
+    for stg_tbl_indx, stg_tbl_row in tables_df.iterrows():
+        if record_id is not None:
+            comma = '\t' + ',' if stg_tbl_indx > 0 else '\t'
+        else:
+            comma = '\t' + ',' if stg_tbl_indx > 0 else ''
+        if record_id is None:
+            columns_comma += comma+alias+stg_tbl_row['Column_Name'] +'\n'
+        else:
+            columns_comma += comma+alias+stg_tbl_row['Column'] +'\n'
     columns_comma = columns_comma[0:len(columns_comma) - 1]
     return columns_comma
 
 
-def get_sama_stg_table_columns_minus_pk(STG_tables, Table_name):
-    STG_tables_df = STG_tables.loc[(STG_tables['Table_Name'].str.upper() == Table_name.upper())
-                                   & (STG_tables['Primary_Key_Flag'].str.upper() != 'Y')
-                                   ].reset_index()
-
-    return STG_tables_df
-
-
-def get_sama_stg_table_columns_pk(STG_tables, Table_name):
-    STG_tables_df = STG_tables.loc[(STG_tables['Table_Name'].str.upper() == Table_name.upper())
-                                   & (STG_tables['Primary_Key_Flag'].str.upper() == 'Y')
-                                   ].reset_index()
-    return STG_tables_df
-
-
-def get_conditional_stamenet(STG_tables, Table_name,columns_type,operational_symbol,alias1=None,alias2=None):
+def get_comparison_columns(tables_sheet, Table_name,operational_symbol,alias1=None,alias2=None,record_id=None):
     conditional_statement = ''
-    if columns_type == 'pk':
-        STG_table_columns = get_sama_stg_table_columns_pk(STG_tables,Table_name)
-    else:
-        STG_table_columns = get_sama_stg_table_columns_minus_pk(STG_tables,Table_name)
+    tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
+                                 & ((tables_sheet['PK'].str.upper() == 'PK') |(tables_sheet['Historization column'] == 'E'))
+                                 & (tables_sheet['Record_ID'] == record_id)
+                                 ].reset_index()
     if alias1 is None:
         alias1 = ''
     else:
@@ -165,11 +163,106 @@ def get_conditional_stamenet(STG_tables, Table_name,columns_type,operational_sym
         alias2 = ''
     else:
         alias2 = alias2 + '.'
-    for column_name_index, column_name_row in STG_table_columns.iterrows():
-        Column_name = column_name_row['Column_Name']
+    for column_name_index, column_name_row in tables_df.iterrows():
+        Column_name = column_name_row['Column']
+        data_type = column_name_row['Datatype']
+        if data_type == 'INTEGER':
+            first_clause = 'COALESCE('+alias1 + Column_name+',-1)'
+            second_clause = 'COALESCE('+alias2 + Column_name+',-1)'
+        elif data_type == 'TIMESTAMP':
+            first_clause = 'COALESCE('+alias1 + Column_name+",CAST('1001-01-01 00:00:00' AS TIMESTAMP(0)))"
+            second_clause = 'COALESCE('+alias2 + Column_name+",CAST('1001-01-01 00:00:00' AS TIMESTAMP(0)))"
+        elif 'VARCHAR' in data_type:
+            first_clause = 'COALESCE('+alias1 + Column_name+",'-')"
+            second_clause = 'COALESCE('+alias2 + Column_name+",'-')"
+        on_statement = first_clause + ' ' + operational_symbol + '' + second_clause
+        and_statement = '\t\t' + ' , ' if column_name_index > 0 else '  '
+        on_statement = on_statement if column_name_index == len(tables_df) - 1 else on_statement + '\n'
+        and_Column_name = and_statement + on_statement
+        conditional_statement = conditional_statement + and_Column_name
+    return conditional_statement
+
+
+def get_sama_pk_columns_comma_separated(tables_sheet, Table_name, alias='', record_id=None):
+    columns_df = get_sama_stg_table_columns_pk(tables_sheet,Table_name,record_id)
+    columns_comma = ""
+    if alias is None:
+        alias = ''
+    else:
+        alias = alias + '.'
+    for stg_tbl_indx, stg_tbl_row in columns_df.iterrows():
+        comma = '\t' + ',' if stg_tbl_indx > 0 else ''
+        if alias == 'one_pk.':
+            return stg_tbl_row['Column']
+        if record_id is None:
+            columns_comma += comma+alias+str(stg_tbl_row['Column_Name']) +'\n'
+        else:
+            columns_comma += comma+alias+str(stg_tbl_row['Column'])+'\n'
+    columns_comma = columns_comma[0:len(columns_comma) - 1]
+    return columns_comma
+
+
+def get_sama_stg_table_columns_minus_pk(tables_sheet, Table_name,record_id=None):
+    if record_id is None:
+        tables_df = tables_sheet.loc[(tables_sheet['Table_Name'].str.upper() == Table_name.upper())
+                                       & (tables_sheet['Primary_Key_Flag'].str.upper() != 'Y')
+                                       ].reset_index()
+    else:
+        tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
+                                       & (tables_sheet['PK'].str.upper() != 'PK')
+                                       & (tables_sheet['Record_ID'] == record_id)
+                                       ].reset_index()
+    return tables_df
+
+
+def get_sama_stg_table_columns_pk(tables_sheet, Table_name, record_id=None, history_flag=None):
+    if record_id is None:
+        tables_df = tables_sheet.loc[(tables_sheet['Table_Name'].str.upper() == Table_name.upper())
+                                         & (tables_sheet['Primary_Key_Flag'].str.upper() == 'Y')
+                                         ].reset_index()
+    elif record_id is not None and history_flag is not None:
+        tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
+                                         & (tables_sheet['PK'].str.upper() == 'PK')
+                                         & (tables_sheet['Record_ID'] == record_id)
+                                         & (tables_sheet['Historization column'] != 'S')
+                                         ].reset_index()
+    else:
+        tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
+                                         & (tables_sheet['PK'].str.upper() == 'PK')
+                                         & (tables_sheet['Record_ID'] == record_id)
+                                         ].reset_index()
+    return tables_df
+
+
+def get_conditional_stamenet(tables_sheet, Table_name,columns_type,operational_symbol,alias1=None,alias2=None,record_id=None,history_flag=None):
+    conditional_statement = ''
+    if columns_type == 'pk' and record_id is None:
+        table_columns = get_sama_stg_table_columns_pk(tables_sheet,Table_name)
+    elif columns_type != 'pk' and record_id is None:
+        table_columns = get_sama_stg_table_columns_minus_pk(tables_sheet,Table_name)
+    elif columns_type == 'pk' and record_id is not None:
+        table_columns = get_sama_stg_table_columns_pk(tables_sheet,Table_name,record_id,history_flag)
+    elif columns_type == 'non_pk' and record_id is not None:
+        table_columns = get_sama_stg_table_columns_minus_pk(tables_sheet,Table_name,record_id)
+    if alias1 is None:
+        alias1 = ''
+    else:
+        alias1 = alias1 + '.'
+    if alias2 is None:
+        alias2 = ''
+    else:
+        alias2 = alias2 + '.'
+    for column_name_index, column_name_row in table_columns.iterrows():
+        if record_id is None:
+            Column_name = column_name_row['Column_Name']
+        else:
+            Column_name = column_name_row['Column']
         on_statement = alias1 + Column_name + ' ' + operational_symbol + '' + alias2 + Column_name
-        and_statement = '\t' + ' and ' if column_name_index > 0 else ' '
-        on_statement = on_statement if column_name_index == len(STG_table_columns) - 1 else on_statement + '\n'
+        if record_id is not None:
+            and_statement = '\t' + ' and ' if column_name_index > 0 else ' '
+        else:
+            and_statement = '\t' + ' and ' if column_name_index > 0 else '\t'
+        on_statement = on_statement if column_name_index == len(table_columns) - 1 else on_statement + '\n'
         and_Column_name = and_statement + on_statement
         conditional_statement = conditional_statement + and_Column_name
     return conditional_statement

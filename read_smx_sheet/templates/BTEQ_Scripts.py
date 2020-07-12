@@ -15,7 +15,6 @@ def bteq_temp_script(cf, source_output_path, STG_tables,script_flag):
 
     stg_prefix = cf.stg_prefix
     oi_prefix = cf.oi_prefix
-    dup_suffix = cf.duplicate_table_suffix
     data_mart_prefix = cf.dm_prefix
     bteq_run_file = cf.bteq_run_file
     template_string = ""
@@ -35,8 +34,8 @@ def bteq_temp_script(cf, source_output_path, STG_tables,script_flag):
         schema_name = stg_tables_df_row['Schema_Name']
         f = funcs.WriteFile(source_output_path, Table_name, "bteq")
         filename = Table_name+'.bteq'
-        stg_columns = funcs.get_sama_stg_table_columns_comma_separated(STG_tables, Table_name, 'STG')
-        table_columns = funcs.get_sama_stg_table_columns_comma_separated(STG_tables, Table_name)
+        stg_columns = funcs.get_sama_table_columns_comma_separated(STG_tables, Table_name, 'STG')
+        table_columns = funcs.get_sama_table_columns_comma_separated(STG_tables, Table_name)
         stg_equal_datamart_pk = funcs.get_conditional_stamenet(STG_tables, Table_name, 'pk', '=', 'stg', 'dm')
         stg_equal_updt_cols = funcs.get_conditional_stamenet(STG_tables, Table_name, 'stg', '=', None, 'dm')
 

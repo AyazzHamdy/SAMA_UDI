@@ -6,12 +6,13 @@ import datetime as dt
 
 @Logging_decorator
 def history_apply(cf, source_output_path, smx_table):
-    print("hi")
-    template_path = cf.templates_path + "/" + pm.default_bteq_oi_stg_template_file_name
-    template_smx_path = cf.smx_path + "/" + "Templates" + "/" + pm.default_bteq_oi_stg_template_file_name
-    loadDB_prefix = cf.ld_prefix
-    modelDB_prefix = cf.modelDB_prefix
-    modelDUP_prefix = cf.modelDup_prefix
+    template_path = cf.templates_path + "/" + pm.default_history_apply_template_file_name
+    template_smx_path = cf.smx_path + "/" + "Templates" + "/" + pm.default_history_apply_template_file_name
+    LD_SCHEMA_NAME = cf.ld_prefix
+    MODEL_SCHEMA_NAME = cf.modelDB_prefix
+    MODEL_DUP_SCHEMA_NAME = cf.modelDup_prefix
+    bteq_run_file = cf.bteq_run_file
+    currentdate = dt.datetime.now()
     template_string = ""
     try:
         template_file = open(template_path, "r")
@@ -22,32 +23,42 @@ def history_apply(cf, source_output_path, smx_table):
         if i != "":
             template_string = template_string + i
 
-    history_handeled = funcs.get_sama_stg_tables(smx_table, None)
-    for stg_tables_df_index, stg_tables_df_row in stg_tables_df.iterrows():
-        Table_name = stg_tables_df_row['Table_Name']
-        schema_name = stg_tables_df_row['Schema_Name']
-        f = funcs.WriteFile(source_output_path, Table_name, "bteq")
-        filename = Table_name+'.bteq'
-        stg_columns = funcs.get_sama_stg_table_columns_comma_separated(STG_tables, Table_name, 'STG')
-        table_columns = funcs.get_sama_stg_table_columns_comma_separated(STG_tables, Table_name)
-        stg_equal_datamart_pk = funcs.get_conditional_stamenet(STG_tables, Table_name, 'pk', '=', 'stg', 'dm')
-        stg_equal_updt_cols = funcs.get_conditional_stamenet(STG_tables, Table_name, 'stg', '=', None, 'dm')
+    history_handeled_df = funcs.get_history_handled_processes(smx_table)
+    for history_df_index, history_df_row in history_handeled_df.iterrows():
+        record_id = history_df_row['Record_ID']
+        table_name = history_df_row['Entity']
+        SOURCE_SYSTEM = history_df_row['Source_System']
+        filename = table_name + '_' + str(record_id)
+        f = funcs.WriteFile(source_output_path, filename, "bteq")
+        filename = filename + '.bteq'
+        PK_TABLE_COLOUMNS_WITH_ALIAS_LD = funcs.get_sama_pk_columns_comma_separated(history_handeled_df, table_name,
+                                                                                    'LOAD_TABLE', record_id)
+        TABLE_PK = funcs.get_sama_pk_columns_comma_separated(history_handeled_df, table_name, 'one_pk', record_id)
+        COALESCED_TABLE_COLUMNS_LD_EQL_DATAMODEL = funcs.get_comparison_columns(history_handeled_df, table_name, '=',
+                                                                                'LOAD_TABLE', 'MODEL_TABLE', record_id)
+        LOADTBL_PK_EQL_MODELTBL = funcs.get_conditional_stamenet(history_handeled_df, table_name, 'pk', '=',
+                                                                 'LOAD_TABLE', 'MODEL_TABLE', record_id, 'histort')
+        LOADTBL_PK_EQL_FLAGIND = funcs.get_conditional_stamenet(history_handeled_df, table_name, 'pk', '=',
+                                                                'LOAD_TABLE', 'FLAG_IND', record_id, 'history')
+        TABLE_COLUMNS = funcs.get_sama_table_columns_comma_separated(history_handeled_df, table_name, None, record_id)
+        NON_PK_COLS_EQL_LD = funcs.get_conditional_stamenet(history_handeled_df, table_name, 'non_pk', '=',
+                                                            'MODEL_TABLE', 'LOAD_TABLE', record_id)
 
-        if stg_equal_datamart_pk != '':
-            stg_equal_datamart_pk = "ON" + stg_equal_datamart_pk
-
-
-        bteq_script = template_string.format(currentdate=dt.datetime.now(),
-                                             filename = filename,
-                                             bteq_run_file=bteq_run_file, stg_prefix=stg_prefix,
-                                             dm_prefix=data_mart_prefix,
-                                             schema_name=schema_name,
-                                             table_name=Table_name, stg_columns=stg_columns,
-                                             stg_equal_datamart_pk=stg_equal_datamart_pk,
-                                             stg_equal_updt_cols=stg_equal_updt_cols,
-                                             table_columns=table_columns
+        bteq_script = template_string.format(SOURCE_SYSTEM=SOURCE_SYSTEM,
+                                             currentdate=currentdate,
+                                             filename=filename,
+                                             bteq_run_file=bteq_run_file, LD_SCHEMA_NAME=LD_SCHEMA_NAME,
+                                             MODEL_SCHEMA_NAME=MODEL_SCHEMA_NAME,
+                                             MODEL_DUP_SCHEMA_NAME=MODEL_DUP_SCHEMA_NAME,
+                                             TABLE_NAME=table_name, RECORD_ID=record_id,
+                                             PK_TABLE_COLOUMNS_WITH_ALIAS_LD=PK_TABLE_COLOUMNS_WITH_ALIAS_LD,
+                                             TABLE_PK=TABLE_PK,
+                                             COALESCED_TABLE_COLUMNS_LD_EQL_DATAMODEL=COALESCED_TABLE_COLUMNS_LD_EQL_DATAMODEL,
+                                             LOADTBL_PK_EQL_MODELTBL=LOADTBL_PK_EQL_MODELTBL,
+                                             LOADTBL_PK_EQL_FLAGIND=LOADTBL_PK_EQL_FLAGIND,
+                                             NON_PK_COLS_EQL_LD=NON_PK_COLS_EQL_LD,
+                                             TABLE_COLUMNS=TABLE_COLUMNS
                                              )
-
         bteq_script = bteq_script.upper()
         f.write(bteq_script)
         f.close()
