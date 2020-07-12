@@ -98,6 +98,28 @@ def get_sama_stg_table_columns(STG_tables, Table_name):
     return STG_tables_df
 
 
+def get_sama_fsdm_record_id(SMX_SHEET, R_id):
+    smx_Rid = SMX_SHEET.loc[
+        (SMX_SHEET['R_id'] == R_id)
+    ].reset_index()
+    return smx_Rid.drop_duplicates()
+
+
+def get_fsdm_tbl_columns(SMX_SHEET, alias_name, R_id):
+    smx_Rid = SMX_SHEET.loc[
+        (SMX_SHEET['R_id'] == R_id)
+    ].reset_index()
+    columns_list = smx_Rid['Column'].values.tolist()
+
+    for i in columns_list:
+        columns_list[i] = alias_name + "." + columns_list[i]
+
+    return columns_list
+
+
+
+
+
 def get_sama_stg_table_columns_comma_separated(STG_tables, Table_name,alias=None):
     STG_tables_df = STG_tables.loc[
         (STG_tables['Table_Name'].str.upper() == Table_name.upper())
