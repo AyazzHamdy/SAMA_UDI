@@ -13,7 +13,10 @@ System_sht = "System"
 Supplements_sht = "Supplements"
 STG_tables_sht = "STG tables"
 Data_types_sht = "Data type"
-SAMA_sheets = [Data_types_sht,STG_tables_sht]
+smx_sht = "SMX"
+
+staging_sheets = [Data_types_sht,STG_tables_sht]
+smx_sheets = [smx_sht]
 
 # AppName_<Major>.<Minor>.<BuildNo>
 ver_no = "| Build #2.11.7"

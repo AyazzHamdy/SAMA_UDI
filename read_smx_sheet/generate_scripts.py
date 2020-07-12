@@ -18,7 +18,7 @@ class LogFile(funcs.WriteFile):
 
 
 class ConfigFile:
-    def __init__(self, config_file=None, config_file_values=None):
+    def __init__(self,smx_type, config_file=None, config_file_values=None):
         self.config_file_values = funcs.get_config_file_values(config_file) if config_file_values is None else config_file_values
         self.output_path = self.config_file_values["output_path"]
         self.smx_path = self.config_file_values["smx_path"]
@@ -26,18 +26,23 @@ class ConfigFile:
             self.templates_path = self.config_file_values["templates_path"]
         except:
             self.templates_path= self.config_file_values["smx_path"]
-        self.oi_prefix = self.config_file_values["oi_prefix"]
-        self.stg_prefix = self.config_file_values["stg_prefix"]
-        self.dm_prefix = self.config_file_values["dm_prefix"]
         self.bteq_run_file = self.config_file_values["bteq_run_file"]
-        self.duplicate_table_suffix = self.config_file_values["duplicate_table_suffix"]
         self.read_sheets_parallel = self.config_file_values["read_sheets_parallel"]
+        if smx_type == 'Staging Tables':
+            self.oi_prefix = self.config_file_values["oi_prefix"]
+            self.stg_prefix = self.config_file_values["stg_prefix"]
+            self.dm_prefix = self.config_file_values["dm_prefix"]
+            self.duplicate_table_suffix = self.config_file_values["duplicate_table_suffix"]
+        elif smx_type == 'SMX':
+            self.ld_prefix = self.config_file_values["ld_prefix"]
+            self.modelDB_prefix = self.config_file_values["fsdm_prefix"]
+            self.modelDup_prefix = self.config_file_values["dup_prefix"]
 
 
 class GenerateScripts:
-    def __init__(self, config_file=None, config_file_values=None):
+    def __init__(self, config_file=None, config_file_values=None,project_generation_flag='Staging Tables'):
         self.start_time = dt.datetime.now()
-        self.cf = ConfigFile(config_file, config_file_values)
+        self.cf = ConfigFile(project_generation_flag,config_file, config_file_values)
         md.remove_folder(self.cf.output_path)
         md.create_folder(self.cf.output_path)
         self.log_file = LogFile(self.cf.output_path)
@@ -52,7 +57,8 @@ class GenerateScripts:
         self.count_smx = 0
         self.smx_ext = pm.smx_ext
         self.STG_tables_sht = pm.STG_tables_sht
-        self.SAMA_sheets = pm.SAMA_sheets
+        self.staging_sheets = pm.staging_sheets
+        self.smx_sheets = pm.smx_sheets
         self.Data_types_sht = pm.Data_types_sht
 
     def generate_scripts(self):
@@ -66,7 +72,8 @@ class GenerateScripts:
         self.start_time = dt.datetime.now()
 
         try:
-            smx_files = funcs.get_smx_files(self.cf.smx_path, self.smx_ext, self.SAMA_sheets)
+            smx_files = funcs.get_smx_files(self.cf.smx_path, self.smx_ext, self.staging_sheets,self.smx_sheets
+                                            ,self.scripts_generation_flag)
             for smx in smx_files:
                 try:
                     self.count_smx = self.count_smx + 1
@@ -77,19 +84,31 @@ class GenerateScripts:
                     self.log_file.write("\t" + smx_file_name)
                     home_output_path = self.cf.output_path + "/" + smx_file_name + "/"
                     self.parallel_create_output_home_path.append(delayed(md.create_folder)(home_output_path))
-                    main_output_path = home_output_path + "/" + "DDLs"
-                    bteq_stg_dm_scripts_output_path = home_output_path + "/" + "BTEQ_Scrtipts" + "/" + "BTEQ_STG_TO_DATAMARAT_SCRIPTS"
-                    bteq_stg_oi_scripts_output_path = home_output_path + "/" + "BTEQ_Scrtipts" + "/" + "BTEQ_STG_TO_OI_SCRIPTS"
-                    self.parallel_create_output_source_path.append(delayed(md.create_folder)(main_output_path))
-                    self.parallel_create_output_source_path.append(delayed(md.create_folder)(bteq_stg_dm_scripts_output_path))
-                    self.parallel_create_output_source_path.append(delayed(md.create_folder)(bteq_stg_oi_scripts_output_path))
-                    Data_Types = delayed(funcs.read_excel)(smx_file_path, sheet_name=self.Data_types_sht)
-                    STG_tables = delayed(funcs.read_excel)(smx_file_path, sheet_name=self.STG_tables_sht)
-                    self.parallel_templates.append(delayed(Staging_DDL.stg_temp_DDL)(self.cf, main_output_path, STG_tables, Data_Types, 'Staging'))
-                    self.parallel_templates.append(delayed(Staging_DDL.stg_temp_DDL)(self.cf, main_output_path, STG_tables, Data_Types, 'Data_mart'))
-                    self.parallel_templates.append(delayed(Staging_DDL.stg_temp_DDL)(self.cf, main_output_path, STG_tables, Data_Types, 'OI_staging'))
-                    self.parallel_templates.append(delayed(BTEQ_Scripts.bteq_temp_script)(self.cf, bteq_stg_dm_scripts_output_path, STG_tables, 'from stg to datamart'))
-                    self.parallel_templates.append(delayed(BTEQ_Scripts.bteq_temp_script)(self.cf, bteq_stg_oi_scripts_output_path, STG_tables, 'from stg to oi'))
+                    if self.scripts_generation_flag=='Staging Tables':
+                        main_output_path = home_output_path + "/" + "DDLs"
+                        bteq_stg_dm_scripts_output_path = home_output_path + "/" + "BTEQ_Scrtipts" + "/" + "BTEQ_STG_TO_DATAMARAT_SCRIPTS"
+                        bteq_stg_oi_scripts_output_path = home_output_path + "/" + "BTEQ_Scrtipts" + "/" + "BTEQ_STG_TO_OI_SCRIPTS"
+                        self.parallel_create_output_source_path.append(delayed(md.create_folder)(main_output_path))
+                        self.parallel_create_output_source_path.append(delayed(md.create_folder)(bteq_stg_dm_scripts_output_path))
+                        self.parallel_create_output_source_path.append(delayed(md.create_folder)(bteq_stg_oi_scripts_output_path))
+                        Data_Types = delayed(funcs.read_excel)(smx_file_path, sheet_name=self.Data_types_sht)
+                        STG_tables = delayed(funcs.read_excel)(smx_file_path, sheet_name=self.STG_tables_sht)
+                        self.parallel_templates.append(delayed(Staging_DDL.stg_temp_DDL)(self.cf, main_output_path, STG_tables, Data_Types, 'Staging'))
+                        self.parallel_templates.append(delayed(Staging_DDL.stg_temp_DDL)(self.cf, main_output_path, STG_tables, Data_Types, 'Data_mart'))
+                        self.parallel_templates.append(delayed(Staging_DDL.stg_temp_DDL)(self.cf, main_output_path, STG_tables, Data_Types, 'OI_staging'))
+                        self.parallel_templates.append(delayed(BTEQ_Scripts.bteq_temp_script)(self.cf, bteq_stg_dm_scripts_output_path, STG_tables, 'from stg to datamart'))
+                        self.parallel_templates.append(delayed(BTEQ_Scripts.bteq_temp_script)(self.cf, bteq_stg_oi_scripts_output_path, STG_tables, 'from stg to oi'))
+                    elif self.scripts_generation_flag == 'SMX':
+                        main_output_path = home_output_path + "/" + "DDLs"
+                        bteq_stg_dm_scripts_output_path = home_output_path + "/" + "BTEQ_Scrtipts" + "/" + "BTEQ_STG_TO_DATAMARAT_SCRIPTS"
+                        bteq_stg_oi_scripts_output_path = home_output_path + "/" + "BTEQ_Scrtipts" + "/" + "BTEQ_STG_TO_OI_SCRIPTS"
+                        self.parallel_create_output_source_path.append(delayed(md.create_folder)(main_output_path))
+                        self.parallel_create_output_source_path.append(delayed(md.create_folder)(bteq_stg_dm_scripts_output_path))
+                        self.parallel_create_output_source_path.append(delayed(md.create_folder)(bteq_stg_oi_scripts_output_path))
+                        Data_Types = delayed(funcs.read_excel)(smx_file_path, sheet_name=self.Data_types_sht)
+                        STG_tables = delayed(funcs.read_excel)(smx_file_path, sheet_name=self.STG_tables_sht)
+                        self.parallel_templates.append(delayed(Staging_DDL.stg_temp_DDL)(self.cf, main_output_path, STG_tables, Data_Types, 'Data_mart'))
+
 
                 except Exception as e_smx_file:
                     # print(error)

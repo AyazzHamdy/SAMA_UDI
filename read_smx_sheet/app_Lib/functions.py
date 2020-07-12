@@ -280,12 +280,15 @@ def is_smx_file(file, sheets):
     return True if len(required_sheets) == 0 else False
 
 
-def get_smx_files(smx_path, smx_ext, sheets):
+def get_smx_files(smx_path, smx_ext, stg_sheets,smx_sheets,sheet_type):
     smx_files = []
     all_files = md.get_files_in_dir(smx_path, smx_ext)
     for i in all_files:
         file = smx_path + "/" + i
-        smx_files.append(i) if is_smx_file(file, sheets) else None
+        if sheet_type == 'Staging Tables':
+            smx_files.append(i) if is_smx_file(file, stg_sheets) else None
+        elif sheet_type == 'SMX':
+            smx_files.append(i) if is_smx_file(file, smx_sheets) else None
     return smx_files
 
 

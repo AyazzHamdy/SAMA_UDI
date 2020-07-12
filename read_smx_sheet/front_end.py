@@ -31,7 +31,7 @@ class FrontEnd:
         self.color_msg_done = "green"
         self.color_msg_done_with_error = "red"
         self.color_error_messager = "red"
-        self.project_generation_flag = "Project ACA"
+        self.scripts_generation_flag = "Project ACA"
 
         frame_row0 = Frame(self.root, borderwidth="2", relief="ridge")
         frame_row0.grid(column=0, row=0, sticky=W)
@@ -96,11 +96,8 @@ class FrontEnd:
         frame_config_file_values = Frame(frame_row1, borderwidth="2", relief="ridge")
         frame_config_file_values.grid(column=0, row=0, sticky="w")
 
-        frame_checkboxes_values = Frame(frame_config_file_values, relief="ridge")
-        frame_checkboxes_values.grid(column=1, row=6, sticky="W")
-
         frame_radiobuttons_values = Frame(frame_config_file_values, relief="ridge")
-        frame_radiobuttons_values.grid(column=1, row=5, sticky="W")
+        frame_radiobuttons_values.grid(column=1, row=3, sticky="W")
 
         self.get_config_file_values()
         frame_config_file_values_entry_width = 84
@@ -126,6 +123,22 @@ class FrontEnd:
         self.entry_field_templates_path = Entry(frame_config_file_values, textvariable=self.text_field_templates_path, width=frame_config_file_values_entry_width)
         self.entry_field_templates_path.grid(row=2, column=1, sticky="w", columnspan=1)
 
+        self.excel_sheet = StringVar()
+        scripts_generation_label = Label(frame_config_file_values, text="Project")
+        scripts_generation_label.grid(row=3, column=0, sticky='e', columnspan=1)
+        self.scripts_generation_flag = "Staging Tables"
+
+        self.staging_tables_flag = Radiobutton(frame_radiobuttons_values, text="Staging Tables", value='Staging Tables'
+                                               , variable=self.excel_sheet
+                                               , command=self.toggle_excel_sheet_flag)
+        self.staging_tables_flag.grid(row=1, column=0, sticky='w', columnspan=1)
+
+        self.smx_flag = Radiobutton(frame_radiobuttons_values, text="SMX ", value='SMX'
+                                    , variable=self.excel_sheet
+                                    , command=self.toggle_excel_sheet_flag)
+        self.smx_flag.grid(row=1, column=1, sticky='w', columnspan=1)
+
+        self.staging_tables_flag.select()
         self.populate_config_file_values()
         self.config_file_entry_txt.trace("w", self.refresh_config_file_values)
 
@@ -134,6 +147,13 @@ class FrontEnd:
 
         self.root.mainloop()
 
+    def toggle_excel_sheet_flag(self):
+        generate_smx_flag = self.excel_sheet.get()
+        if generate_smx_flag == 'Staging Tables':
+            self.enable_disable_fields(NORMAL)
+        elif generate_smx_flag == 'SMX':
+            self.enable_disable_fields(NORMAL)
+        self.scripts_generation_flag = generate_smx_flag
 
     def change_status_label(self, msg, color):
         self.status_label_text.set(msg)
@@ -160,8 +180,12 @@ class FrontEnd:
             self.oi_prefix = self.config_file_values["oi_prefix"]
             self.stg_prefix = self.config_file_values["stg_prefix"]
             self.dm_prefix = self.config_file_values["dm_prefix"]
+            self.ld_prefix=self.config_file_values["ld_prefix"]
+            self.fsdm_prefix=self.config_file_values["fsdm_prefix"]
+            self.duplicate_table_model=self.config_file_values["dup_prefix"]
             self.duplicate_table_suffix = self.config_file_values["duplicate_table_suffix"]
             self.bteq_run_file = self.config_file_values["bteq_run_file"]
+
             self.generate_button.config(state=NORMAL)
             self.change_status_label(self.msg_ready, self.color_msg_ready)
         except:
@@ -176,6 +200,9 @@ class FrontEnd:
             self.dm_prefix = ""
             self.duplicate_table_suffix = ""
             self.bteq_run_file = ""
+            self.ld_prefix = ""
+            self.fsdm_prefix = ""
+            self.duplicate_table_model=""
 
     def refresh_config_file_values(self, *args):
         self.get_config_file_values()
@@ -233,7 +260,8 @@ class FrontEnd:
                 self.enable_disable_fields(DISABLED)
                 self.g.generate_scripts()
                 self.enable_disable_fields(NORMAL)
-
+                self.staging_tables_flag.config(state=NORMAL)
+                self.smx_flag.config(state=NORMAL)
                 print("Total Elapsed time: ", self.g.elapsed_time, "\n")
             except Exception as error:
                 try:
@@ -257,8 +285,10 @@ class FrontEnd:
 
     def start(self):
         self.refresh_config_file_values()
-        self.g = gs.GenerateScripts(None, self.config_file_values)
-
+        self.g = gs.GenerateScripts(None, self.config_file_values, self.scripts_generation_flag)
+        self.g.scripts_generation_flag = self.scripts_generation_flag
+        self.staging_tables_flag.config(state=DISABLED)
+        self.smx_flag.config(state=DISABLED)
         thread1 = GenerateScriptsThread(1, "Thread-1", self)
         thread1.start()
 
