@@ -1,0 +1,39 @@
+.run FILE={bteq_run_file};
+
+BT;
+
+UPDATE {ld_prefix}{schema_name}.{ld_table_name}
+FROM (
+    SELECT
+    {table_columns}
+    FROM {ld_prefix}{schema_name}.{ld_table_name} LD
+    LEFT OUTER JOIN {fsdm_prefix}.{fsdm_table_name} FSDM
+    ON {ld_equal_fsdm_pk}
+) FLAG_IND
+SET FLAG = FLAG_IND.FLAG
+WHERE {FLAG_IND_equal_fsdm_pk};
+
+
+INSERT INTO {fsdm_prefix}.{table_name}
+(
+    {table_columns}
+)
+SELECT
+    {table_columns}
+FROM {ld_prefix}{schema_name}.{table_name}
+WHERE FLAG='I';
+
+
+INSERT INTO {dup_prefix}{schema_name}.{table_name}
+(
+    {table_columns}
+)
+SELECT
+     {table_columns}
+FROM {ld_prefix}{schema_name}.{table_name}
+WHERE FLAG='D';
+
+ET;
+
+.LOGOFF;
+.QUIT;
