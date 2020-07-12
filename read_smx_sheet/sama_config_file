@@ -4,6 +4,7 @@ dm_prefix="md_stg_"
 duplicate_table_suffix="_dup"
 ld_prefix="dd_ld_"
 fsdm_prefix="dd_fsdm_"
+dup_prefix= "dd_dup_"
 bteq_run_file="C:\Logon\Logon_dev.txt"
 
 smx_path="C:/smx_sheets"
