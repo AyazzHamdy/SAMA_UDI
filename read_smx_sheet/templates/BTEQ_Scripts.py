@@ -31,8 +31,8 @@ def bteq_temp_script(cf, source_output_path, STG_tables,script_flag):
 
     stg_tables_df = funcs.get_sama_stg_tables(STG_tables, None)
     for stg_tables_df_index, stg_tables_df_row in stg_tables_df.iterrows():
-        Table_name = stg_tables_df_row['Table_Name']
-        schema_name = stg_tables_df_row['Schema_Name']
+        Table_name = stg_tables_df_row['TABLE_NAME']
+        schema_name = stg_tables_df_row['SCHEMA_NAME']
         f = funcs.WriteFile(source_output_path, Table_name, "bteq")
         filename = Table_name+'.bteq'
         stg_columns = funcs.get_sama_table_columns_comma_separated(STG_tables, Table_name, 'STG')

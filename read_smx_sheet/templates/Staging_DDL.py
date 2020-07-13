@@ -46,41 +46,43 @@ def stg_temp_DDL(cf, source_output_path, STG_tables, Data_types, script_flag):
     stg_tables_df = funcs.get_sama_stg_tables(STG_tables, None)
     f.write(template_head)
     for stg_tables_df_index, stg_tables_df_row in stg_tables_df.iterrows():
-        Table_name = stg_tables_df_row['Table_Name']
-        schema_name = stg_tables_df_row['Schema_Name']
+        Table_name = stg_tables_df_row['TABLE_NAME']
+        schema_name = stg_tables_df_row['SCHEMA_NAME']
         STG_table_columns = funcs.get_sama_stg_table_columns(STG_tables, Table_name)
         pi_columns = ""
         partition_columns = ""
         columns = ""
 
         for STG_table_columns_index, STG_table_columns_row in STG_table_columns.iterrows():
-            Column_name = STG_table_columns_row['Column_Name']
+            Column_name = STG_table_columns_row['COLUMN_NAME']
             comma = '\t' + '  ,' if STG_table_columns_index > 0 else ' '
             comma_Column_name = comma + Column_name
 
-            source_data_type = STG_table_columns_row['Data_Type']
+            source_data_type = STG_table_columns_row['DATA_TYPE']
             Data_type = source_data_type
-            for data_type_index, data_type_row in Data_types.iterrows():
-                if data_type_row['Source Data Type'].upper() == source_data_type.upper():
-                    Data_type = str(data_type_row['Teradata Data Type'].upper())
-            if str(STG_table_columns_row['Data_Length']) != '' and str(STG_table_columns_row['Data_Precision']) == '':
-                Data_type = Data_type + "(" + str(STG_table_columns_row['Data_Length']) + ")"
-
-            elif str(STG_table_columns_row['Data_Length']) != '' and str(STG_table_columns_row['Data_Precision']) != '':
-                source_data_type = source_data_type + "(" + str(STG_table_columns_row['Data_Length']) + ',' + str(
-                    STG_table_columns_row['Data_Precision']) + ")"
+            if str(STG_table_columns_row['DATA_LENGTH']) != '' and str(STG_table_columns_row['DATA_PRECISION']) == '':
+                Data_type = Data_type + "(" + str(STG_table_columns_row['DATA_LENGTH']) + ")"
+                for data_type_index, data_type_row in Data_types.iterrows():
+                    if data_type_row['SOURCE DATA TYPE'].upper() == Data_type.upper():
+                        Data_type = str(data_type_row['TERADATA DATA TYPE'].upper())
+            elif str(STG_table_columns_row['DATA_LENGTH']) != '' and str(STG_table_columns_row['DATA_PRECISION']) != '':
+                source_data_type = source_data_type + "(" + str(STG_table_columns_row['DATA_LENGTH']) + ',' + str(
+                    STG_table_columns_row['DATA_PRECISION']) + ")"
                 Data_type = source_data_type.replace("NUMBER", "DECIMAL")
 
+
+
+
             if source_data_type == 'VARCHAR2':
-                if STG_table_columns_row['Unicode_Flag'] == 'Y':
+                if STG_table_columns_row['UNICODE_FLAG'] == 'Y':
                     character_set = " CHARACTER SET UNICODE NOT CASESPECIFIC "
                 else:
                     character_set = " CHARACTER SET LATIN NOT CASESPECIFIC "
             else:
                 character_set = ""
 
-            if STG_table_columns_row['Primary_Key_Flag'].upper() == 'Y' or STG_table_columns_row[
-                'Nullability_Flag'].upper() == 'N':
+            if STG_table_columns_row['PRIMARY_KEY_FLAG'].upper() == 'Y' or STG_table_columns_row[
+                'NULLABILITY_FLAG'].upper() == 'N':
                 not_null = " not null "
             else:
                 not_null = ""
@@ -88,9 +90,9 @@ def stg_temp_DDL(cf, source_output_path, STG_tables, Data_types, script_flag):
             not_null = not_null if STG_table_columns_index == len(STG_table_columns) - 1 else not_null + '\n'
             columns = columns + comma_Column_name + " " + Data_type + character_set + not_null
 
-            if STG_table_columns_row['Primary_Key_Flag'].upper() == 'Y':
+            if STG_table_columns_row['PRIMARY_KEY_FLAG'].upper() == 'Y':
                 pi_columns = pi_columns + ',' + Column_name if pi_columns != "" else Column_name
-                if STG_table_columns_row['Teradata partition'].upper() == 'Y':
+                if STG_table_columns_row['TERADATA_PARTITION'].upper() == 'Y':
                     partition_columns = partition_columns + ',' + Column_name if partition_columns != "" \
                         else Column_name
 

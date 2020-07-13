@@ -251,6 +251,8 @@ class FrontEnd:
         self.generate_button.config(state=f_state)
         self.config_file_entry.config(state=f_state)
         self.config_file_browse_button.config(state=f_state)
+        self.staging_tables_flag.config(state=f_state)
+        self.smx_flag.config(state=f_state)
 
     def generate_scripts_thread(self):
         try:
@@ -260,8 +262,6 @@ class FrontEnd:
                 self.enable_disable_fields(DISABLED)
                 self.g.generate_scripts()
                 self.enable_disable_fields(NORMAL)
-                self.staging_tables_flag.config(state=NORMAL)
-                self.smx_flag.config(state=NORMAL)
                 print("Total Elapsed time: ", self.g.elapsed_time, "\n")
             except Exception as error:
                 try:

@@ -89,15 +89,15 @@ def get_history_handled_processes(smx_table):
 def get_sama_stg_tables(STG_tables, source_name=None):
     if source_name:
         stg_table_names = STG_tables.loc[STG_tables['Source System'] == source_name][
-            ['Table_Name', 'Schema_Name']].drop_duplicates()
+            ['TABLE_NAME', 'SCHEMA_NAME']].drop_duplicates()
     else:
-        stg_table_names = STG_tables[['Table_Name', 'Schema_Name']].drop_duplicates()
+        stg_table_names = STG_tables[['TABLE_NAME', 'SCHEMA_NAME']].drop_duplicates()
     return stg_table_names
 
 
 def get_sama_stg_table_columns(STG_tables, Table_name):
     STG_tables_df = STG_tables.loc[
-        (STG_tables['Table_Name'].str.upper() == Table_name.upper())
+        (STG_tables['TABLE_NAME'].str.upper() == Table_name.upper())
     ].reset_index()
 
     return STG_tables_df
@@ -138,7 +138,7 @@ def get_Rid_Source_System(SMX_Rid):
 def get_sama_table_columns_comma_separated(tables_sheet, Table_name, alias=None, record_id=None):
     if record_id is None:
         tables_df = tables_sheet.loc[
-            (tables_sheet['Table_Name'].str.upper() == Table_name.upper())
+            (tables_sheet['TABLE_NAME'].str.upper() == Table_name.upper())
         ].reset_index()
     else:
         tables_df = tables_sheet.loc[
@@ -155,7 +155,7 @@ def get_sama_table_columns_comma_separated(tables_sheet, Table_name, alias=None,
         else:
             comma = '\t' + ',' if stg_tbl_indx > 0 else ''
         if record_id is None:
-            columns_comma += comma+alias+stg_tbl_row['Column_Name'] +'\n'
+            columns_comma += comma+alias+stg_tbl_row['COLUMN_NAME'] +'\n'
         else:
             columns_comma += comma+alias+stg_tbl_row['Column'] +'\n'
     columns_comma = columns_comma[0:len(columns_comma) - 1]
@@ -205,7 +205,7 @@ def get_sama_pk_columns_comma_separated(tables_sheet, Table_name, alias='', reco
         if alias == 'one_pk.':
             return stg_tbl_row['Column']
         if record_id is None:
-            columns_comma += comma+alias+str(stg_tbl_row['Column_Name']) +'\n'
+            columns_comma += comma+alias+str(stg_tbl_row['COLUMN_NAME']) +'\n'
         else:
             columns_comma += comma+alias+str(stg_tbl_row['Column'])+'\n'
     columns_comma = columns_comma[0:len(columns_comma) - 1]
@@ -214,8 +214,8 @@ def get_sama_pk_columns_comma_separated(tables_sheet, Table_name, alias='', reco
 
 def get_sama_stg_table_columns_minus_pk(tables_sheet, Table_name,record_id=None):
     if record_id is None:
-        tables_df = tables_sheet.loc[(tables_sheet['Table_Name'].str.upper() == Table_name.upper())
-                                       & (tables_sheet['Primary_Key_Flag'].str.upper() != 'Y')
+        tables_df = tables_sheet.loc[(tables_sheet['TABLE_NAME'].str.upper() == Table_name.upper())
+                                       & (tables_sheet['PRIMARY_KEY_FLAG'].str.upper() != 'Y')
                                        ].reset_index()
     else:
         tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
@@ -227,8 +227,8 @@ def get_sama_stg_table_columns_minus_pk(tables_sheet, Table_name,record_id=None)
 
 def get_sama_stg_table_columns_pk(tables_sheet, Table_name, record_id=None, history_flag=None):
     if record_id is None:
-        tables_df = tables_sheet.loc[(tables_sheet['Table_Name'].str.upper() == Table_name.upper())
-                                         & (tables_sheet['Primary_Key_Flag'].str.upper() == 'Y')
+        tables_df = tables_sheet.loc[(tables_sheet['TABLE_NAME'].str.upper() == Table_name.upper())
+                                         & (tables_sheet['PRIMARY_KEY_FLAG'].str.upper() == 'Y')
                                          ].reset_index()
     elif record_id is not None and history_flag is not None:
         tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
@@ -264,7 +264,7 @@ def get_conditional_stamenet(tables_sheet, Table_name,columns_type,operational_s
         alias2 = alias2 + '.'
     for column_name_index, column_name_row in table_columns.iterrows():
         if record_id is None:
-            Column_name = column_name_row['Column_Name']
+            Column_name = column_name_row['COLUMN_NAME']
         else:
             Column_name = column_name_row['Column']
         on_statement = alias1 + Column_name + ' ' + operational_symbol + '' + alias2 + Column_name
