@@ -1,7 +1,7 @@
 from read_smx_sheet.app_Lib import functions as funcs
 from read_smx_sheet.Logging_Decorator import Logging_decorator
 from read_smx_sheet.parameters import parameters as pm
-import datetime as dt
+from datetime import date
 
 
 @Logging_decorator
@@ -12,7 +12,8 @@ def bteq_temp_script(cf, source_output_path, STG_tables,script_flag):
     else:
         template_path = cf.templates_path + "/" + pm.default_bteq_oi_stg_template_file_name
         template_smx_path = cf.smx_path + "/" + "Templates" + "/" + pm.default_bteq_oi_stg_template_file_name
-
+    today = date.today()
+    today = today.strftime("%d/%m/%Y")
     stg_prefix = cf.stg_prefix
     oi_prefix = cf.oi_prefix
     data_mart_prefix = cf.dm_prefix
@@ -52,7 +53,7 @@ def bteq_temp_script(cf, source_output_path, STG_tables,script_flag):
         #                                      )
 
         if script_flag == 'from stg to datamart':
-            bteq_script = template_string.format(currentdate=dt.datetime.now(),
+            bteq_script = template_string.format(currentdate=today,versionnumber=pm.ver_no,
                                                  filename = filename,
                                                  bteq_run_file=bteq_run_file, stg_prefix=stg_prefix,
                                                  dm_prefix=data_mart_prefix,
@@ -63,7 +64,7 @@ def bteq_temp_script(cf, source_output_path, STG_tables,script_flag):
                                                  table_columns=table_columns
                                                  )
         elif script_flag == 'from stg to oi':
-            bteq_script = template_string.format(currentdate=dt.datetime.now(),
+            bteq_script = template_string.format(currentdate=today,versionnumber=pm.ver_no,
                                                  filename = filename,
                                                  bteq_run_file=bteq_run_file,oi_prefix=oi_prefix,
                                                  stg_prefix=stg_prefix,

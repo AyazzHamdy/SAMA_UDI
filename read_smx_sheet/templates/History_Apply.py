@@ -1,7 +1,7 @@
 from read_smx_sheet.app_Lib import functions as funcs
 from read_smx_sheet.Logging_Decorator import Logging_decorator
 from read_smx_sheet.parameters import parameters as pm
-import datetime as dt
+from datetime import date
 
 
 @Logging_decorator
@@ -12,7 +12,8 @@ def history_apply(cf, source_output_path, smx_table):
     MODEL_SCHEMA_NAME = cf.modelDB_prefix
     MODEL_DUP_SCHEMA_NAME = cf.modelDup_prefix
     bteq_run_file = cf.bteq_run_file
-    currentdate = dt.datetime.now()
+    today = date.today()
+    today = today.strftime("%d/%m/%Y")
     template_string = ""
     try:
         template_file = open(template_path, "r")
@@ -44,8 +45,8 @@ def history_apply(cf, source_output_path, smx_table):
         NON_PK_COLS_EQL_LD = funcs.get_conditional_stamenet(history_handeled_df, table_name, 'non_pk', '=',
                                                             'MODEL_TABLE', 'LOAD_TABLE', record_id)
 
-        bteq_script = template_string.format(SOURCE_SYSTEM=SOURCE_SYSTEM,
-                                             currentdate=currentdate,
+        bteq_script = template_string.format(SOURCE_SYSTEM=SOURCE_SYSTEM,versionnumber=pm.ver_no,
+                                             currentdate=today,
                                              filename=filename,
                                              bteq_run_file=bteq_run_file, LD_SCHEMA_NAME=LD_SCHEMA_NAME,
                                              MODEL_SCHEMA_NAME=MODEL_SCHEMA_NAME,
