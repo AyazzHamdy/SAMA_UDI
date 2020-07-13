@@ -51,6 +51,7 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
         source_system = funcs.get_Rid_Source_System(smx_record_id_df)
         source_system = source_system.replace('Mobile Payments - ', '')
         schema_name = source_system
+        ld_DB = ld_prefix+schema_name
         Table_name = smx_record_id_df['Entity'].unique()[0]
         Record_id = record_id
         ld_table_name = Table_name + "_R" + str(Record_id)
@@ -59,7 +60,16 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
         f.write(template_head)
 
         ld_tbl_columns = funcs.get_fsdm_tbl_columns(smx_record_id_df, ld_table_name)
-        print(ld_tbl_columns)
+        # print(ld_tbl_columns)
+
+        on_clause = funcs.get_conditional_stamenet(smx_record_id_df, Table_name, "pk", "=", "LD", "FSDM", Record_id)
+        on_clause = on_clause.upper()
+        print("Record id:", Record_id, "\n")
+        print("On clause\n", on_clause.upper())
+
+        where_clause = funcs.get_conditional_stamenet(smx_record_id_df, Table_name, "pk", "=", ld_DB+"."+ld_table_name, "FLAG_IND", Record_id)
+        where_clause = where_clause.upper()
+        print("Where clause\n",where_clause)
 
 
     f.close()
