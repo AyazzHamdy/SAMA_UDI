@@ -54,7 +54,7 @@ def stg_temp_DDL(cf, source_output_path, STG_tables, Data_types, script_flag):
         columns = ""
 
         for STG_table_columns_index, STG_table_columns_row in STG_table_columns.iterrows():
-            Column_name = STG_table_columns_row['COLUMN_NAME']
+            Column_name = '"'+STG_table_columns_row['COLUMN_NAME']+'"'
             comma = '\t' + '  ,' if STG_table_columns_index > 0 else ' '
             comma_Column_name = comma + Column_name
 
