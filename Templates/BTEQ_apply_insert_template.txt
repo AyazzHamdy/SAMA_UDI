@@ -1,39 +1,88 @@
+/* ############################################################################
+#  FILE-NAME   : {filename}.bteq
+#  PURPOSE     : TRANSFORMATION SCRIPT FROM LOAD READY TABLE with Load Strategy - INSERT
+#  -------------------------------------------------------------------------
+#  DB-VERSION  : TD 16.20.32.11
+#  OS-VERSION  : MS WINDOWS SERVER 2012 R2
+#  -------------------------------------------------------------------------
+#
+#  AUTHOR      : Scripts Generator
+#  DEPARTMENT  : TERADATA
+#  VERSION     : {versionnumber}
+#  DATE        : {currentdate}
+#
+#  COPYRIGHT © 2020, TERADATA KSA
+#  -------------------------------------------------------------------------
+#  HISTORY:
+#
+#  DATE [YYYY-MM-DD]              VERSION                                DEVELOPER
+#  -------                        ------                                 --------
+#  {currentdate}                 {versionnumber}                    Scripts Generator
+############################################################################*/
+
+/*########################################################################
+# LOGGIN ON
+#########################################################################*/
 .run FILE={bteq_run_file};
+
+/*############################################################################
+#  UDI MARKING AT LD
+############################################################################*/
+
 
 BT;
 
 UPDATE {ld_prefix}{schema_name}.{ld_table_name}
 FROM (
     SELECT
-    {table_columns}
+    {table_columns_aliased}
+    CASE
+	    WHEN {FSDM_first_tbl_pk} IS NULL THEN 'I'
+	    WHEN{COALESCED_TABLE_COLUMNS_LD_EQL_FSDM}
+	    THEN 'D'
+	ELSE 'X' END AS FLAG  -- Setting update as X because we are not going to update this table in this TFN and want to show correct figures in metadata as well
     FROM {ld_prefix}{schema_name}.{ld_table_name} LD
     LEFT OUTER JOIN {fsdm_prefix}.{fsdm_table_name} FSDM
-    ON {ld_equal_fsdm_pk}
+    ON{ld_equal_fsdm_pk}
 ) FLAG_IND
 SET FLAG = FLAG_IND.FLAG
-WHERE {FLAG_IND_equal_fsdm_pk};
+WHERE{FLAG_IND_equal_fsdm_pk};
 
+/*############################################################################
+#  APPLYING UDI MARKING 'U' AT TARGET
+############################################################################*/
 
-INSERT INTO {fsdm_prefix}.{table_name}
+/*############################################################################
+#  APPLYING UDI MARKING 'I' AT TARGET
+############################################################################*/
+
+INSERT INTO {fsdm_prefix}.{fsdm_table_name}
 (
     {table_columns}
 )
 SELECT
     {table_columns}
-FROM {ld_prefix}{schema_name}.{table_name}
-WHERE FLAG='I';
+FROM {ld_prefix}{schema_name}.{ld_table_name}
+WHERE FLAG = 'I';
 
+/*############################################################################
+#  APPLYING UDI MARKING 'D' AT TARGET - DUP DATABASE
+############################################################################*/
 
-INSERT INTO {dup_prefix}{schema_name}.{table_name}
+INSERT INTO {dup_prefix}{schema_name}.{ld_table_name}
 (
     {table_columns}
 )
 SELECT
      {table_columns}
-FROM {ld_prefix}{schema_name}.{table_name}
-WHERE FLAG='D';
+FROM {ld_prefix}{schema_name}.{ld_table_name}
+WHERE FLAG = 'D';
 
 ET;
+
+/*############################################################################
+#  CLOSING THE BTEQ SCRIPT, SESSION CLOSED AND LOGGING OFF
+############################################################################*/
 
 .LOGOFF;
 .QUIT;

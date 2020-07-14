@@ -3,7 +3,7 @@ stg_prefix="dd_stg_"
 dm_prefix="md_"
 duplicate_table_suffix="_dup"
 ld_prefix="dd_ld_"
-fsdm_prefix="dd_fsdm_"
+fsdm_prefix="dd_fsdm"
 dup_prefix= "dd_dup_"
 bteq_run_file="C:\Logon\Logon_dev.txt"
 
