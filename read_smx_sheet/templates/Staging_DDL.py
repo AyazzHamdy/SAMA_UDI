@@ -70,8 +70,8 @@ def stg_temp_DDL(cf, source_output_path, STG_tables, Data_types, script_flag):
                     STG_table_columns_row['DATA_PRECISION']) + ")"
                 Data_type = source_data_type.replace("NUMBER", "DECIMAL")
 
-
-
+            if 'VARCHAR2' in Data_type:
+                Data_type = 'VARCHAR('+str(STG_table_columns_row['DATA_LENGTH']*2)+')'
 
             if source_data_type == 'VARCHAR2':
                 if STG_table_columns_row['UNICODE_FLAG'] == 'Y':
