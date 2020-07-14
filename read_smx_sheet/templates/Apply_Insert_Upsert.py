@@ -52,12 +52,15 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
         smx_record_id_df = funcs.get_sama_fsdm_record_id(SMX_SHEET, record_id)
         source_system = funcs.get_Rid_Source_System(smx_record_id_df)
         source_system = source_system.replace('Mobile Payments - ', '')
+        Record_id = record_id
         schema_name = source_system
         ld_DB = ld_prefix+schema_name
         Table_name = smx_record_id_df['Entity'].unique()[0]
         fsdm_tbl_alias = funcs.get_fsdm_tbl_alias(Table_name)
         ld_tbl_alias = "{}_R{}_LD".format(fsdm_tbl_alias, Record_id)
-        Record_id = record_id
+        fsdm_tbl_alias = fsdm_tbl_alias + "_FSDM"
+        print("ld_tbl_alias", ld_tbl_alias)
+        print("fsdm_tbl_alias", fsdm_tbl_alias)
         ld_table_name = Table_name + "_R" + str(Record_id)
         BTEQ_file_name = "UDI_{}_{}".format(source_system, ld_table_name)
         f = funcs.WriteFile(apply_folder_path, BTEQ_file_name, "bteq")
@@ -89,6 +92,8 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
                                              schema_name=schema_name,
                                              ld_table_name=ld_table_name,
                                              table_columns_aliased=ld_tbl_columns_aliased,
+                                             ld_tbl_alias=ld_tbl_alias,
+                                             fsdm_tbl_alias=fsdm_tbl_alias,
                                              table_columns=fsdm_tbl_columns,
                                              FSDM_first_tbl_pk=FSDM_first_tbl_pk.strip(),
                                              COALESCED_TABLE_COLUMNS_LD_EQL_FSDM=COALESCED_TABLE_COLUMNS_LD_EQL_FSDM,

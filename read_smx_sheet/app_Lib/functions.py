@@ -131,7 +131,7 @@ def get_fsdm_tbl_columns(smx_Rid, alias_name):
         comma = '\t' + ',' if columns_list.index(column_name) > 0 else '\t'
         columns_comma += comma+alias+column_name + '\n'
     columns_comma = columns_comma[0:len(columns_comma) - 1]
-    return columns_comma
+    return columns_comma.strip()
 
 
 def get_Rid_Source_System(SMX_Rid):
@@ -194,11 +194,11 @@ def get_comparison_columns(tables_sheet, Table_name,operational_symbol,alias1=No
         data_type = stg_tbl_row['Datatype'].upper()
         column_name = str(stg_tbl_row['Column'])
         if data_type == 'INTEGER':
-            column_name = 'COALESCE('+alias1 + column_name + ',-1)' + operational_symbol + 'COALESCE('+alias2 + column_name + ',-1)'
+            column_name = 'COALESCE('+alias1 + column_name + ',-1) ' + operational_symbol + ' COALESCE('+alias2 + column_name + ',-1)'
         elif data_type == 'VARCHAR(50)':
-            column_name = 'COALESCE('+alias1 + column_name + ",'-')" + operational_symbol + 'COALESCE('+alias2 + column_name + ",'-')"
+            column_name = 'COALESCE('+alias1 + column_name + ",'-') " + operational_symbol + ' COALESCE('+alias2 + column_name + ",'-')"
         elif data_type == 'TIMESTAMP':
-            column_name = 'COALESCE('+alias1 + column_name + ",CAST('1001-01-01 00:00:00' AS TIMESTAMP(0)))" + operational_symbol + 'COALESCE('+alias2 + column_name + ",CAST('1001-01-01 00:00:00' AS TIMESTAMP(0)))"
+            column_name = 'COALESCE('+alias1 + column_name + ",CAST('1001-01-01 00:00:00' AS TIMESTAMP(0))) " + operational_symbol + ' COALESCE('+alias2 + column_name + ",CAST('1001-01-01 00:00:00' AS TIMESTAMP(0)))"
         comma = '\t\t' + '    AND ' if stg_tbl_indx > 0 else ' '
         columns_comma += comma+column_name+'\n'
     columns_comma = columns_comma[0:len(columns_comma) - 1]
@@ -279,7 +279,7 @@ def get_conditional_stamenet(tables_sheet, Table_name,columns_type,operational_s
             Column_name = column_name_row['COLUMN_NAME']
         else:
             Column_name = column_name_row['Column']
-        on_statement = alias1 + Column_name + ' ' + operational_symbol + '' + alias2 + Column_name
+        on_statement = alias1 + Column_name + ' ' + operational_symbol + ' ' + alias2 + Column_name
         if record_id is not None:
             and_statement = '\t ' + ' and ' if column_name_index > 0 else ' '
         else:

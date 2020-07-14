@@ -41,8 +41,8 @@ FROM (
 	    WHEN{COALESCED_TABLE_COLUMNS_LD_EQL_FSDM}
 	    THEN 'D'
 	ELSE 'X' END AS FLAG  -- Setting update as X because we are not going to update this table in this TFN and want to show correct figures in metadata as well
-    FROM {ld_prefix}{schema_name}.{ld_table_name} LD
-    LEFT OUTER JOIN {fsdm_prefix}.{fsdm_table_name} FSDM
+    FROM {ld_prefix}{schema_name}.{ld_table_name} {ld_tbl_alias}
+    LEFT OUTER JOIN {fsdm_prefix}.{fsdm_table_name} {fsdm_tbl_alias}
     ON{ld_equal_fsdm_pk}
 ) FLAG_IND
 SET FLAG = FLAG_IND.FLAG
