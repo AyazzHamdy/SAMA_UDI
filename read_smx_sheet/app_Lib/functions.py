@@ -133,6 +133,23 @@ def get_fsdm_tbl_columns(smx_Rid, alias_name):
     columns_comma = columns_comma[0:len(columns_comma) - 1]
     return columns_comma.strip()
 
+def get_fsdm_tbl_non_technical_columns(smx_Rid, alias_name):
+    tech_cols_list = ['R_ID', 'B_ID', 'INSRT_DTTM', 'UPDT_DTTM']
+
+    smx_Rid = smx_Rid.reset_index()
+    columns_list = smx_Rid['Column'].values.tolist()
+    columns_list = np.setdiff1d(columns_list, tech_cols_list).tolist()
+    columns_comma = ""
+    if alias_name is None:
+        alias = ''
+    else:
+        alias = alias_name + '.'
+    for column_name in columns_list:
+        comma = '\t' + ',' if columns_list.index(column_name) > 0 else '\t'
+        columns_comma += comma+alias+column_name + '\n'
+    columns_comma = columns_comma[0:len(columns_comma) - 1]
+    return columns_comma.strip()
+
 
 def get_Rid_Source_System(SMX_Rid):
     src_system_names = SMX_Rid.loc[
@@ -140,6 +157,8 @@ def get_Rid_Source_System(SMX_Rid):
     ]
     src_system_name = src_system_names['Source_System'].unique()[0]
     return src_system_name
+
+
 
 def get_sama_table_columns_comma_separated(tables_sheet, Table_name, alias=None, record_id=None):
     if record_id is None:

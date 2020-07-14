@@ -50,34 +50,32 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
 
     for record_id in record_ids_list:
         smx_record_id_df = funcs.get_sama_fsdm_record_id(SMX_SHEET, record_id)
+
         source_system = funcs.get_Rid_Source_System(smx_record_id_df)
         source_system = source_system.replace('Mobile Payments - ', '')
         Record_id = record_id
         schema_name = source_system
         ld_DB = ld_prefix+schema_name
+
         Table_name = smx_record_id_df['Entity'].unique()[0]
         fsdm_tbl_alias = funcs.get_fsdm_tbl_alias(Table_name)
         ld_tbl_alias = "{}_R{}_LD".format(fsdm_tbl_alias, Record_id)
         fsdm_tbl_alias = fsdm_tbl_alias + "_FSDM"
-        print("ld_tbl_alias", ld_tbl_alias)
-        print("fsdm_tbl_alias", fsdm_tbl_alias)
         ld_table_name = Table_name + "_R" + str(Record_id)
         BTEQ_file_name = "UDI_{}_{}".format(source_system, ld_table_name)
+
         f = funcs.WriteFile(apply_folder_path, BTEQ_file_name, "bteq")
         f.write(template_head)
 
-        ld_tbl_columns_aliased = funcs.get_fsdm_tbl_columns(smx_record_id_df, ld_table_name)
-        # print(ld_tbl_columns)
+        # ld_tbl_columns_aliased = funcs.get_fsdm_tbl_non_technical_columns(smx_record_id_df, ld_tbl_alias)
+        ld_pk_cols_aliased = funcs.get_sama_pk_columns_comma_separated(smx_record_id_df, Table_name, alias=ld_tbl_alias, record_id=Record_id)
+
         fsdm_tbl_columns = funcs.get_fsdm_tbl_columns(smx_record_id_df, alias_name=None)
 
         on_clause = funcs.get_conditional_stamenet(smx_record_id_df, Table_name, "pk", "=", ld_tbl_alias, fsdm_tbl_alias, Record_id)
 
-        # print("Record id:", Record_id, "\n")
-        # print("On clause\n", on_clause.upper())
-
         where_clause = funcs.get_conditional_stamenet(smx_record_id_df, Table_name, "pk", "=", ld_DB+"."+ld_table_name, "FLAG_IND", Record_id)
 
-        # print("Where clause\n",where_clause)
         FSDM_tbl_pk= funcs.get_sama_pk_columns_comma_separated(smx_record_id_df, Table_name, alias=fsdm_tbl_alias, record_id=Record_id)
         FSDM_first_tbl_pk = FSDM_tbl_pk.split(',')[0]
 
@@ -91,7 +89,7 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
                                              ld_prefix=ld_prefix,
                                              schema_name=schema_name,
                                              ld_table_name=ld_table_name,
-                                             table_columns_aliased=ld_tbl_columns_aliased,
+                                             tbl_pk_cols_aliased=ld_pk_cols_aliased,
                                              ld_tbl_alias=ld_tbl_alias,
                                              fsdm_tbl_alias=fsdm_tbl_alias,
                                              table_columns=fsdm_tbl_columns,
