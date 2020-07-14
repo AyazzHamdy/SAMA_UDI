@@ -109,6 +109,12 @@ def get_sama_fsdm_record_id(SMX_SHEET, R_id):
     ].reset_index()
     return smx_Rid.drop_duplicates()
 
+def get_fsdm_tbl_alias(Table_name):
+    alias_name = ' '
+    tbl_name_elements = Table_name.split("_")
+    for i in range(len(tbl_name_elements)):
+        alias_name = str(alias_name) + str(tbl_name_elements[i][0])
+    return alias_name.strip()
 
 def get_fsdm_tbl_columns(smx_Rid, alias_name):
     # smx_Rid = SMX_SHEET.loc[
@@ -125,7 +131,24 @@ def get_fsdm_tbl_columns(smx_Rid, alias_name):
         comma = '\t' + ',' if columns_list.index(column_name) > 0 else '\t'
         columns_comma += comma+alias+column_name + '\n'
     columns_comma = columns_comma[0:len(columns_comma) - 1]
-    return columns_comma
+    return columns_comma.strip()
+
+def get_fsdm_tbl_non_technical_columns(smx_Rid, alias_name):
+    tech_cols_list = ['R_ID', 'B_ID', 'INSRT_DTTM', 'UPDT_DTTM']
+
+    smx_Rid = smx_Rid.reset_index()
+    columns_list = smx_Rid['Column'].values.tolist()
+    columns_list = np.setdiff1d(columns_list, tech_cols_list).tolist()
+    columns_comma = ""
+    if alias_name is None:
+        alias = ''
+    else:
+        alias = alias_name + '.'
+    for column_name in columns_list:
+        comma = '\t' + ',' if columns_list.index(column_name) > 0 else '\t'
+        columns_comma += comma+alias+column_name + '\n'
+    columns_comma = columns_comma[0:len(columns_comma) - 1]
+    return columns_comma.strip()
 
 
 def get_Rid_Source_System(SMX_Rid):
@@ -134,6 +157,8 @@ def get_Rid_Source_System(SMX_Rid):
     ]
     src_system_name = src_system_names['Source_System'].unique()[0]
     return src_system_name
+
+
 
 def get_sama_table_columns_comma_separated(tables_sheet, Table_name, alias=None, record_id=None):
     if record_id is None:
@@ -162,13 +187,19 @@ def get_sama_table_columns_comma_separated(tables_sheet, Table_name, alias=None,
     return columns_comma
 
 
-def get_comparison_columns(tables_sheet, Table_name,operational_symbol,alias1=None,alias2=None,record_id=None):
+def get_comparison_columns(tables_sheet, Table_name,operational_symbol,alias1=None,alias2=None,record_id=None, history_flag=None):
     conditional_statement = ''
     columns_comma = ""
-    tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
-                                 & ((tables_sheet['PK'].str.upper() == 'PK')|(tables_sheet['Historization column'].str.upper() == 'E'))
-                                 & (tables_sheet['Record_ID'] == record_id)
-                                 ].reset_index()
+    if history_flag is not None:
+        tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
+                                     & ((tables_sheet['PK'].str.upper() == 'PK')|(tables_sheet['Historization column'].str.upper() == 'E'))
+                                     & (tables_sheet['Record_ID'] == record_id)
+                                     ].reset_index()
+    else:
+        tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
+                                     & (tables_sheet['PK'].str.upper() == 'PK')
+                                     & (tables_sheet['Record_ID'] == record_id)
+                                     ].reset_index()
     if alias1 is None:
         alias1 = ''
     else:
@@ -182,12 +213,12 @@ def get_comparison_columns(tables_sheet, Table_name,operational_symbol,alias1=No
         data_type = stg_tbl_row['Datatype'].upper()
         column_name = str(stg_tbl_row['Column'])
         if data_type == 'INTEGER':
-            column_name = 'COALESCE('+alias1 + column_name + ',-1)' + operational_symbol + 'COALESCE('+alias2 + column_name + ',-1)'
+            column_name = 'COALESCE('+alias1 + column_name + ',-1) ' + operational_symbol + ' COALESCE('+alias2 + column_name + ',-1)'
         elif data_type == 'VARCHAR(50)':
-            column_name = 'COALESCE('+alias1 + column_name + ",'-')" + operational_symbol + 'COALESCE('+alias2 + column_name + ",'-')"
+            column_name = 'COALESCE('+alias1 + column_name + ",'-') " + operational_symbol + ' COALESCE('+alias2 + column_name + ",'-')"
         elif data_type == 'TIMESTAMP':
-            column_name = 'COALESCE('+alias1 + column_name + ",CAST('1001-01-01 00:00:00' AS TIMESTAMP(0)))" + operational_symbol + 'COALESCE('+alias2 + column_name + ",CAST('1001-01-01 00:00:00' AS TIMESTAMP(0)))"
-        comma = '\t\t' + ',' if stg_tbl_indx > 0 else ' '
+            column_name = 'COALESCE('+alias1 + column_name + ",CAST('1001-01-01 00:00:00' AS TIMESTAMP(0))) " + operational_symbol + ' COALESCE('+alias2 + column_name + ",CAST('1001-01-01 00:00:00' AS TIMESTAMP(0)))"
+        comma = '\t\t' + '    AND ' if stg_tbl_indx > 0 else ' '
         columns_comma += comma+column_name+'\n'
     columns_comma = columns_comma[0:len(columns_comma) - 1]
     return columns_comma
@@ -267,9 +298,9 @@ def get_conditional_stamenet(tables_sheet, Table_name,columns_type,operational_s
             Column_name = column_name_row['COLUMN_NAME']
         else:
             Column_name = column_name_row['Column']
-        on_statement = alias1 + Column_name + ' ' + operational_symbol + '' + alias2 + Column_name
+        on_statement = alias1 + Column_name + ' ' + operational_symbol + ' ' + alias2 + Column_name
         if record_id is not None:
-            and_statement = '\t' + ' and ' if column_name_index > 0 else ' '
+            and_statement = '\t ' + ' and ' if column_name_index > 0 else ' '
         else:
             and_statement = '\t' + ' and ' if column_name_index > 0 else '\t'
         on_statement = on_statement if column_name_index == len(table_columns) - 1 else on_statement + '\n'

@@ -36,7 +36,8 @@ def history_apply(cf, source_output_path, smx_table):
                                                                                     'LOAD_TABLE', record_id)
         TABLE_PK = funcs.get_sama_pk_columns_comma_separated(history_handeled_df, table_name, 'one_pk', record_id)
         COALESCED_TABLE_COLUMNS_LD_EQL_DATAMODEL = funcs.get_comparison_columns(history_handeled_df, table_name, '=',
-                                                                                'LOAD_TABLE', 'MODEL_TABLE', record_id)
+                                                                                'LOAD_TABLE', 'MODEL_TABLE', record_id,
+                                                                                "Y")
         LOADTBL_PK_EQL_MODELTBL = funcs.get_conditional_stamenet(history_handeled_df, table_name, 'pk', '=',
                                                                  'LOAD_TABLE', 'MODEL_TABLE', record_id, 'histort')
         LOADTBL_PK_EQL_FLAGIND = funcs.get_conditional_stamenet(history_handeled_df, table_name, 'pk', '=',
