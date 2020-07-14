@@ -35,12 +35,12 @@ BT;
 UPDATE {ld_prefix}{schema_name}.{ld_table_name}
 FROM (
     SELECT
-    {table_columns_aliased}
+     {tbl_pk_cols_aliased}
     CASE
 	    WHEN {FSDM_first_tbl_pk} IS NULL THEN 'I'
-	    WHEN{COALESCED_TABLE_COLUMNS_LD_EQL_FSDM}
+	    WHEN{COALESCED_TABLE_nonPK_COLUMNS_LD_EQL_FSDM}
 	    THEN 'D'
-	ELSE 'X' END AS FLAG  -- Setting update as X because we are not going to update this table in this TFN and want to show correct figures in metadata as well
+	ELSE 'U' END AS FLAG
     FROM {ld_prefix}{schema_name}.{ld_table_name} {ld_tbl_alias}
     LEFT OUTER JOIN {fsdm_prefix}.{fsdm_table_name} {fsdm_tbl_alias}
     ON{ld_equal_fsdm_pk}
@@ -54,7 +54,7 @@ WHERE{FLAG_IND_equal_fsdm_pk};
 
 UPDATE {fsdm_prefix}.{fsdm_table_name}
 FROM {ld_prefix}{schema_name}.{ld_table_name} {ld_tbl_alias}
-SET{}
+SET{non_pk_cols_eql_ld_cols}
 WHERE{ld_tbl_alias}.FLAG = 'U'
 AND{ld_equal_fsdm_pk_update}
 
