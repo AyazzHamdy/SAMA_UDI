@@ -187,19 +187,25 @@ def get_sama_table_columns_comma_separated(tables_sheet, Table_name, alias=None,
     return columns_comma
 
 
-def get_comparison_columns(tables_sheet, Table_name,operational_symbol,alias1=None,alias2=None,record_id=None, history_flag=None):
+def get_comparison_columns(tables_sheet, Table_name, apply_type, operational_symbol, alias1=None, alias2=None, record_id=None):
     conditional_statement = ''
     columns_comma = ""
-    if history_flag is not None:
+    if apply_type.upper() == "HISTORY":
         tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
                                      & ((tables_sheet['PK'].str.upper() == 'PK')|(tables_sheet['Historization column'].str.upper() == 'E'))
                                      & (tables_sheet['Record_ID'] == record_id)
                                      ].reset_index()
-    else:
+    elif apply_type.upper() == "INSERT":
         tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
                                      & (tables_sheet['PK'].str.upper() == 'PK')
                                      & (tables_sheet['Record_ID'] == record_id)
                                      ].reset_index()
+    else: #UPSERT
+        tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
+                                     & (tables_sheet['PK'].str.upper() != 'PK')
+                                     & (tables_sheet['Record_ID'] == record_id)
+                                     ].reset_index()
+
     if alias1 is None:
         alias1 = ''
     else:
@@ -246,13 +252,13 @@ def get_sama_pk_columns_comma_separated(tables_sheet, Table_name, alias='', reco
 def get_sama_stg_table_columns_minus_pk(tables_sheet, Table_name,record_id=None):
     if record_id is None:
         tables_df = tables_sheet.loc[(tables_sheet['TABLE_NAME'].str.upper() == Table_name.upper())
-                                       & (tables_sheet['PRIMARY_KEY_FLAG'].str.upper() != 'Y')
-                                       ].reset_index()
+                                     & (tables_sheet['PRIMARY_KEY_FLAG'].str.upper() != 'Y')
+                                     ].reset_index()
     else:
         tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
-                                       & (tables_sheet['PK'].str.upper() != 'PK')
-                                       & (tables_sheet['Record_ID'] == record_id)
-                                       ].reset_index()
+                                     & (tables_sheet['PK'].str.upper() != 'PK')
+                                     & (tables_sheet['Record_ID'] == record_id)
+                                     ].reset_index()
     return tables_df
 
 
@@ -285,6 +291,13 @@ def get_conditional_stamenet(tables_sheet, Table_name,columns_type,operational_s
         table_columns = get_sama_stg_table_columns_pk(tables_sheet,Table_name,record_id,history_flag)
     elif columns_type == 'non_pk' and record_id is not None:
         table_columns = get_sama_stg_table_columns_minus_pk(tables_sheet,Table_name,record_id)
+    elif columns_type == 'non_pk_upsert_set' and record_id is not None:
+        excluded_cols = ['R_ID', 'INSRT_DTTM']
+        print("excluded_cols",excluded_cols)
+        table_columns = get_sama_stg_table_columns_minus_pk(tables_sheet, Table_name, record_id)
+        print("table_columns", table_columns)
+        table_columns = np.setdiff1d(table_columns, excluded_cols).tolist()
+        print("table_columns222", table_columns)
     if alias1 is None:
         alias1 = ''
     else:

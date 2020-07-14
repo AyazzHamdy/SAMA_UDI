@@ -105,6 +105,8 @@ class GenerateScripts:
                         self.parallel_create_output_source_path.append(delayed(md.create_folder)(main_output_path_apply))
                         smx_sheet = delayed(funcs.read_excel)(smx_file_path, sheet_name=self.smx_sheet)
                         self.parallel_templates.append(delayed(Apply_Insert_Upsert.apply_insert_upsert)(self.cf, main_output_path_apply, smx_sheet[smx_sheet['Load Type'] == 'Insert Only'], "Apply_Insert"))
+                        self.parallel_templates.append(delayed(Apply_Insert_Upsert.apply_insert_upsert)(self.cf, main_output_path_apply, smx_sheet[smx_sheet['Load Type'] == 'Upsert'], "Apply_Upsert"))
+
                         # self.parallel_templates.append(delayed(History_Apply.history_apply)(self.cf, main_output_path_apply, smx_sheet))
 
                 except Exception as e_smx_file:

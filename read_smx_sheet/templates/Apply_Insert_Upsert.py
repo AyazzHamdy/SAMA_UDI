@@ -79,28 +79,60 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
         FSDM_tbl_pk= funcs.get_sama_pk_columns_comma_separated(smx_record_id_df, Table_name, alias=fsdm_tbl_alias, record_id=Record_id)
         FSDM_first_tbl_pk = FSDM_tbl_pk.split(',')[0]
 
-        COALESCED_TABLE_COLUMNS_LD_EQL_FSDM = funcs.get_comparison_columns(smx_record_id_df, Table_name, '=',
-                                                                                ld_tbl_alias, fsdm_tbl_alias, Record_id)
-        print(COALESCED_TABLE_COLUMNS_LD_EQL_FSDM)
 
-        bteq_script = template_string.format(filename=BTEQ_file_name, versionnumber=pm.ver_no,
-                                             currentdate=date.today().strftime("%d/%m/%Y"),
-                                             bteq_run_file=bteq_run_file,
-                                             ld_prefix=ld_prefix,
-                                             schema_name=schema_name,
-                                             ld_table_name=ld_table_name,
-                                             tbl_pk_cols_aliased=ld_pk_cols_aliased,
-                                             ld_tbl_alias=ld_tbl_alias,
-                                             fsdm_tbl_alias=fsdm_tbl_alias,
-                                             table_columns=fsdm_tbl_columns,
-                                             FSDM_first_tbl_pk=FSDM_first_tbl_pk.strip(),
-                                             COALESCED_TABLE_COLUMNS_LD_EQL_FSDM=COALESCED_TABLE_COLUMNS_LD_EQL_FSDM,
-                                             fsdm_prefix=FSDM_prefix,
-                                             fsdm_table_name=Table_name,
-                                             ld_equal_fsdm_pk=on_clause,
-                                             FLAG_IND_equal_fsdm_pk=where_clause,
-                                             dup_prefix=DupDB_prefix
-                                             )
+        if script_flag == 'Apply_Insert':
+            COALESCED_TABLE_PK_COLUMNS_LD_EQL_FSDM = funcs.get_comparison_columns(smx_record_id_df, Table_name, "INSERT"
+                                                                                  , '=', ld_tbl_alias, fsdm_tbl_alias,
+                                                                                  Record_id)
+            bteq_script = template_string.format(filename=BTEQ_file_name, versionnumber=pm.ver_no,
+                                                 currentdate=date.today().strftime("%d/%m/%Y"),
+                                                 bteq_run_file=bteq_run_file,
+                                                 ld_prefix=ld_prefix,
+                                                 schema_name=schema_name,
+                                                 ld_table_name=ld_table_name,
+                                                 tbl_pk_cols_aliased=ld_pk_cols_aliased,
+                                                 ld_tbl_alias=ld_tbl_alias,
+                                                 fsdm_tbl_alias=fsdm_tbl_alias,
+                                                 table_columns=fsdm_tbl_columns,
+                                                 FSDM_first_tbl_pk=FSDM_first_tbl_pk.strip(),
+                                                 COALESCED_TABLE_PK_COLUMNS_LD_EQL_FSDM=COALESCED_TABLE_PK_COLUMNS_LD_EQL_FSDM,
+                                                 fsdm_prefix=FSDM_prefix,
+                                                 fsdm_table_name=Table_name,
+                                                 ld_equal_fsdm_pk=on_clause,
+                                                 FLAG_IND_equal_fsdm_pk=where_clause,
+                                                 dup_prefix=DupDB_prefix
+                                                 )
+        else:
+            COALESCED_TABLE_nonPK_COLUMNS_LD_EQL_FSDM= funcs.get_comparison_columns(smx_record_id_df, Table_name,
+                                                                                    "UPSERT", '=', ld_tbl_alias,
+                                                                                    fsdm_tbl_alias, Record_id)
+            ld_equal_fsdm_pk_update = funcs.get_conditional_stamenet(smx_record_id_df, Table_name, "pk", "=",
+                                                                     FSDM_prefix + "." + Table_name, ld_tbl_alias,
+                                                                     Record_id)
+            non_pk_cols_eql_ld_cols = funcs.get_conditional_stamenet(smx_record_id_df, Table_name, "non_pk_upsert_set",
+                                                                     "=", '', ld_tbl_alias, Record_id)
+
+            bteq_script = template_string.format(filename=BTEQ_file_name, versionnumber=pm.ver_no,
+                                                 currentdate=date.today().strftime("%d/%m/%Y"),
+                                                 bteq_run_file=bteq_run_file,
+                                                 ld_prefix=ld_prefix,
+                                                 schema_name=schema_name,
+                                                 ld_table_name=ld_table_name,
+                                                 tbl_pk_cols_aliased=ld_pk_cols_aliased,
+                                                 ld_tbl_alias=ld_tbl_alias,
+                                                 fsdm_tbl_alias=fsdm_tbl_alias,
+                                                 table_columns=fsdm_tbl_columns,
+                                                 FSDM_first_tbl_pk=FSDM_first_tbl_pk.strip(),
+                                                 COALESCED_TABLE_nonPK_COLUMNS_LD_EQL_FSDM=COALESCED_TABLE_nonPK_COLUMNS_LD_EQL_FSDM,
+                                                 non_pk_cols_eql_ld_cols=non_pk_cols_eql_ld_cols,
+                                                 fsdm_prefix=FSDM_prefix,
+                                                 fsdm_table_name=Table_name,
+                                                 ld_equal_fsdm_pk=on_clause,
+                                                 FLAG_IND_equal_fsdm_pk=where_clause,
+                                                 ld_equal_fsdm_pk_update=ld_equal_fsdm_pk_update,
+                                                 dup_prefix=DupDB_prefix
+                                                 )
+
         bteq_script = bteq_script.upper()
         f.write(bteq_script)
         f.close()
