@@ -33,10 +33,12 @@
 BT;
 
 UPDATE {ld_prefix}{schema_name}.{ld_table_name}
-FROM (
+FROM
+(
     SELECT
-     {tbl_pk_cols_aliased}
-    CASE
+
+    {tbl_pk_cols_aliased}
+    ,CASE
 	    WHEN {FSDM_first_tbl_pk} IS NULL THEN 'I'
 	    WHEN{COALESCED_TABLE_nonPK_COLUMNS_LD_EQL_FSDM}
 	    THEN 'D'
@@ -54,9 +56,11 @@ WHERE{FLAG_IND_equal_fsdm_pk};
 
 UPDATE {fsdm_prefix}.{fsdm_table_name}
 FROM {ld_prefix}{schema_name}.{ld_table_name} {ld_tbl_alias}
-SET{non_pk_cols_eql_ld_cols}
-WHERE{ld_tbl_alias}.FLAG = 'U'
-AND{ld_equal_fsdm_pk_update}
+
+SET {non_pk_cols_eql_ld_cols}
+
+WHERE {ld_tbl_alias}.FLAG = 'U'
+AND{ld_equal_fsdm_pk_update};
 
 /*############################################################################
 #  APPLYING UDI MARKING 'I' AT TARGET
@@ -68,6 +72,7 @@ INSERT INTO {fsdm_prefix}.{fsdm_table_name}
 )
 SELECT
     {table_columns}
+
 FROM {ld_prefix}{schema_name}.{ld_table_name}
 WHERE FLAG = 'I';
 
@@ -81,6 +86,7 @@ INSERT INTO {dup_prefix}{schema_name}.{ld_table_name}
 )
 SELECT
      {table_columns}
+
 FROM {ld_prefix}{schema_name}.{ld_table_name}
 WHERE FLAG = 'D';
 

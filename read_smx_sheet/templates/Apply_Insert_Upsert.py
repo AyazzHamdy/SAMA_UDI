@@ -6,6 +6,7 @@ from datetime import date
 
 @Logging_decorator
 def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
+
     ld_prefix = cf.ld_prefix
     FSDM_prefix = cf.modelDB_prefix
     DupDB_prefix = cf.modelDup_prefix
@@ -103,14 +104,15 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
                                                  dup_prefix=DupDB_prefix
                                                  )
         else:
-            COALESCED_TABLE_nonPK_COLUMNS_LD_EQL_FSDM= funcs.get_comparison_columns(smx_record_id_df, Table_name,
-                                                                                    "UPSERT", '=', ld_tbl_alias,
-                                                                                    fsdm_tbl_alias, Record_id)
+            COALESCED_TABLE_nonPK_COLUMNS_LD_EQL_FSDM = funcs.get_comparison_columns(smx_record_id_df, Table_name,
+                                                                                     "UPSERT", '=', ld_tbl_alias,
+                                                                                     fsdm_tbl_alias, Record_id)
             ld_equal_fsdm_pk_update = funcs.get_conditional_stamenet(smx_record_id_df, Table_name, "pk", "=",
                                                                      FSDM_prefix + "." + Table_name, ld_tbl_alias,
                                                                      Record_id)
             non_pk_cols_eql_ld_cols = funcs.get_conditional_stamenet(smx_record_id_df, Table_name, "non_pk_upsert_set",
-                                                                     "=", '', ld_tbl_alias, Record_id)
+                                                                     "=", None, ld_tbl_alias, Record_id)
+            non_pk_cols_eql_ld_cols = non_pk_cols_eql_ld_cols.replace(' and ', ',')
 
             bteq_script = template_string.format(filename=BTEQ_file_name, versionnumber=pm.ver_no,
                                                  currentdate=date.today().strftime("%d/%m/%Y"),
