@@ -313,8 +313,6 @@ def get_conditional_stamenet(tables_sheet, Table_name,columns_type,operational_s
         alias2 = ''
     else:
         alias2 = alias2 + '.'
-    print("*****************RECORD_ID", record_id)
-    print("table_columns  ...", table_columns['Column'])
     for column_name_index, column_name_row in table_columns.iterrows():
         if record_id is None:
             Column_name = column_name_row['COLUMN_NAME']
