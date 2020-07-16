@@ -66,8 +66,8 @@ def stg_temp_DDL(cf, source_output_path, STG_tables, Data_types, script_flag):
                     if data_type_row['SOURCE DATA TYPE'].upper() == Data_type.upper():
                         Data_type = str(data_type_row['TERADATA DATA TYPE'].upper())
             elif str(STG_table_columns_row['DATA_LENGTH']) != '' and str(STG_table_columns_row['DATA_PRECISION']) != '' and 'TIMESTAMP' not in Data_type:
-                source_data_type = source_data_type + "(" + str(STG_table_columns_row['DATA_LENGTH']) + ',' + str(
-                    STG_table_columns_row['DATA_PRECISION']) + ")"
+                source_data_type = source_data_type + "(" + str(STG_table_columns_row['DATA_PRECISION']) + ',' + str(
+                    STG_table_columns_row['DATA_SCALE']) + ")"
                 Data_type = source_data_type.replace("NUMBER", "DECIMAL")
 
             if 'VARCHAR2' in Data_type:
