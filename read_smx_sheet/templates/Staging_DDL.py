@@ -60,12 +60,12 @@ def stg_temp_DDL(cf, source_output_path, STG_tables, Data_types, script_flag):
 
             source_data_type = STG_table_columns_row['DATA_TYPE']
             Data_type = source_data_type
-            if str(STG_table_columns_row['DATA_LENGTH']) != '' and str(STG_table_columns_row['DATA_PRECISION']) == '':
+            if str(STG_table_columns_row['DATA_LENGTH']) != '' and str(STG_table_columns_row['DATA_PRECISION']) == '' and 'TIMESTAMP' not in Data_type:
                 Data_type = Data_type + "(" + str(STG_table_columns_row['DATA_LENGTH']) + ")"
                 for data_type_index, data_type_row in Data_types.iterrows():
                     if data_type_row['SOURCE DATA TYPE'].upper() == Data_type.upper():
                         Data_type = str(data_type_row['TERADATA DATA TYPE'].upper())
-            elif str(STG_table_columns_row['DATA_LENGTH']) != '' and str(STG_table_columns_row['DATA_PRECISION']) != '':
+            elif str(STG_table_columns_row['DATA_LENGTH']) != '' and str(STG_table_columns_row['DATA_PRECISION']) != '' and 'TIMESTAMP' not in Data_type:
                 source_data_type = source_data_type + "(" + str(STG_table_columns_row['DATA_LENGTH']) + ',' + str(
                     STG_table_columns_row['DATA_PRECISION']) + ")"
                 Data_type = source_data_type.replace("NUMBER", "DECIMAL")
