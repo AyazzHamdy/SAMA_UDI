@@ -23,5 +23,5 @@ staging_sheets = [Data_types_sht,STG_tables_sht]
 smx_sheets = [smx_sht]
 
 # AppName_<Major>.<Minor>.<BuildNo>
-ver_no = "| Build #2.11.10"
+ver_no = "| Build #2.11.11"
 # ################################################################################################
