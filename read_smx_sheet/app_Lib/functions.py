@@ -133,8 +133,13 @@ def get_fsdm_tbl_columns(smx_Rid, alias_name):
     columns_comma = columns_comma[0:len(columns_comma) - 1]
     return columns_comma.strip()
 
-def get_fsdm_tbl_non_technical_columns(smx_Rid, alias_name):
+
+def get_fsdm_tech_cols_list():
     tech_cols_list = ['R_ID', 'B_ID', 'INSRT_DTTM', 'UPDT_DTTM']
+    return tech_cols_list
+
+def get_fsdm_tbl_non_technical_columns(smx_Rid, alias_name):
+    tech_cols_list = get_fsdm_tech_cols_list()
 
     smx_Rid = smx_Rid.reset_index()
     columns_list = smx_Rid['Column'].values.tolist()
@@ -205,6 +210,10 @@ def get_comparison_columns(tables_sheet, Table_name, apply_type, operational_sym
                                      & (tables_sheet['PK'].str.upper() != 'PK')
                                      & (tables_sheet['Record_ID'] == record_id)
                                      ].reset_index()
+        tech_cols = get_fsdm_tech_cols_list()
+        tables_df = tables_df[~tables_df.Column.isin(tech_cols)]
+
+
 
     if alias1 is None:
         alias1 = ''
@@ -220,7 +229,7 @@ def get_comparison_columns(tables_sheet, Table_name, apply_type, operational_sym
         column_name = str(stg_tbl_row['Column'])
         if data_type == 'INTEGER':
             column_name = 'COALESCE('+alias1 + column_name + ',-1) ' + operational_symbol + ' COALESCE('+alias2 + column_name + ',-1)'
-        elif data_type == 'VARCHAR(50)':
+        elif 'CHAR' in data_type:# == 'VARCHAR(50)':
             column_name = 'COALESCE('+alias1 + column_name + ",'-') " + operational_symbol + ' COALESCE('+alias2 + column_name + ",'-')"
         elif data_type == 'TIMESTAMP':
             column_name = 'COALESCE('+alias1 + column_name + ",CAST('1001-01-01 00:00:00' AS TIMESTAMP(0))) " + operational_symbol + ' COALESCE('+alias2 + column_name + ",CAST('1001-01-01 00:00:00' AS TIMESTAMP(0)))"
@@ -293,11 +302,9 @@ def get_conditional_stamenet(tables_sheet, Table_name,columns_type,operational_s
         table_columns = get_sama_stg_table_columns_minus_pk(tables_sheet,Table_name,record_id)
     elif columns_type == 'non_pk_upsert_set' and record_id is not None:
         excluded_cols = ['R_ID', 'INSRT_DTTM']
-        print("excluded_cols",excluded_cols)
         table_columns = get_sama_stg_table_columns_minus_pk(tables_sheet, Table_name, record_id)
-        print("table_columns", table_columns)
-        table_columns = np.setdiff1d(table_columns, excluded_cols).tolist()
-        print("table_columns222", table_columns)
+        table_columns = table_columns[~table_columns.Column.isin(excluded_cols)]
+
     if alias1 is None:
         alias1 = ''
     else:
@@ -306,20 +313,30 @@ def get_conditional_stamenet(tables_sheet, Table_name,columns_type,operational_s
         alias2 = ''
     else:
         alias2 = alias2 + '.'
+    print("*****************RECORD_ID", record_id)
+    print("table_columns  ...", table_columns['Column'])
     for column_name_index, column_name_row in table_columns.iterrows():
         if record_id is None:
             Column_name = column_name_row['COLUMN_NAME']
         else:
             Column_name = column_name_row['Column']
+        print("XXXXXColumn_name: ", Column_name, "column_name_index >>>>", column_name_index,
+                  "///len(table_columns) >>>", len(table_columns))
         on_statement = alias1 + Column_name + ' ' + operational_symbol + ' ' + alias2 + Column_name
+        print("on_statement1\n",on_statement)
         if record_id is not None:
             and_statement = '\t ' + ' and ' if column_name_index > 0 else ' '
+            print("and_statement\n", and_statement)
         else:
             and_statement = '\t' + ' and ' if column_name_index > 0 else '\t'
-        on_statement = on_statement if column_name_index == len(table_columns) - 1 else on_statement + '\n'
+
+        on_statement = on_statement if column_name_index == len(table_columns) else on_statement + '\n'#len(table_columns) - 1 else on_statement + '\n'
+        print("on_statement2\n", on_statement)
         and_Column_name = and_statement + on_statement
+        print("and_Column_name\n", and_Column_name)
         conditional_statement = conditional_statement + and_Column_name
-    return conditional_statement
+        print("conditional_statement\n", conditional_statement)
+    return conditional_statement.strip()
 
 
 def single_quotes(string):

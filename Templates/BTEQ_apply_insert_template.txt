@@ -36,11 +36,12 @@ UPDATE {ld_prefix}{schema_name}.{ld_table_name}
 FROM (
     SELECT
     {tbl_pk_cols_aliased}
-    CASE
+    ,CASE
 	    WHEN {FSDM_first_tbl_pk} IS NULL THEN 'I'
 	    WHEN{COALESCED_TABLE_PK_COLUMNS_LD_EQL_FSDM}
 	    THEN 'D'
 	ELSE 'X' END AS FLAG  -- Setting update as X because we are not going to update this table in this TFN and want to show correct figures in metadata as well
+
     FROM {ld_prefix}{schema_name}.{ld_table_name} {ld_tbl_alias}
     LEFT OUTER JOIN {fsdm_prefix}.{fsdm_table_name} {fsdm_tbl_alias}
     ON{ld_equal_fsdm_pk}
@@ -62,6 +63,7 @@ INSERT INTO {fsdm_prefix}.{fsdm_table_name}
 )
 SELECT
     {table_columns}
+
 FROM {ld_prefix}{schema_name}.{ld_table_name}
 WHERE FLAG = 'I';
 
@@ -75,6 +77,7 @@ INSERT INTO {dup_prefix}{schema_name}.{ld_table_name}
 )
 SELECT
      {table_columns}
+
 FROM {ld_prefix}{schema_name}.{ld_table_name}
 WHERE FLAG = 'D';
 
