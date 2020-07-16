@@ -318,22 +318,15 @@ def get_conditional_stamenet(tables_sheet, Table_name,columns_type,operational_s
             Column_name = column_name_row['COLUMN_NAME']
         else:
             Column_name = column_name_row['Column']
-        print("XXXXXColumn_name: ", Column_name, "column_name_index >>>>", column_name_index,
-                  "///len(table_columns) >>>", len(table_columns))
         on_statement = alias1 + Column_name + ' ' + operational_symbol + ' ' + alias2 + Column_name
-        print("on_statement1\n",on_statement)
         if record_id is not None:
             and_statement = '\t ' + ' and ' if column_name_index > 0 else ' '
-            print("and_statement\n", and_statement)
         else:
             and_statement = '\t' + ' and ' if column_name_index > 0 else '\t'
 
         on_statement = on_statement if column_name_index == len(table_columns) else on_statement + '\n'#len(table_columns) - 1 else on_statement + '\n'
-        print("on_statement2\n", on_statement)
         and_Column_name = and_statement + on_statement
-        print("and_Column_name\n", and_Column_name)
         conditional_statement = conditional_statement + and_Column_name
-        print("conditional_statement\n", conditional_statement)
     return conditional_statement.strip()
 
 
