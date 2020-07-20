@@ -45,7 +45,7 @@ def TFN_insertion(cf, source_output_path, SMX_SHEET):
 
         fsdm_table_name = TFN_record_id_df['Entity'].unique()[0]
         ld_table_name = fsdm_table_name + "_R" + str(Record_id)
-        BTEQ_file_name = "{}_{}_{}".format(Source_name, fsdm_table_name, Record_id)
+        BTEQ_file_name = "{}_{}_R{}".format(Source_name, fsdm_table_name, Record_id)
         f = funcs.WriteFile(source_output_path, BTEQ_file_name, "bteq")
         f.write(template_head)
 

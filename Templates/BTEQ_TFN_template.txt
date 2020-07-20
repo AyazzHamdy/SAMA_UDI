@@ -1,5 +1,5 @@
 /* ############################################################################
-#  FILE-NAME   : {Source_name}_{FSDM_tbl_Name}_{Record_Id}.BTEQ
+#  FILE-NAME   : {Source_name}_{FSDM_tbl_Name}_R{Record_Id}.BTEQ
 #  PURPOSE     : TRANSFORMATION SCRIPT FROM STAGE TO LOAD READY TABLE ....
 #  -------------------------------------------------------------------------
 #  DB-VERSION  : TD 16.20.32.11
@@ -43,7 +43,7 @@ INSERT INTO {ld_prefix}{Source_name}.{ld_tbl_name}
 SELECT
     {Column_Mapping}
     ,{Record_Id} AS R_ID
-    ,(SELECT COALESCE(MAX(B_ID),0) FROM DD_MD.BATCH_LOG WHERE B_SOURCE = {Source_name}) AS B_ID
+    ,(SELECT COALESCE(MAX(B_ID),0) FROM DD_MD.BATCH_LOG WHERE B_SOURCE = '{Source_name}') AS B_ID
     ,CURRENT_TIMESTAMP(6) AS INSRT_DTTM
     ,CURRENT_TIMESTAMP(6) AS UPDT_DTTM
 

@@ -168,8 +168,8 @@ def get_TFN_column_mapping(smx_Rid_df):
             if rule == 'NULL':
                 HCV = 'NULL'
             else:
-                applied_rule = rule.replace("Hardcode to", " ").strip()
-                HCV = single_quotes(applied_rule)
+                applied_rule = rule.replace("Hardcode to", " ").replace("HARDCODE TO", " ").strip()
+                HCV = applied_rule
             column_clause = "CAST( {} AS {} ) AS {} /*{}*/".format(HCV, col_dtype, col_name, rule)
             columns_comma += comma + column_clause + '\n'
 
@@ -203,7 +203,7 @@ def handle_default_col_dtype(dtype):
 
 
 def rule_col_analysis_sgk(smx_Rid_df):
-    tech_cols = tech_cols = get_fsdm_tech_cols_list()
+    tech_cols = get_fsdm_tech_cols_list()
     TFN_df = smx_Rid_df[~smx_Rid_df.Column.isin(tech_cols)]
     left_joins = " "
     rule_output = " "

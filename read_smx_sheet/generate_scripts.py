@@ -117,7 +117,9 @@ class GenerateScripts:
                         self.parallel_templates.append(delayed(Apply_Insert_Upsert.apply_insert_upsert)(self.cf, main_output_path_apply, smx_sheet, "Apply_Upsert"))
                         self.parallel_templates.append(delayed(History_Apply.history_apply)(self.cf, main_output_path_apply, smx_sheet))
                         self.parallel_templates.append(delayed(SGK_insertion.sgk_insertion)(self.cf, main_output_path_sgk, smx_sheet))
-                        self.parallel_templates.append(delayed(TFN_insertion.TFN_insertion)(self.cf, main_output_path_TFN, smx_sheet[smx_sheet['Record_ID'] == 30339]))
+                        Rid_list = [30339, 30331, 30051, 30336, 30050, 30058, 30332, 30337, 30045, 30049, 30016, 30345, 30048, 30333, 30053, 30059, 30347, 30335]
+                        self.parallel_templates.append(delayed(TFN_insertion.TFN_insertion)(self.cf, main_output_path_TFN,smx_sheet[smx_sheet.Record_ID.isin(Rid_list)]))
+                        # self.parallel_templates.append(delayed(TFN_insertion.TFN_insertion)(self.cf, main_output_path_TFN, smx_sheet[smx_sheet['Record_ID'] == 30339]))
                         # self.parallel_templates.append(delayed(TFN_insertion.TFN_insertion)(self.cf, main_output_path_TFN, smx_sheet))
 
                 except Exception as e_smx_file:
