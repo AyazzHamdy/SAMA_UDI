@@ -1,0 +1,11 @@
+create table {oi_prefix}{schema_name}.{table_name} NO FALLBACK,
+	NO BEFORE JOURNAL,
+	NO AFTER JOURNAL,
+	CHECKSUM = DEFAULT,
+	DEFAULT MERGEBLOCKRATIO
+	(
+	  {columns}
+	  ,batch_id INTEGER
+	  ,filename VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC
+	  ,dump_dttm TIMESTAMP(3)
+	) {primary_index}{Table_name_pk}{pi_columns};
