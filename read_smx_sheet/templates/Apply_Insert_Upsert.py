@@ -6,6 +6,14 @@ from datetime import date
 
 @Logging_decorator
 def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
+    load_types_list = SMX_SHEET['Load Type'].unique()
+    insrt_load_types = []
+    upsrt_load_types = []
+    for i in range(len(load_types_list)):
+        if 'Insert'.upper() in load_types_list[i].upper():
+            insrt_load_types.append(load_types_list[i])
+        elif 'Upsert'.upper() in load_types_list[i].upper():
+            upsrt_load_types.append(load_types_list[i])
 
     ld_prefix = cf.ld_prefix
     FSDM_prefix = cf.modelDB_prefix
@@ -13,12 +21,16 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
     bteq_run_file = cf.bteq_run_file
 
     if script_flag == 'Apply_Insert':
+        SMX_SHEET = SMX_SHEET[SMX_SHEET['Load Type'].isin(insrt_load_types)]
+        # SMX_SHEET = SMX_SHEET['Insert'.upper() in SMX_SHEET['Load Type'].str.upper()]
         folder_name = 'Apply_Insert'
         # f = funcs.WriteFile(source_output_path, file_name, "sql")
         template_path = cf.templates_path + "/" + pm.default_bteq_apply_insert_template_file_name
         template_smx_path = cf.smx_path + "/" + pm.default_bteq_apply_insert_template_file_name
 
     else:
+        SMX_SHEET = SMX_SHEET[SMX_SHEET['Load Type'].isin(upsrt_load_types)]
+        # SMX_SHEET = SMX_SHEET['Upsert'.upper() in SMX_SHEET['Load Type'].str.upper()]
         folder_name = 'Apply_Upsert'
         # f = funcs.WriteFile(source_output_path, file_name, "sql")
         template_path = cf.templates_path + "/" + pm.default_bteq_apply_upsert_template_file_name
