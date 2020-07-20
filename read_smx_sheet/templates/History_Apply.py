@@ -2,10 +2,21 @@ from read_smx_sheet.app_Lib import functions as funcs
 from read_smx_sheet.Logging_Decorator import Logging_decorator
 from read_smx_sheet.parameters import parameters as pm
 from datetime import date
-
+from os import path, makedirs
 
 @Logging_decorator
 def history_apply(cf, source_output_path, smx_table):
+    load_types_list = smx_table['Load Type'].unique()
+    hist_load_types = []
+
+    for i in range(len(load_types_list)):
+        if 'History'.upper() in load_types_list[i].upper():
+            hist_load_types.append(load_types_list[i])
+
+    folder_name = 'Apply_History'
+    apply_folder_path = path.join(source_output_path, folder_name)
+    makedirs(apply_folder_path)
+
     template_path = cf.templates_path + "/" + pm.default_history_apply_template_file_name
     template_smx_path = cf.smx_path + "/" + "Templates" + "/" + pm.default_history_apply_template_file_name
     LD_SCHEMA_NAME = cf.ld_prefix
@@ -24,13 +35,18 @@ def history_apply(cf, source_output_path, smx_table):
         if i != "":
             template_string = template_string + i
 
-    history_handeled_df = funcs.get_history_handled_processes(smx_table)
+    history_handeled_df = funcs.get_history_handled_processes(smx_table, hist_load_types)
+
+
     for history_df_index, history_df_row in history_handeled_df.iterrows():
         record_id = history_df_row['Record_ID']
         table_name = history_df_row['Entity']
         SOURCE_SYSTEM = history_df_row['Source_System']
         filename = table_name + '_' + str(record_id)
-        f = funcs.WriteFile(source_output_path, filename, "bteq")
+
+
+
+        f = funcs.WriteFile(apply_folder_path, filename, "bteq")
         filename = filename + '.bteq'
         PK_TABLE_COLOUMNS_WITH_ALIAS_LD = funcs.get_sama_pk_columns_comma_separated(history_handeled_df, table_name,
                                                                                     'LOAD_TABLE', record_id)

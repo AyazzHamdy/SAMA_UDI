@@ -1,7 +1,7 @@
 from read_smx_sheet.app_Lib import functions as funcs
 from read_smx_sheet.Logging_Decorator import Logging_decorator
 from read_smx_sheet.parameters import parameters as pm
-import os
+from os import path, makedirs
 from datetime import date
 
 @Logging_decorator
@@ -36,8 +36,8 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
         template_path = cf.templates_path + "/" + pm.default_bteq_apply_upsert_template_file_name
         template_smx_path = cf.smx_path + "/" + pm.default_bteq_apply_upsert_template_file_name
 
-    apply_folder_path = os.path.join(source_output_path, folder_name)
-    os.makedirs(apply_folder_path)
+    apply_folder_path = path.join(source_output_path, folder_name)
+    makedirs(apply_folder_path)
 
     template_string = ""
     template_head = ""

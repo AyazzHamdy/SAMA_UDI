@@ -81,8 +81,10 @@ def get_file_name(file):
     return os.path.splitext(os.path.basename(file))[0]
 
 
-def get_history_handled_processes(smx_table):
-    History_transformations = smx_table.loc[smx_table['Load Type'] == 'History Handled'].reset_index()
+def get_history_handled_processes(smx_table, hist_load_types):
+    # History_transformations = smx_table.loc[smx_table['Load Type'] == 'History Handled'].reset_index()
+
+    History_transformations = smx_table[smx_table['Load Type'].isin(hist_load_types)]
     return History_transformations
 
 
@@ -235,6 +237,9 @@ def get_comparison_columns(tables_sheet, Table_name, apply_type, operational_sym
             column_name = 'COALESCE('+alias1 + column_name + ",'-') " + operational_symbol + ' COALESCE('+alias2 + column_name + ",'-')"
         elif data_type == 'TIMESTAMP':
             column_name = 'COALESCE('+alias1 + column_name + ",CAST('1001-01-01 00:00:00' AS TIMESTAMP(0))) " + operational_symbol + ' COALESCE('+alias2 + column_name + ",CAST('1001-01-01 00:00:00' AS TIMESTAMP(0)))"
+        elif data_type == 'DATE':
+            column_name = 'COALESCE('+alias1 + column_name + ",CAST('1001-01-01' AS DATE)) " + operational_symbol + ' COALESCE('+alias2 + column_name + ",CAST('1001-01-01' AS DATE'))"
+
         comma = '\t\t' + '    AND ' if stg_tbl_indx > 0 else ' '
         columns_comma += comma+column_name+'\n'
     columns_comma = columns_comma[0:len(columns_comma) - 1]
