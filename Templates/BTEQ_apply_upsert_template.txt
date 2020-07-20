@@ -8,16 +8,16 @@
 #
 #  AUTHOR      : Scripts Generator
 #  DEPARTMENT  : TERADATA
-#  VERSION     : {versionnumber}
+#  VERSION     : 1.0
 #  DATE        : {currentdate}
 #
 #  COPYRIGHT © 2020, TERADATA KSA
 #  -------------------------------------------------------------------------
 #  HISTORY:
 #
-#  DATE [YYYY-MM-DD]              VERSION                                DEVELOPER
-#  -------                        ------                                 --------
-#  {currentdate}                 {versionnumber}                    Scripts Generator
+#  DATE [YYYY-MM-DD]              VERSION            DEVELOPER            DESCRIPTION OF CHANGE
+#  -------                        ------             ----------           ---------------------
+#  {currentdate}                   1.0             Scripts Generator         INITIAL VERSION
 ############################################################################*/
 
 /*########################################################################
@@ -32,8 +32,8 @@
 
 BT;
 
-UPDATE {ld_prefix}{schema_name}.{ld_table_name}
-FROM
+UPDATE {ld_tbl_alias}
+FROM {ld_prefix}{schema_name}.{ld_table_name} {ld_tbl_alias},
 (
     SELECT
 
@@ -44,23 +44,27 @@ FROM
 	    THEN 'D'
 	ELSE 'U' END AS FLAG
     FROM {ld_prefix}{schema_name}.{ld_table_name} {ld_tbl_alias}
+
     LEFT OUTER JOIN {fsdm_prefix}.{fsdm_table_name} {fsdm_tbl_alias}
-    ON{ld_equal_fsdm_pk}
+    ON {ld_equal_fsdm_pk}
+
 ) FLAG_IND
 SET FLAG = FLAG_IND.FLAG
-WHERE{FLAG_IND_equal_fsdm_pk};
+
+WHERE {FLAG_IND_equal_fsdm_pk};
 
 /*############################################################################
 #  APPLYING UDI MARKING 'U' AT TARGET
 ############################################################################*/
 
-UPDATE {fsdm_prefix}.{fsdm_table_name}
-FROM {ld_prefix}{schema_name}.{ld_table_name} {ld_tbl_alias}
+UPDATE {fsdm_tbl_alias}
+FROM {fsdm_prefix}.{fsdm_table_name} {fsdm_tbl_alias},
+{ld_prefix}{schema_name}.{ld_table_name} {ld_tbl_alias}
 
 SET {non_pk_cols_eql_ld_cols}
 
 WHERE {ld_tbl_alias}.FLAG = 'U'
-AND{ld_equal_fsdm_pk_update};
+AND {ld_equal_fsdm_pk_update};
 
 /*############################################################################
 #  APPLYING UDI MARKING 'I' AT TARGET

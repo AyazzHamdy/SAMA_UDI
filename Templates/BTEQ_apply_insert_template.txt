@@ -8,16 +8,16 @@
 #
 #  AUTHOR      : Scripts Generator
 #  DEPARTMENT  : TERADATA
-#  VERSION     : {versionnumber}
+#  VERSION     : 1.0
 #  DATE        : {currentdate}
 #
 #  COPYRIGHT © 2020, TERADATA KSA
 #  -------------------------------------------------------------------------
 #  HISTORY:
 #
-#  DATE [YYYY-MM-DD]              VERSION                                DEVELOPER
-#  -------                        ------                                 --------
-#  {currentdate}                 {versionnumber}                    Scripts Generator
+#  DATE [YYYY-MM-DD]              VERSION            DEVELOPER            DESCRIPTION OF CHANGE
+#  -------                        ------             ----------           ---------------------
+#  {currentdate}                   1.0             Scripts Generator         INITIAL VERSION
 ############################################################################*/
 
 /*########################################################################
@@ -32,8 +32,9 @@
 
 BT;
 
-UPDATE {ld_prefix}{schema_name}.{ld_table_name}
-FROM (
+UPDATE {ld_tbl_alias}
+FROM {ld_prefix}{schema_name}.{ld_table_name} {ld_tbl_alias},
+(
     SELECT
     {tbl_pk_cols_aliased}
     ,CASE
@@ -43,11 +44,14 @@ FROM (
 	ELSE 'X' END AS FLAG  -- Setting update as X because we are not going to update this table in this TFN and want to show correct figures in metadata as well
 
     FROM {ld_prefix}{schema_name}.{ld_table_name} {ld_tbl_alias}
+
     LEFT OUTER JOIN {fsdm_prefix}.{fsdm_table_name} {fsdm_tbl_alias}
-    ON{ld_equal_fsdm_pk}
+    ON {ld_equal_fsdm_pk}
+
 ) FLAG_IND
 SET FLAG = FLAG_IND.FLAG
-WHERE{FLAG_IND_equal_fsdm_pk};
+
+WHERE {FLAG_IND_equal_fsdm_pk};
 
 /*############################################################################
 #  APPLYING UDI MARKING 'U' AT TARGET

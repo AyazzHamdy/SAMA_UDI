@@ -1,0 +1,66 @@
+/* ############################################################################
+#  FILE-NAME   : {Source_name}_{FSDM_tbl_Name}_{Record_Id}.BTEQ
+#  PURPOSE     : TRANSFORMATION SCRIPT FROM STAGE TO LOAD READY TABLE ....
+#  -------------------------------------------------------------------------
+#  DB-VERSION  : TD 16.20.32.11
+#  OS-VERSION  : MS WINDOWS SERVER 2012 R2
+#  -------------------------------------------------------------------------
+#
+#  AUTHOR      : Scripts Generator
+#  DEPARTMENT  : TERADATA
+#  VERSION     : 1.0
+#  DATE        : {currentdate}
+#
+#  COPYRIGHT © 2020, TERADATA KSA
+#  -------------------------------------------------------------------------
+#  HISTORY:
+#
+#  DATE [YYYY-MM-DD]              VERSION            DEVELOPER            DESCRIPTION OF CHANGE
+#  -------                        ------             ----------           ---------------------
+#  {currentdate}                   1.0             Scripts Generator         INITIAL VERSION
+############################################################################*/
+
+
+
+/*########################################################################
+# LOGGIN ON
+#########################################################################*/
+.run FILE={bteq_run_file};
+
+
+
+/*############################################################################
+#  DELETE FROM LOAD READY TABLE AND THEN INSERT.
+############################################################################*/
+
+INSERT INTO {ld_prefix}{Source_name}.{ld_tbl_name}
+(
+   {ld_cols}
+)
+SELECT
+    {Column_Mapping}
+    {Record_Id} AS R_ID ,
+    (SELECT COALESCE(MAX(B_ID),0) FROM DD_MD.BATCH_LOG WHERE B_SOURCE = {Source_name}) AS B_ID ,
+    CURRENT_TIMESTAMP(6) AS INSRT_DTTM ,
+    CURRENT_TIMESTAMP(6) AS UPDT_DTTM
+
+
+
+FROM
+{STG_prefix}_{Source_name}.{STG_tbl} STG
+
+
+
+LEFT JOIN DD_FSDM.PRTY_SGK SGK
+ON SGK.MASTER_PARTY_ID = TRIM( LEADING '0' FROM STG.BILLER )
+   AND SGK.SGK_ID = 20048
+;
+
+/*############################################################################
+#  CLOSING THE BTEQ SCRIPT, SESSION CLOSED AND LOGGING OFF
+############################################################################*/
+
+
+
+.LOGOFF;
+.QUIT;
