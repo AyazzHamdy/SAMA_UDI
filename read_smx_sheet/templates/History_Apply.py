@@ -6,13 +6,13 @@ from os import path, makedirs
 
 @Logging_decorator
 def history_apply(cf, source_output_path, smx_table):
-    load_types_list = smx_table['Load Type'].unique()
-    hist_load_types = []
-
-    for i in range(len(load_types_list)):
-        if 'History'.upper() in load_types_list[i].upper():
-            hist_load_types.append(load_types_list[i])
-
+    # load_types_list = smx_table['Load Type'].unique()
+    # hist_load_types = []
+    #
+    # for i in range(len(load_types_list)):
+    #     if 'History'.upper() in load_types_list[i].upper():
+    #         hist_load_types.append(load_types_list[i])
+    hist_load_types = funcs.get_history_load_types(smx_table)
     folder_name = 'Apply_History'
     apply_folder_path = path.join(source_output_path, folder_name)
     makedirs(apply_folder_path)

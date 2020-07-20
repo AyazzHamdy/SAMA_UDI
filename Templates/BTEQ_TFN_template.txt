@@ -17,7 +17,7 @@
 #
 #  DATE [YYYY-MM-DD]              VERSION            DEVELOPER            DESCRIPTION OF CHANGE
 #  -------                        ------             ----------           ---------------------
-#  {currentdate}                   1.0             Scripts Generator         INITIAL VERSION
+#  {currentdate}                      1.0             Scripts Generator         INITIAL VERSION
 ############################################################################*/
 
 
@@ -32,30 +32,27 @@
 /*############################################################################
 #  DELETE FROM LOAD READY TABLE AND THEN INSERT.
 ############################################################################*/
+BT;
+
+DELETE FROM {ld_prefix}{Source_name}.{ld_tbl_name};
 
 INSERT INTO {ld_prefix}{Source_name}.{ld_tbl_name}
 (
-   {ld_cols}
+   {ld_tbl_cols}
 )
 SELECT
     {Column_Mapping}
-    {Record_Id} AS R_ID ,
-    (SELECT COALESCE(MAX(B_ID),0) FROM DD_MD.BATCH_LOG WHERE B_SOURCE = {Source_name}) AS B_ID ,
-    CURRENT_TIMESTAMP(6) AS INSRT_DTTM ,
-    CURRENT_TIMESTAMP(6) AS UPDT_DTTM
+    ,{Record_Id} AS R_ID
+    ,(SELECT COALESCE(MAX(B_ID),0) FROM DD_MD.BATCH_LOG WHERE B_SOURCE = {Source_name}) AS B_ID
+    ,CURRENT_TIMESTAMP(6) AS INSRT_DTTM
+    ,CURRENT_TIMESTAMP(6) AS UPDT_DTTM
 
 
 
-FROM
-{STG_prefix}_{Source_name}.{STG_tbl} STG
+FROM {STG_prefix}{Source_name}.{STG_tbl} STG
+{possible_left_joins};
 
-
-
-LEFT JOIN DD_FSDM.PRTY_SGK SGK
-ON SGK.MASTER_PARTY_ID = TRIM( LEADING '0' FROM STG.BILLER )
-   AND SGK.SGK_ID = 20048
-;
-
+ET;
 /*############################################################################
 #  CLOSING THE BTEQ SCRIPT, SESSION CLOSED AND LOGGING OFF
 ############################################################################*/

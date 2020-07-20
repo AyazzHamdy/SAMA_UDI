@@ -29,9 +29,9 @@ class ConfigFile:
             self.templates_path= self.config_file_values["smx_path"]
         self.bteq_run_file = self.config_file_values["bteq_run_file"]
         self.read_sheets_parallel = self.config_file_values["read_sheets_parallel"]
+        self.stg_prefix = self.config_file_values["stg_prefix"]
         if smx_type == 'Staging Tables':
             self.oi_prefix = self.config_file_values["oi_prefix"]
-            self.stg_prefix = self.config_file_values["stg_prefix"]
             self.dm_prefix = self.config_file_values["dm_prefix"]
             self.duplicate_table_suffix = self.config_file_values["duplicate_table_suffix"]
         elif smx_type == 'SMX':
@@ -111,12 +111,14 @@ class GenerateScripts:
                         main_output_path_TFN = home_output_path + "/" + "TFN"
                         self.parallel_create_output_source_path.append(delayed(md.create_folder)(main_output_path_apply))
                         self.parallel_create_output_source_path.append(delayed(md.create_folder)(main_output_path_sgk))
+                        self.parallel_create_output_source_path.append(delayed(md.create_folder)(main_output_path_TFN))
                         smx_sheet = delayed(funcs.read_excel)(smx_file_path, sheet_name=self.smx_sheet)
                         self.parallel_templates.append(delayed(Apply_Insert_Upsert.apply_insert_upsert)(self.cf, main_output_path_apply, smx_sheet, "Apply_Insert"))
                         self.parallel_templates.append(delayed(Apply_Insert_Upsert.apply_insert_upsert)(self.cf, main_output_path_apply, smx_sheet, "Apply_Upsert"))
                         self.parallel_templates.append(delayed(History_Apply.history_apply)(self.cf, main_output_path_apply, smx_sheet))
                         self.parallel_templates.append(delayed(SGK_insertion.sgk_insertion)(self.cf, main_output_path_sgk, smx_sheet))
-                        self.parallel_templates.append(delayed(TFN_insertion.TFN_insertion)(self.cf, main_output_path_TFN, smx_sheet))
+                        self.parallel_templates.append(delayed(TFN_insertion.TFN_insertion)(self.cf, main_output_path_TFN, smx_sheet[smx_sheet['Record_ID'] == 30339]))
+                        # self.parallel_templates.append(delayed(TFN_insertion.TFN_insertion)(self.cf, main_output_path_TFN, smx_sheet))
 
                 except Exception as e_smx_file:
                     # print(error)

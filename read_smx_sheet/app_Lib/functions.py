@@ -16,7 +16,7 @@ import psutil
 
 def read_excel(file_path, sheet_name, filter=None, reserved_words_validation=None, nan_to_empty=True):
     try:
-        df = pd.read_excel(file_path, sheet_name)
+        df = pd.read_excel(file_path, sheet_name, na_filter=False)
         df_cols = list(df.columns.values)
         df = df.applymap(lambda x: x.strip() if type(x) is str else x)
 
@@ -80,6 +80,21 @@ def rename_reserved_word(Supplements, Reserved_words_source, word):
 def get_file_name(file):
     return os.path.splitext(os.path.basename(file))[0]
 
+def get_history_load_types(smx_sheet_df):
+    load_types_list = smx_sheet_df['Load Type'].unique()
+    hist_load_types = []
+    for i in range(len(load_types_list)):
+        if 'History'.upper() in load_types_list[i].upper():
+            hist_load_types.append(load_types_list[i])
+
+    return hist_load_types
+
+def is_history_load_type(TFN_Rid_df):
+    hist_load_types = get_history_load_types(TFN_Rid_df)
+    if TFN_Rid_df[TFN_Rid_df['Load Type'].isin(hist_load_types)]:
+        return True
+    else:
+        return False
 
 def get_history_handled_processes(smx_table, hist_load_types):
     # History_transformations = smx_table.loc[smx_table['Load Type'] == 'History Handled'].reset_index()
@@ -111,12 +126,147 @@ def get_sama_fsdm_record_id(SMX_SHEET, R_id):
     ].reset_index()
     return smx_Rid.drop_duplicates()
 
+def get_Rid_Source_Table(SMX_R_id):
+    tech_src_tbl_list = get_SMX_tech_Source_Table_vals()
+
+    src_tbl_list = SMX_R_id['Source_Table'].unique()
+    print("unique_src_tbls", src_tbl_list)
+    # src_tbl_list = src_tbl_list.values.tolist()
+
+    o_src_tbls_list = np.setdiff1d(src_tbl_list, tech_src_tbl_list).tolist()
+    print("src_tbls_list", o_src_tbls_list)
+    return o_src_tbls_list[0]
+
+def get_SMX_tech_Source_Table_vals():
+    tech_vals_list = ['HCV', 'JOB']
+    return tech_vals_list
+
 def get_fsdm_tbl_alias(Table_name):
     alias_name = ' '
     tbl_name_elements = Table_name.split("_")
     for i in range(len(tbl_name_elements)):
         alias_name = str(alias_name) + str(tbl_name_elements[i][0])
     return alias_name.strip()
+
+def get_TFN_column_mapping(smx_Rid_df):
+    tech_cols = tech_cols = get_fsdm_tech_cols_list()
+    TFN_df = smx_Rid_df[~smx_Rid_df.Column.isin(tech_cols)]
+    columns_comma = ""
+    stg_alias = "STG."
+    sgk_alias = "SGK."
+    for tfn_Rid_indx, tfn_Rid_row in TFN_df.iterrows():
+        comma = '\t' + ',' if tfn_Rid_indx > 0 else ''
+        col_name = tfn_Rid_row['Column'].upper()
+        col_dtype = tfn_Rid_row['Datatype'].upper()
+        col_dtype = handle_default_col_dtype(col_dtype)
+        src_tbl = tfn_Rid_row['Source_Table'].upper()
+        src_col = tfn_Rid_row['Source_Column'].upper()
+        load_type = tfn_Rid_row['Load Type'].upper()
+        rule = tfn_Rid_row['Rule']
+
+        if src_tbl == 'HCV' and src_col == 'HCV':
+            if rule == 'NULL':
+                HCV = 'NULL'
+            else:
+                applied_rule = rule.replace("Hardcode to", " ").strip()
+                HCV = single_quotes(applied_rule)
+            column_clause = "CAST( {} AS {} ) AS {} /*{}*/".format(HCV, col_dtype, col_name, rule)
+            columns_comma += comma + column_clause + '\n'
+
+        elif rule == "1:1" and src_tbl != 'JOB':
+            column_clause = "CAST( {}{} AS {} ) AS {} /*{}*/".format(stg_alias, src_col, col_dtype, col_name, rule)
+            columns_comma += comma + column_clause + '\n'
+
+        elif src_tbl == 'JOB' and "_STRT_" in col_name:
+            HCV_strt = "CURRENT_{}".format(col_dtype)
+            column_clause = "CAST( {} AS {} ) AS {} /*{}*/".format(HCV_strt, col_dtype, col_name, rule)
+            columns_comma += comma + column_clause + '\n'
+        elif "HISTORY" in load_type and src_tbl == 'JOB' and "_END_" in col_name:
+            HCV_end = "9999-12-31 23:59:59.999999"
+            HCV_end = single_quotes(HCV_end)
+            column_clause = "CAST( {} AS {} ) AS {} /* {}*/".format(HCV_end, col_dtype, col_name, rule)
+            columns_comma += comma + column_clause + '\n'
+        else:
+            column_clause = col_name + "/* mapped to {}.{} following rule: {}*/".format(src_tbl, src_col, rule)
+            columns_comma += comma + column_clause + '\n'
+
+    columns_comma = columns_comma[0:len(columns_comma) - 1]
+    return columns_comma
+
+
+def handle_default_col_dtype(dtype):
+    if dtype == 'TIMESTAMP':
+        o_dtype = 'TIMESTAMP(6)'
+    else:
+        o_dtype = dtype
+    return o_dtype.upper()
+
+
+def rule_col_analysis_sgk(smx_Rid_df):
+    tech_cols = tech_cols = get_fsdm_tech_cols_list()
+    TFN_df = smx_Rid_df[~smx_Rid_df.Column.isin(tech_cols)]
+    left_joins = " "
+    rule_output = " "
+    sgk_cntr = 1
+    for tfn_Rid_indx, tfn_Rid_row in TFN_df.iterrows():
+        rule = tfn_Rid_row['Rule']
+        rule_output = rule_cell_analysis_sgk(rule, sgk_cntr)
+        sgk_cntr += 1
+        if rule_output != " ":
+            left_joins += rule_output + "\n"
+    return left_joins
+
+def rule_cell_analysis_sgk(i_rule_cell_value, sgk_cntr):
+    print("rule_cell_value:\n", i_rule_cell_value)
+    source_key = " "
+    edw_key = " "
+    SGK_left_join_clause = " "
+    sgk_tbl = " "
+    sgk_alias = 'SGK{}'.format(str(sgk_cntr))
+    stg_alias = 'STG'
+    sgk_id_value = " "
+    rule_cell_value = i_rule_cell_value.upper()
+    if "LOOKUP" in rule_cell_value:
+        strt_index = rule_cell_value.find("LOOKUP")+len("LOOKUP")
+        rule_sbstring = rule_cell_value[strt_index:]
+        rule_sbstring_list = rule_sbstring.split()
+        print("rule_sbstring_list", rule_sbstring_list)
+        sgk_cntr = 0
+        print("len(rule_cell_value)", len(rule_sbstring_list), "__", len(rule_sbstring_list)-1 )
+        for i in range(len(rule_sbstring_list)-1):
+           print("**", i, "..........\n")
+           if i == 0:
+               source_key = rule_sbstring_list[i]
+               print("--source_key:", source_key)
+
+           elif "AGAINST" in rule_sbstring_list[i].upper():
+               edw_key = rule_sbstring_list[i + 1]
+               print("--edw_key:", edw_key)
+
+           elif "SGK" in rule_sbstring_list[i].upper():
+               if sgk_cntr == 0:
+                   sgk_tbl = rule_sbstring_list[i]
+                   print("--sgk_tbl:", sgk_tbl)
+                   sgk_cntr += 1
+                   # left_join_clause = "LEFT JOIN {}.{}{}\n ON \nAND ".format("dd_fsdm", sgk_tbl, sgk_alias)
+               else:
+                   sgk_id_value = rule_sbstring_list[i+2]
+                   print("--sgk_id_value:", sgk_id_value)
+                   # and_clause = "SGK.{} = {}".format(rule_sbstring_list[i], rule_sbstring_list[i+2])
+
+        SGK_left_join_clause = "\nLEFT JOIN {}.{} {}\nON {}.{} = {}.{}\n    AND {}.SGK_ID = {}"\
+                               .format("dd_fsdm", sgk_tbl, sgk_alias, sgk_alias, edw_key, stg_alias, source_key,
+                                       sgk_alias, sgk_id_value)
+        print("SGK_left_join_clause:\n", SGK_left_join_clause)
+    return SGK_left_join_clause
+
+
+
+
+
+
+
+
 
 def get_fsdm_tbl_columns(smx_Rid, alias_name):
     # smx_Rid = SMX_SHEET.loc[

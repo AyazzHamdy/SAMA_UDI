@@ -63,7 +63,7 @@ WHERE {FLAG_IND_equal_fsdm_pk};
 
 INSERT INTO {fsdm_prefix}.{fsdm_table_name}
 (
-    {table_columns}
+      {table_columns}
 )
 SELECT
     {table_columns}
