@@ -1,0 +1,64 @@
+/* ############################################################################
+#  FILE-NAME   : SAP{SOURCENAME}_{TABLENAME}_R{RECORDID}
+#  PURPOSE     : TRANSFORMATION SCRIPT FROM STAGE TO FSDM SGK .... 
+#  -------------------------------------------------------------------------
+#  DB-VERSION  : TD 16.20.32.11
+#  OS-VERSION  : MS WINDOWS SERVER 2012 R2
+#  -------------------------------------------------------------------------
+#
+#  AUTHOR      : Scripts Generator 
+#  DEPARTMENT  : TERADATA
+#  VERSION     : {versionnumber}  
+#  DATE        : {currentdate}
+#
+#  COPYRIGHT © 2020, TERADATA KSA
+#  -------------------------------------------------------------------------
+#  HISTORY:
+#
+#  DATE [YYYY-MM-DD]              VERSION                                DEVELOPER                                     
+#  -------                        ------                                 --------                                   
+#  {currentdate}                  {versionnumber}                    Scripts Generator   
+############################################################################*/
+ 
+/*########################################################################
+# LOGGIN ON
+#########################################################################*/
+.run FILE={bteq_run_file};
+ 
+/*############################################################################
+#  SGK INSERTION INTO FSDM
+############################################################################*/
+ 
+INSERT INTO {MODELDB}.{TABLENAME}
+(
+    {TABLECOLUMNS}
+)
+SELECT
+    MX.HIGHEST_ID+ROW_NUMBER() OVER (ORDER BY STG.{SOURCECOLUMN} DESC),
+    CAST ( STG.{SOURCECOLUMN} AS {DATATYPE}) AS {SOURCEKEY} , {NULLCOLUMNS} 
+    CAST ('{RECORDID}' AS SMALLINT) AS SGK_ID ,
+    {RECORDID} AS R_ID ,
+    (SELECT COALESCE(MAX(B_ID),0) FROM DD_MD.BATCH_LOG WHERE B_SOURCE = '{SOURCENAME}') AS B_ID ,
+    CURRENT_TIMESTAMP(0) AS INSRT_DTTM ,
+    CURRENT_TIMESTAMP(0) AS UPDT_DTTM
+ 
+FROM
+(
+    {RULE}
+    GROUP BY 1
+) STG
+ 
+LEFT JOIN  ( SELECT {SGKKEY} AS SGK_KEY, {SOURCEKEY} AS  SRC_KEY FROM {MODELDB}.{TABLENAME} WHERE SGK_ID = {RECORDID} ) TGT
+ON CAST (STG.{SOURCECOLUMN} AS ({DATATYPE})) = TGT.SRC_KEY
+ 
+CROSS JOIN ( SELECT MAX(COALESCE({SGKKEY},0)) HIGHEST_ID FROM {MODELDB}.{TABLENAME} ) MX
+ 
+WHERE TGT.SRC_KEY IS NULL;
+ 
+/*############################################################################
+#  CLOSING THE BTEQ SCRIPT, SESSION CLOSED AND LOGGING OFF
+############################################################################*/
+ 
+.LOGOFF;
+.QUIT;
+ 

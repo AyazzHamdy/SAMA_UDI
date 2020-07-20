@@ -1,0 +1,96 @@
+/* ############################################################################
+#  FILE-NAME   : UDI_{SOURCE_SYSTEM}_{filename}
+#  PURPOSE     : TRANSFORMATION SCRIPT FROM LOAD READY TO TAGET-TABLE HISTORY HANDLED...
+#  -------------------------------------------------------------------------
+#  DB-VERSION  : TD 16.20.32.11
+#  OS-VERSION  : MS WINDOWS SERVER 2012 R2
+#  -------------------------------------------------------------------------
+#
+#  AUTHOR      : Scripts Generator  
+#  DEPARTMENT  : TERADATA
+#  VERSION     : {versionnumber}
+#  DATE        : {currentdate}
+#
+#  COPYRIGHT © 2020, TERADATA KSA
+#  -------------------------------------------------------------------------
+#  HISTORY:
+#
+#  DATE [YYYY-MM-DD]              VERSION                                DEVELOPER                                
+#  -------                        ------                                 --------                                  
+#  {currentdate}                 {versionnumber}                    Scripts Generator     
+############################################################################*/
+ 
+/*########################################################################
+# LOGGIN ON
+#########################################################################*/
+.run FILE={bteq_run_file};
+ 
+/*############################################################################
+#  UPDATE FLAG ACCORDING TO HISTORY ALGORITHM
+############################################################################*/
+BT;
+
+UPDATE {LD_SCHEMA_NAME}.{TABLE_NAME}_{RECORD_ID}
+FROM
+(
+	SELECT
+	{PK_TABLE_COLOUMNS_WITH_ALIAS_LD}
+	CASE 
+	WHEN {TABLE_PK} IS NULL THEN 'I'
+	WHEN {COALESCED_TABLE_COLUMNS_LD_EQL_DATAMODEL}
+	THEN 'D'
+	ELSE 'U' END AS FLAG
+FROM {LD_SCHEMA_NAME}.{TABLE_NAME}_{RECORD_ID} LOAD_TABLE
+LEFT OUTER JOIN {MODEL_SCHEMA_NAME}.{TABLE_NAME} MODEL_TABLE
+ON  {LOADTBL_PK_EQL_MODELTBL}
+)FLAG_IND
+SET FLAG = FLAG_IND.FLAG
+WHERE 
+	{LOADTBL_PK_EQL_FLAGIND};
+
+/*##########################################################################
+# APPLYING UDI MARKING 'U' AT TARGET
+##########################################################################*/
+
+UPDATE {MODEL_SCHEMA_NAME}.{TABLE_NAME} MODEL_TABLE
+FROM {LD_SCHEMA_NAME}.{TABLE_NAME}_{RECORD_ID} LOAD_TABLE
+	SET {NON_PK_COLS_EQL_LD}
+WHERE LOAD_TABLE.FLAG = 'U'
+AND {LOADTBL_PK_EQL_MODELTBL};
+
+/*##########################################################################
+# APPLYING UDI MARKING 'I' AT TARGET
+##########################################################################*/
+
+INSERT INTO {MODEL_SCHEMA_NAME}.{TABLE_NAME} 
+(
+{TABLE_COLUMNS}
+)
+SELECT 
+{TABLE_COLUMNS}
+FROM {LD_SCHEMA_NAME}.{TABLE_NAME}_{RECORD_ID}
+WHERE FLAG IN ('I', 'U');
+
+
+/*##########################################################################
+# APPLYING UDI MARKING 'D' AT TARGET  --DUP DATABASE
+##########################################################################*/
+
+INSERT INTO {MODEL_DUP_SCHEMA_NAME}.{TABLE_NAME}_{RECORD_ID}
+(
+{TABLE_COLUMNS}
+)
+SELECT
+{TABLE_COLUMNS}
+FROM {LD_SCHEMA_NAME}.{TABLE_NAME}_{RECORD_ID}
+WHERE FLAG = 'D';
+
+
+ET;
+
+/*############################################################################
+#  CLOSING THE BTEQ SCRIPT, SESSION CLOSED AND LOGGING OFF
+############################################################################*/
+
+.LOGOFF;
+.QUIT;

@@ -1,0 +1,24 @@
+create table {stg_prefix}{schema_name}.{table_name} NO FALLBACK,
+	NO BEFORE JOURNAL,
+	NO AFTER JOURNAL,
+	CHECKSUM = DEFAULT,
+	DEFAULT MERGEBLOCKRATIO
+	(
+	  {columns}
+	  ,batch_id INTEGER
+	  ,filename VARCHAR(50) CHARACTER SET LATIN NOT CASESPECIFIC
+	  ,dump_dttm TIMESTAMP(3)
+	) {primary_index}{Table_name_pk}{pi_columns};
+
+create table {stg_prefix}{schema_name}.{table_name}{dup_suffix} NO FALLBACK,
+	NO BEFORE JOURNAL,
+	NO AFTER JOURNAL,
+	CHECKSUM = DEFAULT,
+	DEFAULT MERGEBLOCKRATIO
+	(
+	  {columns}
+	  ,b_id INTEGER TITLE 'B_Id'
+	  ,file_name VARCHAR(100) CHARACTER SET UNICODE NOT CASESPECIFIC
+	  ,insrt_dttm TIMESTAMP(6) TITLE 'Insert_Dttm'
+	  ,updt_dttm TIMESTAMP(6) TITLE 'Update_Dttm'
+	) {primary_index}{Table_name_pk}{pi_columns};

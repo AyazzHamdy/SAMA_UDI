@@ -1,0 +1,58 @@
+/* ############################################################################
+#  FILE-NAME   : {filename}
+#  PURPOSE     : TRANSFORMATION SCRIPT FROM STAGE TO DATAMART ....
+#  -------------------------------------------------------------------------
+#  DB-VERSION  : TD 16.20.32.11
+#  OS-VERSION  : MS WINDOWS SERVER 2012 R2
+#  -------------------------------------------------------------------------
+#
+#  AUTHOR      : Scripts Generator 
+#  DEPARTMENT  : TERADATA
+#  VERSION     : {versionnumber}  
+#  DATE        : {currentdate}
+#
+#  COPYRIGHT © 2020, TERADATA KSA
+#  -------------------------------------------------------------------------
+#  HISTORY:
+#
+#  DATE [YYYY-MM-DD]              VERSION                                DEVELOPER                                     
+#  -------                        ------                                 --------                                   
+#  {currentdate}                  {versionnumber}                    Scripts Generator   
+############################################################################*/
+ 
+/*########################################################################
+# LOGGIN ON
+#########################################################################*/
+.run FILE={bteq_run_file};
+ 
+/*############################################################################
+#  MOVE DATA FROM STAGE TO DATAMART
+############################################################################*/
+
+MERGE INTO {dm_prefix}{schema_name}.{table_name} dm
+USING {stg_prefix}{schema_name}.{table_name} stg 
+	{stg_equal_datamart_pk}
+WHEN MATCHED THEN 
+UPDATE SET
+{stg_equal_updt_cols}
+WHEN NOT MATCHED THEN 
+INSERT (
+	{table_columns}
+	,b_id
+	,insrt_dttm
+	,updt_dttm
+	)
+VALUES (	
+	{stg_columns}
+	,stg.batch_id b_id
+	,current_timestamp(0) insrt_dttm
+	,current_timestamp(0) updt_dttm
+	);
+
+
+/*############################################################################
+#  CLOSING THE BTEQ SCRIPT, SESSION CLOSED AND LOGGING OFF
+############################################################################*/
+
+.LOGOFF;
+.QUIT;

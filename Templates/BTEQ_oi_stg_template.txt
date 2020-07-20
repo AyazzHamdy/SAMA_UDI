@@ -1,0 +1,5 @@
+
+select
+	{stg_columns}
+from {stg_prefix}{schema_name}.{table_name} 
+
