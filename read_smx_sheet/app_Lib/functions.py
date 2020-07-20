@@ -164,7 +164,6 @@ def get_Rid_Source_System(SMX_Rid):
     return src_system_name
 
 
-
 def get_sama_table_columns_comma_separated(tables_sheet, Table_name, alias=None, record_id=None):
     if record_id is None:
         tables_df = tables_sheet.loc[
@@ -184,6 +183,9 @@ def get_sama_table_columns_comma_separated(tables_sheet, Table_name, alias=None,
             comma = '\t' + ',' if stg_tbl_indx > 0 else '\t'
         else:
             comma = '\t' + ',' if stg_tbl_indx > 0 else ''
+        if alias == 'sgk.':
+            alias = ''
+            comma = '' + ',' if stg_tbl_indx > 0 else '\t'
         if record_id is None:
             columns_comma += comma+alias+stg_tbl_row['COLUMN_NAME'] +'\n'
         else:
@@ -288,6 +290,40 @@ def get_sama_stg_table_columns_pk(tables_sheet, Table_name, record_id=None, hist
                                          & (tables_sheet['Record_ID'] == record_id)
                                          ].reset_index()
     return tables_df
+
+
+def get_sgk_record(SGK_tables,TABLENAME,RECORDID,flag):
+    null_cols = ''
+    tables_df = SGK_tables.loc[(SGK_tables['Entity'].str.upper() == TABLENAME.upper())
+                                         & (SGK_tables['Record_ID'] == RECORDID)
+                                         ].reset_index()
+    null_tables_df = tables_df.loc[(tables_df['Rule'] == 'NULL') | (tables_df['Rule'] == '')
+                                         ].reset_index()
+
+    for null_tables_index,null_tables_row in null_tables_df.iterrows():
+        Column_name = null_tables_row['Column']
+        null_statment = 'NULL AS ' + Column_name
+        and_Column_name = '\n\t' + null_statment + ','
+        null_cols = null_cols + and_Column_name
+    if flag == 'null_cols':
+        return null_cols
+
+    for tables_df_index,tables_df_row in tables_df.iterrows():
+        if tables_df_row['Rule'] != 'NULL' and tables_df_row['Rule'] != '':
+            source_column = tables_df_row['Source_Column']
+            sgk_key = tables_df_row['Column']
+            src_key_dt = tables_df_row['Datatype']
+            rule = tables_df_row['Rule']
+            if flag == 'sgk_key':
+                return sgk_key
+            if flag == 'src_col':
+                return source_column
+            if flag == 'rule':
+                return rule
+            if flag == 'src_key' and rule == '1:1':
+                return sgk_key
+            if flag == 'data_type' and rule == '1:1':
+                return src_key_dt
 
 
 def get_conditional_stamenet(tables_sheet, Table_name,columns_type,operational_symbol,alias1=None,alias2=None,record_id=None,history_flag=None):
@@ -467,7 +503,6 @@ def get_smx_files(smx_path, smx_ext, stg_sheets,smx_sheets,sheet_type):
         elif sheet_type == 'SMX':
             smx_files.append(i) if is_smx_file(file, smx_sheets) else None
     return smx_files
-
 
 def get_config_file_path():
     config_file_path = md.get_dirs()[1]

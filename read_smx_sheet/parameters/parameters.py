@@ -10,6 +10,7 @@ default_bteq_oi_stg_template_file_name = "BTEQ_oi_stg_template.txt"
 default_history_apply_template_file_name = "History_template.txt"
 default_bteq_apply_insert_template_file_name = "BTEQ_apply_insert_template.txt"
 default_bteq_apply_upsert_template_file_name = "BTEQ_apply_upsert_template.txt"
+default_sgk_template_file_name = "SGK_template.txt"
 
 
 smx_ext = "xlsx"
@@ -23,5 +24,5 @@ staging_sheets = [Data_types_sht,STG_tables_sht]
 smx_sheets = [smx_sht]
 
 # AppName_<Major>.<Minor>.<BuildNo>
-ver_no = "| Build #2.11.11"
+ver_no = "| Build #2.11.12"
 # ################################################################################################

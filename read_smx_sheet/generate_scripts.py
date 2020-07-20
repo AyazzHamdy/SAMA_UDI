@@ -4,6 +4,7 @@ from read_smx_sheet.app_Lib import manage_directories as md, functions as funcs
 from dask import compute, delayed, config
 from dask.diagnostics import ProgressBar
 from read_smx_sheet.templates import Staging_DDL, BTEQ_Scripts, Apply_Insert_Upsert,History_Apply
+from read_smx_sheet.templates import SGK_insertion
 from read_smx_sheet.parameters import parameters as pm
 import traceback
 import datetime as dt
@@ -37,6 +38,10 @@ class ConfigFile:
             self.ld_prefix = self.config_file_values["ld_prefix"]
             self.modelDB_prefix = self.config_file_values["fsdm_prefix"]
             self.modelDup_prefix = self.config_file_values["dup_prefix"]
+            try:
+                self.sgk_source = self.config_file_values["SGK_Source"]
+            except:
+                self.sgk_source = 'ALL'
 
 
 class GenerateScripts:
@@ -102,11 +107,14 @@ class GenerateScripts:
                         self.parallel_templates.append(delayed(BTEQ_Scripts.bteq_temp_script)(self.cf, bteq_stg_oi_scripts_output_path, STG_tables, 'from stg to oi'))
                     elif self.scripts_generation_flag == 'SMX':
                         main_output_path_apply = home_output_path + "/" + "APPLY_SCRIPTS"
+                        main_output_path_sgk = home_output_path + "/" + "SGK"
                         self.parallel_create_output_source_path.append(delayed(md.create_folder)(main_output_path_apply))
+                        self.parallel_create_output_source_path.append(delayed(md.create_folder)(main_output_path_sgk))
                         smx_sheet = delayed(funcs.read_excel)(smx_file_path, sheet_name=self.smx_sheet)
                         self.parallel_templates.append(delayed(Apply_Insert_Upsert.apply_insert_upsert)(self.cf, main_output_path_apply, smx_sheet[smx_sheet['Load Type'] == 'Insert Only'], "Apply_Insert"))
                         self.parallel_templates.append(delayed(Apply_Insert_Upsert.apply_insert_upsert)(self.cf, main_output_path_apply, smx_sheet[smx_sheet['Load Type'] == 'Upsert'], "Apply_Upsert"))
                         self.parallel_templates.append(delayed(History_Apply.history_apply)(self.cf, main_output_path_apply, smx_sheet))
+                        self.parallel_templates.append(delayed(SGK_insertion.sgk_insertion)(self.cf, main_output_path_sgk, smx_sheet))
 
                 except Exception as e_smx_file:
                     # print(error)
