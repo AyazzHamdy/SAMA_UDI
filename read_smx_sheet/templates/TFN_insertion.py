@@ -13,6 +13,7 @@ def TFN_insertion(cf, source_output_path, SMX_SHEET):
     ld_prefix = cf.ld_prefix
     STG_prefix = cf.stg_prefix
 
+    current_date = funcs.get_current_date()
     Source_name = cf.sgk_source
     if Source_name != 'ALL':
         SMX_SHEET = SMX_SHEET[SMX_SHEET['Ssource'] == Source_name]
@@ -55,7 +56,7 @@ def TFN_insertion(cf, source_output_path, SMX_SHEET):
         col_mapping = funcs.get_TFN_column_mapping(TFN_record_id_df)
         left_joins = funcs.rule_col_analysis_sgk(TFN_record_id_df)
 
-        bteq_script = template_string.format(currentdate=date.today().strftime("%d/%m/%Y"),
+        bteq_script = template_string.format(currentdate=current_date,
                                              bteq_run_file=bteq_run_file,
                                              ld_prefix=ld_prefix,
                                              FSDM_tbl_Name=fsdm_table_name,

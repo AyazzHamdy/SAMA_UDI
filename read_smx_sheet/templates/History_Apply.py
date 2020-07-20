@@ -23,8 +23,9 @@ def history_apply(cf, source_output_path, smx_table):
     MODEL_SCHEMA_NAME = cf.modelDB_prefix
     MODEL_DUP_SCHEMA_NAME = cf.modelDup_prefix
     bteq_run_file = cf.bteq_run_file
-    today = date.today()
-    today = today.strftime("%d/%m/%Y")
+    # today = date.today()
+    # today = today.strftime("%d/%m/%Y")
+    current_date = funcs.get_current_date()
     template_string = ""
     try:
         template_file = open(template_path, "r")
@@ -63,7 +64,7 @@ def history_apply(cf, source_output_path, smx_table):
                                                             'MODEL_TABLE', 'LOAD_TABLE', record_id)
 
         bteq_script = template_string.format(SOURCE_SYSTEM=SOURCE_SYSTEM,versionnumber=pm.ver_no,
-                                             currentdate=today,
+                                             currentdate=current_date,
                                              filename=filename,
                                              bteq_run_file=bteq_run_file, LD_SCHEMA_NAME=LD_SCHEMA_NAME,
                                              MODEL_SCHEMA_NAME=MODEL_SCHEMA_NAME,

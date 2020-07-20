@@ -12,6 +12,7 @@ from read_smx_sheet.app_Lib import manage_directories as md
 from read_smx_sheet.parameters import parameters as pm
 import datetime as dt
 import psutil
+from datetime import date
 
 
 def read_excel(file_path, sheet_name, filter=None, reserved_words_validation=None, nan_to_empty=True):
@@ -265,7 +266,8 @@ def rule_cell_analysis_sgk(i_rule_cell_value, sgk_cntr):
 
 
 
-
+def get_current_date():
+    return date.today().strftime("%Y-%m-%d")
 
 
 def get_fsdm_tbl_columns(smx_Rid, alias_name):

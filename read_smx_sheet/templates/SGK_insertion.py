@@ -11,8 +11,9 @@ def sgk_insertion(cf, source_output_path, smx_table):
     MODELDB = cf.modelDB_prefix
     bteq_run_file = cf.bteq_run_file
     SOURCENAME = cf.sgk_source
-    today = date.today()
-    today = today.strftime("%d/%m/%Y")
+    # today = date.today()
+    # today = today.strftime("%d/%m/%Y")
+    current_date = funcs.get_current_date()
     template_string = ""
     SGK_tables = smx_table[smx_table['Entity'].str.endswith(str('_SGK'))]
     if SOURCENAME != 'ALL':
@@ -42,7 +43,7 @@ def sgk_insertion(cf, source_output_path, smx_table):
         DATATYPE = funcs.get_sgk_record(SGK_tables,TABLENAME,RECORDID,'data_type')
 
         bteq_script = template_string.format(versionnumber=pm.ver_no,
-                                             currentdate=today,
+                                             currentdate=current_date,
                                              filename=filename,
                                              bteq_run_file=bteq_run_file, MODELDB=MODELDB,
                                              TABLENAME=TABLENAME,RECORDID=RECORDID,

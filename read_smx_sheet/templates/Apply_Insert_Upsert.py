@@ -15,6 +15,7 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
         elif 'Upsert'.upper() in load_types_list[i].upper():
             upsrt_load_types.append(load_types_list[i])
 
+    current_date = funcs.get_current_date()
     ld_prefix = cf.ld_prefix
     FSDM_prefix = cf.modelDB_prefix
     DupDB_prefix = cf.modelDup_prefix
@@ -103,7 +104,7 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
                                                                                   , '=', ld_tbl_alias, fsdm_tbl_alias,
                                                                                   Record_id)
             bteq_script = template_string.format(filename=BTEQ_file_name,#versionnumber=pm.ver_no,
-                                                 currentdate=date.today().strftime("%d/%m/%Y"),
+                                                 currentdate=current_date,
                                                  bteq_run_file=bteq_run_file,
                                                  ld_prefix=ld_prefix,
                                                  schema_name=schema_name,
@@ -132,7 +133,7 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
             non_pk_cols_eql_ld_cols = non_pk_cols_eql_ld_cols.replace(' and ', ',')
 
             bteq_script = template_string.format(filename=BTEQ_file_name, #versionnumber=pm.ver_no,
-                                                 currentdate=date.today().strftime("%d/%m/%Y"),
+                                                 currentdate=current_date,
                                                  bteq_run_file=bteq_run_file,
                                                  ld_prefix=ld_prefix,
                                                  schema_name=schema_name,
