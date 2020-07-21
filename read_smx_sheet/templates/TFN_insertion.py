@@ -41,7 +41,7 @@ def TFN_insertion(cf, source_output_path, SMX_SHEET):
 
     for record_id in record_ids_list:
         TFN_record_id_df = funcs.get_sama_fsdm_record_id(SMX_SHEET, record_id)
-        # print("***************", TFN_record_id_df['Rule'])
+
         Record_id = record_id
 
         fsdm_table_name = TFN_record_id_df['Entity'].unique()[0]
@@ -71,5 +71,5 @@ def TFN_insertion(cf, source_output_path, SMX_SHEET):
                                              )
 
         bteq_script = bteq_script.upper()
-        f.write(bteq_script)
+        f.write(bteq_script.replace('Â', ' '))
         f.close()

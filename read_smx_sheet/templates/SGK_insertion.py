@@ -53,5 +53,5 @@ def sgk_insertion(cf, source_output_path, smx_table):
                                              DATATYPE=DATATYPE
                                              )
         bteq_script = bteq_script.upper()
-        f.write(bteq_script)
+        f.write(bteq_script.replace('Â', ' '))
         f.close()

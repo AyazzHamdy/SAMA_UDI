@@ -17,7 +17,7 @@
 #
 #  DATE [YYYY-MM-DD]              VERSION            DEVELOPER            DESCRIPTION OF CHANGE
 #  -------                        ------             ----------           ---------------------
-#  {currentdate}                   1.0             Scripts Generator         INITIAL VERSION
+#  {currentdate}                      1.0             Scripts Generator         INITIAL VERSION
 ############################################################################*/
 
 /*########################################################################
@@ -33,6 +33,7 @@
 BT;
 
 UPDATE {ld_tbl_alias}
+
 FROM {ld_prefix}{schema_name}.{ld_table_name} {ld_tbl_alias},
 (
     SELECT
@@ -41,7 +42,7 @@ FROM {ld_prefix}{schema_name}.{ld_table_name} {ld_tbl_alias},
 	    WHEN {FSDM_first_tbl_pk} IS NULL THEN 'I'
 	    WHEN{COALESCED_TABLE_PK_COLUMNS_LD_EQL_FSDM}
 	    THEN 'D'
-	ELSE 'X' END AS FLAG  -- Setting update as X because we are not going to update this table in this TFN and want to show correct figures in metadata as well
+    ELSE 'X' END AS FLAG  -- Setting update as X because we are not going to update this table in this TFN and want to show correct figures in metadata as well
 
     FROM {ld_prefix}{schema_name}.{ld_table_name} {ld_tbl_alias}
 
@@ -63,7 +64,7 @@ WHERE {FLAG_IND_equal_fsdm_pk};
 
 INSERT INTO {fsdm_prefix}.{fsdm_table_name}
 (
-      {table_columns}
+    {table_columns}
 )
 SELECT
     {table_columns}
@@ -80,7 +81,7 @@ INSERT INTO {dup_prefix}{schema_name}.{ld_table_name}
     {table_columns}
 )
 SELECT
-     {table_columns}
+    {table_columns}
 
 FROM {ld_prefix}{schema_name}.{ld_table_name}
 WHERE FLAG = 'D';

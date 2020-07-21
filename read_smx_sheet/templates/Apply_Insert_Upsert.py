@@ -78,7 +78,8 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
 
         Table_name = smx_record_id_df['Entity'].unique()[0]
         fsdm_tbl_alias = funcs.get_fsdm_tbl_alias(Table_name)
-        ld_tbl_alias = "{}_R{}_LD".format(fsdm_tbl_alias, Record_id)
+
+        ld_tbl_alias = funcs.get_ld_tbl_alias(fsdm_tbl_alias, Record_id)
         fsdm_tbl_alias = fsdm_tbl_alias + "_FSDM"
         ld_table_name = Table_name + "_R" + str(Record_id)
         BTEQ_file_name = "UDI_{}_{}".format(SOURCENAME, ld_table_name)
@@ -154,6 +155,6 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
                                                  )
 
         bteq_script = bteq_script.upper()
-        f.write(bteq_script)
+        f.write(bteq_script.replace('Â', ' '))
         f.close()
 
