@@ -18,6 +18,8 @@ def TFN_insertion(cf, source_output_path, SMX_SHEET):
     if Source_name != 'ALL':
         SMX_SHEET = SMX_SHEET[SMX_SHEET['Ssource'] == Source_name]
 
+    SMX_SHEET = funcs.get_apply_processes(SMX_SHEET, "TFN")
+
     template_string = ""
     template_head = ""
     try:

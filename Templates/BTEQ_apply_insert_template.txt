@@ -15,9 +15,9 @@
 #  -------------------------------------------------------------------------
 #  HISTORY:
 #
-#  DATE [YYYY-MM-DD]              VERSION            DEVELOPER            DESCRIPTION OF CHANGE
-#  -------                        ------             ----------           ---------------------
-#  {currentdate}                      1.0             Scripts Generator         INITIAL VERSION
+#  DATE [YYYY-MM-DD]       VERSION            DEVELOPER            DESCRIPTION OF CHANGE
+#  --------------           ------             ----------           ---------------------
+#    {currentdate}              1.0             Scripts Generator         INITIAL VERSION
 ############################################################################*/
 
 /*########################################################################
@@ -39,9 +39,9 @@ FROM {ld_prefix}{schema_name}.{ld_table_name} {ld_tbl_alias},
     SELECT
     {tbl_pk_cols_aliased}
     ,CASE
-	    WHEN {FSDM_first_tbl_pk} IS NULL THEN 'I'
-	    WHEN{COALESCED_TABLE_PK_COLUMNS_LD_EQL_FSDM}
-	    THEN 'D'
+        WHEN {FSDM_first_tbl_pk} IS NULL THEN 'I'
+        WHEN{COALESCED_TABLE_nonPK_COLUMNS_LD_EQL_FSDM}
+        THEN 'D'
     ELSE 'X' END AS FLAG  -- Setting update as X because we are not going to update this table in this TFN and want to show correct figures in metadata as well
 
     FROM {ld_prefix}{schema_name}.{ld_table_name} {ld_tbl_alias}

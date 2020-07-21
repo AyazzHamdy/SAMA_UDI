@@ -15,9 +15,9 @@
 #  -------------------------------------------------------------------------
 #  HISTORY:
 #
-#  DATE [YYYY-MM-DD]              VERSION            DEVELOPER            DESCRIPTION OF CHANGE
-#  -------                        ------             ----------           ---------------------
-#  {currentdate}                      1.0             Scripts Generator         INITIAL VERSION
+#  DATE [YYYY-MM-DD]       VERSION            DEVELOPER            DESCRIPTION OF CHANGE
+#  --------------           ------             ----------           ---------------------
+#    {currentdate}              1.0             Scripts Generator         INITIAL VERSION
 ############################################################################*/
 
 

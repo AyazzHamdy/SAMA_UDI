@@ -39,10 +39,10 @@ FROM {ld_prefix}{schema_name}.{ld_table_name} {ld_tbl_alias},
     SELECT
     {tbl_pk_cols_aliased}
     ,CASE
-	    WHEN {FSDM_first_tbl_pk} IS NULL THEN 'I'
-	    WHEN{COALESCED_TABLE_nonPK_COLUMNS_LD_EQL_FSDM}
-	    THEN 'D'
-	ELSE 'U' END AS FLAG
+        WHEN {FSDM_first_tbl_pk} IS NULL THEN 'I'
+        WHEN{COALESCED_TABLE_nonPK_COLUMNS_LD_EQL_FSDM}
+        THEN 'D'
+    ELSE 'U' END AS FLAG
     FROM {ld_prefix}{schema_name}.{ld_table_name} {ld_tbl_alias}
 
     LEFT OUTER JOIN {fsdm_prefix}.{fsdm_table_name} {fsdm_tbl_alias}

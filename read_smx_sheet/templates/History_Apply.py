@@ -8,6 +8,7 @@ from os import path, makedirs
 def history_apply(cf, source_output_path, smx_table):
 
     hist_load_types = funcs.get_history_load_types(smx_table)
+
     folder_name = 'Apply_History'
     apply_folder_path = path.join(source_output_path, folder_name)
     makedirs(apply_folder_path)
@@ -34,15 +35,16 @@ def history_apply(cf, source_output_path, smx_table):
         if i != "":
             template_string = template_string + i
 
-    history_handeled_df = funcs.get_history_handled_processes(smx_table, hist_load_types)
+    # history_handeled_df = funcs.get_history_handled_processes(smx_table, hist_load_types)
+    history_handeled_df = funcs.get_apply_processes(smx_table, "Apply_History")
 
     record_ids_list = history_handeled_df['Record_ID'].unique()
-    print ("record_ids_list", record_ids_list)
+
     for r_id in record_ids_list:
         history_df = funcs.get_sama_fsdm_record_id(history_handeled_df, r_id)
 
         record_id = r_id
-        table_name = history_handeled_df['Entity'].unique()[0]
+        table_name = history_df['Entity'].unique()[0]
         filename = table_name + '_' + str(record_id)
         f = funcs.WriteFile(apply_folder_path, filename, "bteq")
         filename = filename + '.bteq'
@@ -50,31 +52,36 @@ def history_apply(cf, source_output_path, smx_table):
         fsdm_tbl_alias = funcs.get_fsdm_tbl_alias(table_name)
         ld_tbl_alias = funcs.get_ld_tbl_alias(fsdm_tbl_alias, record_id)
         fsdm_tbl_alias = fsdm_tbl_alias+"_FSDM"
-        strt_date, end_date, hist_keys, hist_cols = funcs.get_history_variables(history_handeled_df, record_id, table_name)
-        print("hist_keys, hist_keys", hist_keys)
-        print("hist_cols, hist_cols", hist_cols)
+        strt_date, end_date, hist_keys, hist_cols = funcs.get_history_variables(history_df, record_id, table_name)
+        # print("hist_keys, hist_keys", hist_keys)
+        # print("hist_cols, hist_cols", hist_cols)
         first_history_key = hist_keys[0]
         strt_date = strt_date[0]
         end_date = end_date[0]
 
         hist_keys_aliased = funcs.get_aliased_columns(hist_keys, ld_tbl_alias)
-        COALESCED_history_col_LD_EQL_DATAMODEL = funcs.get_comparison_columns(history_handeled_df, table_name,
+        COALESCED_history_col_LD_EQL_DATAMODEL = funcs.get_comparison_columns(history_df, table_name,
                                                                               "HISTORY_COL", '=', ld_tbl_alias,
                                                                               fsdm_tbl_alias, record_id)
+        # print("COALESCED_history_col_LD_EQL_DATAMODEL", COALESCED_history_col_LD_EQL_DATAMODEL)
+        if COALESCED_history_col_LD_EQL_DATAMODEL.strip() == "":
+            COALESCED_history_col_LD_EQL_DATAMODEL = "/* This is a special history case, please refer to the" \
+                                                     " SMX's Rules column to deduce the needed History_columns " \
+                                                     "that will be changing */"
 
-        ld_fsdm_history_key_and_end_date_equality = funcs.get_conditional_stamenet(history_handeled_df, table_name,
+        ld_fsdm_history_key_and_end_date_equality = funcs.get_conditional_stamenet(history_df, table_name,
                                                                                    'hist_key_end_date', '=',
                                                                                    ld_tbl_alias, fsdm_tbl_alias,
                                                                                    record_id, None)
 
-        ld_fsdm_history_key_and_strt_date_equality = funcs.get_conditional_stamenet(history_handeled_df, table_name,
+        ld_fsdm_history_key_and_strt_date_equality = funcs.get_conditional_stamenet(history_df, table_name,
                                                                                     'hist_key_strt_date', '=',
                                                                                     ld_tbl_alias, "FLAG_IND",
                                                                                     record_id, None)
 
         end_date_updt = funcs.get_hist_end_dt_updt(end_date, "end_date", "=", None, ld_tbl_alias, record_id)
 
-        TBL_COLUMNS = funcs.get_sama_table_columns_comma_separated(history_handeled_df, table_name, None, record_id)
+        TBL_COLUMNS = funcs.get_sama_table_columns_comma_separated(history_df, table_name, None, record_id)
 
         bteq_script = template_string.format(SOURCE_SYSTEM=SOURCENAME, versionnumber=pm.ver_no,
                                              currentdate=current_date,

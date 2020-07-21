@@ -87,8 +87,25 @@ def get_history_load_types(smx_sheet_df):
     for i in range(len(load_types_list)):
         if 'History'.upper() in load_types_list[i].upper():
             hist_load_types.append(load_types_list[i])
-    print("hist_load_types", hist_load_types)
     return hist_load_types
+
+def get_insert_load_types(smx_sheet_df):
+    load_types_list = smx_sheet_df['Load Type'].unique()
+    insert_load_types = []
+    for i in range(len(load_types_list)):
+        if 'Insert'.upper() in load_types_list[i].upper():
+            insert_load_types.append(load_types_list[i])
+    # print("insert_load_types", insert_load_types)
+    return insert_load_types
+
+def get_upsert_load_types(smx_sheet_df):
+    load_types_list = smx_sheet_df['Load Type'].unique()
+    upsert_load_types = []
+    for i in range(len(load_types_list)):
+        if 'Upsert'.upper() in load_types_list[i].upper():
+            upsert_load_types.append(load_types_list[i])
+    # print("upsert_load_types", upsert_load_types)
+    return upsert_load_types
 
 def is_history_load_type(TFN_Rid_df):
     hist_load_types = get_history_load_types(TFN_Rid_df)
@@ -97,12 +114,25 @@ def is_history_load_type(TFN_Rid_df):
     else:
         return False
 
-def get_history_handled_processes(smx_table, hist_load_types):
-    # History_transformations = smx_table.loc[smx_table['Load Type'] == 'History Handled'].reset_index()
+def get_apply_processes(smx_sheet, apply_type):
+    # print("get_apply_processes", apply_type.upper())
+    if apply_type.upper() == "APPLY_INSERT":
+        insrt_load_types = get_insert_load_types(smx_sheet)
+        apply_tfns = smx_sheet.loc[smx_sheet['Load Type'].isin(insrt_load_types)]
+        # print("insrt_load_types", insrt_load_types)
+    elif apply_type.upper() == "APPLY_UPSERT":
+        upsrt_load_types = get_upsert_load_types(smx_sheet)
+        apply_tfns = smx_sheet.loc[smx_sheet['Load Type'].isin(upsrt_load_types)]
+        # print("upsrt_load_types", upsrt_load_types)
+    elif apply_type.upper() == "APPLY_HISTORY":
+        hist_load_types = get_history_load_types(smx_sheet)
+        apply_tfns = smx_sheet.loc[smx_sheet['Load Type'].isin(hist_load_types)]
+    else:
+        apply_tfns = smx_sheet
 
-    History_transformations = smx_table[smx_table['Load Type'].isin(hist_load_types)]
-
-    return History_transformations
+    apply_processes = apply_tfns[(apply_tfns['Source_System'] != 'EMDAD_M')]
+    apply_processes = apply_processes[~apply_processes['Entity'].str.endswith(str('_SGK'))]
+    return apply_processes
 
 
 def get_sama_stg_tables(STG_tables, source_name=None):
@@ -132,7 +162,11 @@ def get_Rid_Source_Table(SMX_R_id):
     tech_src_tbl_list = get_SMX_tech_Source_Table_vals()
     src_tbl_list = SMX_R_id['Source_Table'].unique()
     o_src_tbls_list = np.setdiff1d(src_tbl_list, tech_src_tbl_list).tolist()
-    src_tbl = o_src_tbls_list[0]
+    print("R_id: ", SMX_R_id["Record_ID"].unique(), "o_src_tbls_list: ", o_src_tbls_list)
+    try:
+        src_tbl = o_src_tbls_list[0]
+    except:
+        src_tbl = " "
     src_tbl_name = '"'+src_tbl+'"' if str(src_tbl[0]) == str(0) else src_tbl
     return src_tbl_name
 
@@ -172,8 +206,11 @@ def get_TFN_column_mapping(smx_Rid_df):
         src_tbl = tfn_Rid_row['Source_Table'].upper()
         src_col = tfn_Rid_row['Source_Column'].upper()
         load_type = tfn_Rid_row['Load Type'].upper()
-        rule = tfn_Rid_row['Rule'].replace("\n", " ")
 
+        rule = tfn_Rid_row['Rule']
+        # print("rule", rule)
+        rule = str(rule).replace("\n", " ")
+        # print("rule2", rule)
         if src_tbl == 'HCV' and src_col == 'HCV':
             if rule == 'NULL':
                 HCV = 'NULL'
@@ -235,39 +272,39 @@ def rule_cell_analysis_sgk(i_rule_cell_value, sgk_cntr):
     sgk_alias = 'SGK{}'.format(str(sgk_cntr))
     stg_alias = 'STG'
     sgk_id_value = " "
-    rule_cell_value = i_rule_cell_value.upper()
+    rule_cell_value = str(i_rule_cell_value).upper()
     if "LOOKUP" in rule_cell_value:
         strt_index = rule_cell_value.find("LOOKUP")+len("LOOKUP")
         rule_sbstring = rule_cell_value[strt_index:]
         rule_sbstring_list = rule_sbstring.split()
-        print("rule_sbstring_list", rule_sbstring_list)
+        # print("rule_sbstring_list", rule_sbstring_list)
         sgk_cntr = 0
-        print("len(rule_cell_value)", len(rule_sbstring_list), "__", len(rule_sbstring_list)-1 )
+        # print("len(rule_cell_value)", len(rule_sbstring_list), "__", len(rule_sbstring_list)-1 )
         for i in range(len(rule_sbstring_list)-1):
-           print("**", i, "..........\n")
+           # print("**", i, "..........\n")
            if i == 0:
                source_key = rule_sbstring_list[i]
-               print("--source_key:", source_key)
+               # print("--source_key:", source_key)
 
            elif "AGAINST" in rule_sbstring_list[i].upper():
                edw_key = rule_sbstring_list[i + 1]
-               print("--edw_key:", edw_key)
+               # print("--edw_key:", edw_key)
 
            elif "SGK" in rule_sbstring_list[i].upper():
                if sgk_cntr == 0:
                    sgk_tbl = rule_sbstring_list[i]
-                   print("--sgk_tbl:", sgk_tbl)
+                   # print("--sgk_tbl:", sgk_tbl)
                    sgk_cntr += 1
                    # left_join_clause = "LEFT JOIN {}.{}{}\n ON \nAND ".format("dd_fsdm", sgk_tbl, sgk_alias)
                else:
                    sgk_id_value = rule_sbstring_list[i+2]
-                   print("--sgk_id_value:", sgk_id_value)
+                   # print("--sgk_id_value:", sgk_id_value)
                    # and_clause = "SGK.{} = {}".format(rule_sbstring_list[i], rule_sbstring_list[i+2])
 
         SGK_left_join_clause = "\nLEFT JOIN {}.{} {}\nON {}.{} = {}.{}\n    AND {}.SGK_ID = {}"\
                                .format("dd_fsdm", sgk_tbl, sgk_alias, sgk_alias, edw_key, stg_alias, source_key,
                                        sgk_alias, sgk_id_value)
-        print("SGK_left_join_clause:\n", SGK_left_join_clause)
+        # print("SGK_left_join_clause:\n", SGK_left_join_clause)
     return SGK_left_join_clause
 
 
@@ -296,8 +333,8 @@ def get_history_variables(smx_sheet, rid, table_name):
     historization_columns = smx_TFN_Rid[smx_TFN_Rid['PK'].str.upper() != 'PK']['Column'].tolist()
     historization_keys = [item for item in historization_keys if item not in possible_start_date]
     historization_columns = [item for item in historization_columns if item not in possible_end_date]
-    # historization_keys = np.setdiff1d(~smx_Rid_df.Column.isin(tech_cols))
-    print("possible_start_date: ", possible_start_date, "possible_end_date: ", possible_end_date, "historization_keys: ", historization_keys, "historization_columns: ", historization_columns )
+
+    # print("possible_start_date: ", possible_start_date, "possible_end_date: ", possible_end_date, "historization_keys: ", historization_keys, "historization_columns: ", historization_columns )
     return possible_start_date, possible_end_date, historization_keys, historization_columns
 
 
@@ -389,24 +426,25 @@ def get_comparison_columns(tables_sheet, Table_name, apply_type, operational_sym
                                      ].reset_index()
     elif apply_type.upper() == "HISTORY_COL":
         hist_col_list = get_history_variables(tables_sheet, record_id, Table_name)[3]
-        # print("((((((((((hist_col_list:", Table_name, ">>>>", hist_col_list)
         tables_sheet = tables_sheet[tables_sheet.Column.isin(hist_col_list)]
-        # print("((((((((((tables_df_:", Table_name, ">>>>", tables_sheet.head())
+
         tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
                                      & (tables_sheet['PK'].str.upper() != 'PK')
                                      & (tables_sheet['Record_ID'] == record_id)#.any(axis = 0)
                                      ].reset_index()
         tables_df = tables_df[tables_df.Column.isin(hist_col_list)]
 
-        print("**func, tables_df:\n", tables_df)
-    elif apply_type.upper() == "INSERT":
-        tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
-                                     & (tables_sheet['PK'].str.upper() == 'PK')
-                                     & (tables_sheet['Record_ID'] == record_id)
-                                     ].reset_index()
-    else: #UPSERT
+    elif apply_type.upper() == "INSERT" or apply_type.upper() == "UPSERT":
+
         tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
                                      & (tables_sheet['PK'].str.upper() != 'PK')
+                                     & (tables_sheet['Record_ID'] == record_id)
+                                     ].reset_index()
+        tech_cols = get_fsdm_tech_cols_list()
+        tables_df = tables_df[~tables_df.Column.isin(tech_cols)]
+    else:
+        tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
+                                     & (tables_sheet['PK'].str.upper() == 'PK')
                                      & (tables_sheet['Record_ID'] == record_id)
                                      ].reset_index()
         tech_cols = get_fsdm_tech_cols_list()

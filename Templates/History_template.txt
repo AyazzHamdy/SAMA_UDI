@@ -15,9 +15,9 @@
 #  -------------------------------------------------------------------------
 #  HISTORY:
 #
-#  DATE [YYYY-MM-DD]              VERSION            DEVELOPER            DESCRIPTION OF CHANGE
-#  --------------                 ------             ----------           ---------------------
-#    {currentdate}                    1.0             Scripts Generator         INITIAL VERSION
+#  DATE [YYYY-MM-DD]       VERSION            DEVELOPER            DESCRIPTION OF CHANGE
+#  --------------           ------             ----------           ---------------------
+#    {currentdate}              1.0             Scripts Generator         INITIAL VERSION
 ############################################################################*/
 
 /*########################################################################
@@ -33,14 +33,14 @@ BT;
 UPDATE {ld_alias}
 FROM {LD_SCHEMA_NAME}{SOURCE_SYSTEM}.{TABLE_NAME}_{RECORD_ID} {ld_alias},
 (
-	SELECT
-	{history_key}
-	,{ld_alias}.{start_date}
-	CASE
-	WHEN {fsdm_alias}.{first_history_key} IS NULL THEN 'I'
-	WHEN {COALESCED_history_col_LD_EQL_DATAMODEL}
-	THEN 'D'
-	ELSE 'U' END AS FLAG
+    SELECT
+    {history_key}
+    ,{ld_alias}.{start_date}
+    CASE
+    WHEN {fsdm_alias}.{first_history_key} IS NULL THEN 'I'
+    WHEN {COALESCED_history_col_LD_EQL_DATAMODEL}
+    THEN 'D'
+    ELSE 'U' END AS FLAG
 
 FROM {LD_SCHEMA_NAME}{SOURCE_SYSTEM}.{TABLE_NAME}_{RECORD_ID} {ld_alias}
 
@@ -60,8 +60,8 @@ FROM {MODEL_SCHEMA_NAME}.{TABLE_NAME} {fsdm_alias},
 {LD_SCHEMA_NAME}{SOURCE_SYSTEM}.{TABLE_NAME}_{RECORD_ID} {ld_alias}
 
 SET {end_date_updt}
-	    ,B_ID = {ld_alias}.B_ID
-        ,UPDT_DTTM = {ld_alias}.UPDT_DTTM
+    ,B_ID = {ld_alias}.B_ID
+    ,UPDT_DTTM = {ld_alias}.UPDT_DTTM
 
 WHERE {ld_alias}.FLAG = 'U'
 AND {ld_fsdm_history_key_and_end_date_equality};
