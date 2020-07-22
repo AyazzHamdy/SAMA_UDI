@@ -586,6 +586,9 @@ def get_aliased_columns(columns_list, alias=None):
     columns_comma = columns_comma[0:len(columns_comma) - 1]
     return columns_comma
 
+def get_hist_end_dt_updtt(history_df, table_name,record_id,col_name,col_dtype):
+    print("")
+
 
 def get_hist_end_dt_updt(column_name, columns_type, operational_symbol, alias1=None, alias2=None, record_id=None):
     if alias1 is None:
