@@ -90,6 +90,18 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
             COALESCED_TABLE_nonPK_COLUMNS_LD_EQL_FSDM = funcs.get_comparison_columns(smx_record_id_df, Table_name,
                                                                                      "UPSERT", '=', ld_tbl_alias,
                                                                                      fsdm_tbl_alias, Record_id)
+            if COALESCED_TABLE_nonPK_COLUMNS_LD_EQL_FSDM.strip() == "":
+                duplicate_when = ""
+                duplicate_then = ""
+                COALESCED_TABLE_nonPK_COLUMNS_LD_EQL_FSDM = ""
+            else:
+                duplicate_when = '\n        WHEN'
+                COALESCED_TABLE_nonPK_COLUMNS_LD_EQL_FSDM = COALESCED_TABLE_nonPK_COLUMNS_LD_EQL_FSDM+"\n"
+                duplicate_then = "        THEN 'D'"
+
+
+
+
 
             if script_flag == 'Apply_Insert':
                 # COALESCED_TABLE_PK_COLUMNS_LD_EQL_FSDM = funcs.get_comparison_columns(smx_record_id_df, Table_name, "INSERT"
@@ -111,7 +123,9 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
                                                      fsdm_table_name=Table_name,
                                                      ld_equal_fsdm_pk=on_clause,
                                                      FLAG_IND_equal_fsdm_pk=where_clause,
-                                                     dup_prefix=DupDB_prefix
+                                                     dup_prefix=DupDB_prefix,
+                                                     duplicate_when=duplicate_when,
+                                                     duplicate_then=duplicate_then
                                                      )
             else:
 
@@ -140,7 +154,9 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
                                                      ld_equal_fsdm_pk=on_clause,
                                                      FLAG_IND_equal_fsdm_pk=where_clause,
                                                      ld_equal_fsdm_pk_update=ld_equal_fsdm_pk_update,
-                                                     dup_prefix=DupDB_prefix
+                                                     dup_prefix=DupDB_prefix,
+                                                     duplicate_when=duplicate_when,
+                                                     duplicate_then=duplicate_then
                                                      )
 
             bteq_script = bteq_script.upper()
