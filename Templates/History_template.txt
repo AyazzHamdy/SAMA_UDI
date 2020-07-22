@@ -31,6 +31,7 @@
 BT;
 
 UPDATE {ld_alias}
+
 FROM {LD_SCHEMA_NAME}{SOURCE_SYSTEM}.{TABLE_NAME}_{RECORD_ID} {ld_alias},
 (
     SELECT
@@ -42,10 +43,10 @@ FROM {LD_SCHEMA_NAME}{SOURCE_SYSTEM}.{TABLE_NAME}_{RECORD_ID} {ld_alias},
     THEN 'D'
     ELSE 'U' END AS FLAG
 
-FROM {LD_SCHEMA_NAME}{SOURCE_SYSTEM}.{TABLE_NAME}_{RECORD_ID} {ld_alias}
+    FROM {LD_SCHEMA_NAME}{SOURCE_SYSTEM}.{TABLE_NAME}_{RECORD_ID} {ld_alias}
 
-LEFT OUTER JOIN {MODEL_SCHEMA_NAME}.{TABLE_NAME} {fsdm_alias}
-ON  {ld_fsdm_history_key_and_end_date_equality}
+    LEFT OUTER JOIN {MODEL_SCHEMA_NAME}.{TABLE_NAME} {fsdm_alias}
+    ON  {ld_fsdm_history_key_and_end_date_equality}
 )FLAG_IND
 SET FLAG = FLAG_IND.FLAG
 
@@ -56,6 +57,7 @@ WHERE {ld_fsdm_history_key_and_strt_date_equality};
 ##########################################################################*/
 
 UPDATE {fsdm_alias}
+
 FROM {MODEL_SCHEMA_NAME}.{TABLE_NAME} {fsdm_alias},
 {LD_SCHEMA_NAME}{SOURCE_SYSTEM}.{TABLE_NAME}_{RECORD_ID} {ld_alias}
 

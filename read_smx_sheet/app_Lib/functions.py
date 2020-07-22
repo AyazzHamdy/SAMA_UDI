@@ -130,10 +130,17 @@ def get_apply_processes(smx_sheet, apply_type):
     else:
         apply_tfns = smx_sheet
 
-    apply_processes = apply_tfns[(apply_tfns['Source_System'] != 'EMDAD_M')]
+
+    # apply_processes = apply_tfns[(apply_tfns['Source_System'] != 'EMDAD_M')]
+    emdad_Rids_list = get_EMDAD_Rids_list(smx_sheet)
+    apply_processes = apply_tfns[~apply_tfns.Record_ID.isin(emdad_Rids_list)]
     apply_processes = apply_processes[~apply_processes['Entity'].str.endswith(str('_SGK'))]
     return apply_processes
 
+def get_EMDAD_Rids_list(smx_sheet):
+    emdad_df = smx_sheet[smx_sheet['Source_System'] == 'EMDAD_M']
+    emdad_Rids_list = emdad_df['Record_ID'].unique()
+    return emdad_Rids_list
 
 def get_sama_stg_tables(STG_tables, source_name=None):
     if source_name:
@@ -644,14 +651,14 @@ def get_conditional_stamenet(tables_sheet, Table_name,columns_type,operational_s
             Column_name = column_name_row['Column']
         on_statement = alias1 + Column_name + ' ' + operational_symbol + ' ' + alias2 + Column_name
         if record_id is not None:
-            and_statement = '    ' + ' and ' if column_name_index > 0 else ' '
+            and_statement = '        ' + 'and ' if column_name_index > 0 else ' '
         else:
-            and_statement = '    ' + ' and ' if column_name_index > 0 else '    '
+            and_statement = '        ' + 'and ' if column_name_index > 0 else '    '
 
         on_statement = on_statement if column_name_index == len(table_columns) else on_statement + '\n'#len(table_columns) - 1 else on_statement + '\n'
         and_Column_name = and_statement + on_statement
         conditional_statement = conditional_statement + and_Column_name
-    return conditional_statement.strip()
+    return conditional_statement.rstrip()
 
 
 def single_quotes(string):

@@ -46,7 +46,9 @@ def history_apply(cf, source_output_path, smx_table):
         record_id = r_id
         table_name = history_df['Entity'].unique()[0]
         filename = table_name + '_' + str(record_id)
-        f = funcs.WriteFile(apply_folder_path, filename, "bteq")
+        BTEQ_file_name = "UDI_{}_{}".format(SOURCENAME, filename)
+
+        f = funcs.WriteFile(apply_folder_path, BTEQ_file_name, "bteq")
         filename = filename + '.bteq'
 
         fsdm_tbl_alias = funcs.get_fsdm_tbl_alias(table_name)
