@@ -16,8 +16,8 @@
 #  HISTORY:
 #
 #  DATE [YYYY-MM-DD]       VERSION            DEVELOPER            DESCRIPTION OF CHANGE
-#  --------------           ------             ----------           ---------------------
-#    {currentdate}              1.0             Scripts Generator         INITIAL VERSION
+#  --------------          -------            ----------           ---------------------
+#  {currentdate}               1.0             Scripts Generator         INITIAL VERSION
 ############################################################################*/
 
 /*########################################################################
@@ -66,7 +66,7 @@ SET {end_date_updt}
     ,UPDT_DTTM = {ld_alias}.UPDT_DTTM
 
 WHERE {ld_alias}.FLAG = 'U'
-AND {ld_fsdm_history_key_and_end_date_equality};
+    AND {ld_fsdm_history_key_and_end_date_equality};
 
 /*##########################################################################
 # APPLYING UDI MARKING 'I' AT TARGET

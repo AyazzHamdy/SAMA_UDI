@@ -169,7 +169,7 @@ def get_Rid_Source_Table(SMX_R_id):
     tech_src_tbl_list = get_SMX_tech_Source_Table_vals()
     src_tbl_list = SMX_R_id['Source_Table'].unique()
     o_src_tbls_list = np.setdiff1d(src_tbl_list, tech_src_tbl_list).tolist()
-    print("R_id: ", SMX_R_id["Record_ID"].unique(), "o_src_tbls_list: ", o_src_tbls_list)
+    # print("R_id: ", SMX_R_id["Record_ID"].unique(), "o_src_tbls_list: ", o_src_tbls_list)
     try:
         src_tbl = o_src_tbls_list[0]
     except:
@@ -205,6 +205,7 @@ def get_TFN_column_mapping(smx_Rid_df):
     columns_comma = ""
     stg_alias = "STG."
     sgk_alias = "SGK."
+
     for tfn_Rid_indx, tfn_Rid_row in TFN_df.iterrows():
         comma = '    ' + ',' if tfn_Rid_indx > 0 else ''
         col_name = tfn_Rid_row['Column'].upper()
@@ -213,36 +214,67 @@ def get_TFN_column_mapping(smx_Rid_df):
         src_tbl = tfn_Rid_row['Source_Table'].upper()
         src_col = tfn_Rid_row['Source_Column'].upper()
         load_type = tfn_Rid_row['Load Type'].upper()
-
+        record_id = tfn_Rid_row['Record_ID']
         rule = tfn_Rid_row['Rule']
         # print("rule", rule)
         rule = str(rule).replace("\n", " ")
         # print("rule2", rule)
-        if src_tbl == 'HCV' and src_col == 'HCV':
+        rule = rule.upper()
+
+        rule_Comment = ""
+        if rule == "1:1":
+            rule_Comment = ""
+        elif ("HARDCODE TO" in rule) or ("SET TO" in rule):
+            rule = rule.strip()
+            applied_rule = rule.replace("HARDCODE TO", " ").replace("SET TO", " ").strip()
+            applied_rule_len = len(applied_rule)
+            rule_len = len(rule)
+
+            if "HARDCODE TO" in rule:
+                rule_Comment = "" if rule_len == applied_rule_len + len("HARDCODE TO ") else rule
+                # print(record_id, applied_rule_len, rule_len,">>>>>>>>", rule_Comment)
+                print(record_id, "applied rule", applied_rule, applied_rule_len, "rule", rule, rule_len,">>>>>>>>", rule_Comment)
+
+            elif "SET TO" in rule:
+                rule_Comment = "" if rule_len == applied_rule_len + len("SET TO ") else rule
+
+        final_rule_comment = "/*{}*/". format(rule_Comment) if rule_Comment != "" else ""
+
+        if src_tbl == 'HCV' and src_col == 'HCV' and "_END_" not in col_name:
             if rule == 'NULL':
                 HCV = 'NULL'
+                column_clause = "{} AS {} {}".format(HCV, col_name, final_rule_comment)
             else:
-                applied_rule = rule.replace("Hardcode to", " ").replace("HARDCODE TO", " ").strip()
+
+                applied_rule = rule.replace("HARDCODE TO", " ").replace("SET TO", " ").replace("'", "").strip()
+                numeric_dtypes = get_numeric_dtypes()
+                applied_rule = applied_rule if col_dtype in numeric_dtypes else "'" + applied_rule + "'"
                 HCV = applied_rule
-            column_clause = "CAST( {} AS {} ) AS {} /*{}*/".format(HCV, col_dtype, col_name, rule)
-            columns_comma += comma + column_clause + '\n'
+                column_clause = "CAST( {} AS {}) AS {} {}".format(HCV, col_dtype, col_name, final_rule_comment)
 
         elif rule == "1:1" and src_tbl != 'JOB':
-            column_clause = "CAST( {}{} AS {} ) AS {} /*{}*/".format(stg_alias, src_col, col_dtype, col_name, rule)
-            columns_comma += comma + column_clause + '\n'
+            rule = " "
+            column_clause = "CAST( {}{} AS {}) AS {} {}".format(stg_alias, src_col, col_dtype, col_name, final_rule_comment)
 
         elif src_tbl == 'JOB' and "_STRT_" in col_name:
             HCV_strt = "CURRENT_{}".format(col_dtype)
-            column_clause = "CAST( {} AS {} ) AS {} /*{}*/".format(HCV_strt, col_dtype, col_name, rule)
-            columns_comma += comma + column_clause + '\n'
-        elif "HISTORY" in load_type and src_tbl == 'JOB' and "_END_" in col_name:
-            HCV_end = "9999-12-31 23:59:59.999999"
+            column_clause = "CAST( {} AS {}) AS {} {}".format(HCV_strt, col_dtype, col_name, final_rule_comment)
+
+        elif "HISTORY" in load_type and "_END_" in col_name: #and src_tbl == 'JOB'
+            if col_dtype.upper() == "DATE":
+                HCV_end = "9999-12-31"
+            else:
+                HCV_end = "9999-12-31 23:59:59.999999"
             HCV_end = single_quotes(HCV_end)
-            column_clause = "CAST( {} AS {} ) AS {} /* {}*/".format(HCV_end, col_dtype, col_name, rule)
-            columns_comma += comma + column_clause + '\n'
+            column_clause = "CAST( {} AS {}) AS {} {}".format(HCV_end, col_dtype, col_name, final_rule_comment)
+
         else:
-            column_clause = col_name + "/* mapped to {}.{} following rule: {}*/".format(src_tbl, src_col, rule)
-            columns_comma += comma + column_clause + '\n'
+            rule_comment = "/* mapped to {}.{} following rule: {}*/".format(src_tbl, src_col, rule)
+            column_clause = "CAST(  AS {}) AS {} {}". format(col_dtype, col_name, rule_comment)
+            # column_clause = col_name + "/* mapped to {}.{} following rule: {}*/".format(src_tbl, src_col, rule)
+            # columns_comma += comma + column_clause + '\n'
+
+        columns_comma += comma + column_clause + '\n'
 
     columns_comma = columns_comma[0:len(columns_comma) - 1]
     return columns_comma
@@ -268,10 +300,10 @@ def rule_col_analysis_sgk(smx_Rid_df):
         sgk_cntr += 1
         if rule_output != " ":
             left_joins += rule_output + "\n"
-    return left_joins
+    return left_joins.rstrip()
 
 def rule_cell_analysis_sgk(i_rule_cell_value, sgk_cntr):
-    print("rule_cell_value:\n", i_rule_cell_value)
+    # print("rule_cell_value:\n", i_rule_cell_value)
     source_key = " "
     edw_key = " "
     SGK_left_join_clause = " "
@@ -280,6 +312,7 @@ def rule_cell_analysis_sgk(i_rule_cell_value, sgk_cntr):
     stg_alias = 'STG'
     sgk_id_value = " "
     rule_cell_value = str(i_rule_cell_value).upper()
+    rule_cell_value = rule_cell_value.replace("LOOKUP FOOR", "LOOKUP").replace("LOOKUP FOR", "LOOKUP")
     if "LOOKUP" in rule_cell_value:
         strt_index = rule_cell_value.find("LOOKUP")+len("LOOKUP")
         rule_sbstring = rule_cell_value[strt_index:]
@@ -469,7 +502,7 @@ def get_comparison_columns(tables_sheet, Table_name, apply_type, operational_sym
     for stg_tbl_indx, stg_tbl_row in tables_df.iterrows():
         data_type = stg_tbl_row['Datatype'].upper()
         column_name = str(stg_tbl_row['Column'])
-        numeric_data_types = ['INTEGER', 'BIGINT', 'SMALLINT', 'FLOAT']
+        numeric_data_types = get_numeric_dtypes()
         if data_type in numeric_data_types or 'DECIMAL' in data_type:
             column_name = 'COALESCE('+alias1 + column_name + ',-1) ' + operational_symbol + ' COALESCE('+alias2 + column_name + ',-1)'
         elif 'CHAR' in data_type:# == 'VARCHAR(50)':
@@ -477,13 +510,16 @@ def get_comparison_columns(tables_sheet, Table_name, apply_type, operational_sym
         elif data_type == 'TIMESTAMP':
             column_name = 'COALESCE('+alias1 + column_name + ",CAST('1001-01-01 00:00:00' AS TIMESTAMP(0))) " + operational_symbol + ' COALESCE('+alias2 + column_name + ",CAST('1001-01-01 00:00:00' AS TIMESTAMP(0)))"
         elif data_type == 'DATE':
-            column_name = 'COALESCE('+alias1 + column_name + ",CAST('1001-01-01' AS DATE)) " + operational_symbol + ' COALESCE('+alias2 + column_name + ",CAST('1001-01-01' AS DATE'))"
+            column_name = 'COALESCE('+alias1 + column_name + ",CAST('1001-01-01' AS DATE)) " + operational_symbol + ' COALESCE('+alias2 + column_name + ",CAST('1001-01-01' AS DATE))"
 
         comma = '    ' + '    AND ' if stg_tbl_indx > 0 else ' '
         columns_comma += comma+column_name+'\n'
     columns_comma = columns_comma[0:len(columns_comma) - 1]
     return columns_comma
 
+def get_numeric_dtypes():
+    numeric_data_types = ['INTEGER', 'BIGINT', 'SMALLINT', 'FLOAT']
+    return numeric_data_types
 
 def get_sama_pk_columns_comma_separated(tables_sheet, Table_name, alias='', record_id=None):
     columns_df = get_sama_stg_table_columns_pk(tables_sheet,Table_name,record_id)
@@ -584,8 +620,52 @@ def get_aliased_columns(columns_list, alias=None):
     columns_comma = columns_comma[0:len(columns_comma) - 1]
     return columns_comma
 
-def get_hist_end_dt_updtt(history_df, table_name,record_id,col_name,col_dtype):
-    print("")
+def get_hist_end_dt_updtt(history_df, table_name,end_date_col_name,operational_symbol, alias1=None, alias2=None, record_id=None):
+    end_dt_df = history_df.loc[(history_df['Entity'].str.upper() == table_name.upper())
+                               & (history_df['Record_ID'] == record_id)
+                               & (history_df['Column'].str.upper() == end_date_col_name.upper())
+                               ].reset_index()
+    if alias1 is None:
+        alias1 = ''
+    else:
+        alias1 = alias1 + '.'
+    if alias2 is None:
+        alias2 = ''
+    else:
+        alias2 = alias2 + '.'
+
+    end_dt_updt = ""
+    interval = " - INTERVAL '{}' {}"
+    # print("ccccc", end_dt_df['Datatype'].value)
+    col_dtype = end_dt_df['Datatype'].tolist()
+    col_dtype = str(col_dtype[0])
+    # print("Record_id", record_id)
+    # print("col_name", end_date_col_name)
+    # print("col_type", col_dtype)
+    # print("col_type", col_dtype, col_dtype[1])
+
+    if col_dtype.upper() == 'DATE':
+        interval = interval.format(str(1), 'DAY')
+    elif col_dtype.upper() == 'TIMESTAMP' or col_dtype.upper() == 'TIMESTAMP(6)':
+        interval = interval.format("0.000001", 'SECOND')
+    else: #timestamp but not of 6
+        dtype_split1 = col_dtype.split("(")  # ['timestamp', '3)']
+        # print("dtype_split1", dtype_split1)
+        precision = dtype_split1[1].split(")")[0]  #['3', ''][0]
+        # print("precision", precision)
+        precision_int = int(precision) - 1
+        interavl_span = "0.{}1"
+        repeat_zero = '0'*precision_int
+        interavl_span = interavl_span.format(repeat_zero)
+        # print("interavl_span", interavl_span)
+        interval = interval.format(str(interavl_span), 'SECOND')
+        # print("interval", interval)
+
+    end_dt_updt = alias1 + end_date_col_name + ' ' + operational_symbol + ' ' + alias2 + end_date_col_name + interval
+    # print("end_dt_updt", end_dt_updt)
+    return end_dt_updt
+
+
 
 
 def get_hist_end_dt_updt(column_name, columns_type, operational_symbol, alias1=None, alias2=None, record_id=None):
@@ -654,9 +734,9 @@ def get_conditional_stamenet(tables_sheet, Table_name,columns_type,operational_s
             Column_name = column_name_row['Column']
         on_statement = alias1 + Column_name + ' ' + operational_symbol + ' ' + alias2 + Column_name
         if record_id is not None:
-            and_statement = '        ' + 'and ' if column_name_index > 0 else ' '
+            and_statement = '    ' + 'and ' if column_name_index > 0 else ' '
         else:
-            and_statement = '        ' + 'and ' if column_name_index > 0 else '    '
+            and_statement = '    ' + 'and ' if column_name_index > 0 else '    '
 
         on_statement = on_statement if column_name_index == len(table_columns) else on_statement + '\n'#len(table_columns) - 1 else on_statement + '\n'
         and_Column_name = and_statement + on_statement

@@ -15,9 +15,9 @@
 #  -------------------------------------------------------------------------
 #  HISTORY:
 #
-#  DATE [YYYY-MM-DD]              VERSION            DEVELOPER            DESCRIPTION OF CHANGE
-#  -------                        ------             ----------           ---------------------
-#  {currentdate}                      1.0             Scripts Generator         INITIAL VERSION
+#  DATE [YYYY-MM-DD]       VERSION            DEVELOPER            DESCRIPTION OF CHANGE
+#  --------------          -------            ----------           ---------------------
+#  {currentdate}               1.0             Scripts Generator         INITIAL VERSION
 ############################################################################*/
 
 /*########################################################################
@@ -61,10 +61,10 @@ UPDATE {fsdm_tbl_alias}
 FROM {fsdm_prefix}.{fsdm_table_name} {fsdm_tbl_alias},
 {ld_prefix}{schema_name}.{ld_table_name} {ld_tbl_alias}
 
-SET {non_pk_cols_eql_ld_cols}
+SET{non_pk_cols_eql_ld_cols}
 
 WHERE {ld_tbl_alias}.FLAG = 'U'
-AND {ld_equal_fsdm_pk_update};
+    AND {ld_equal_fsdm_pk_update};
 
 /*############################################################################
 #  APPLYING UDI MARKING 'I' AT TARGET

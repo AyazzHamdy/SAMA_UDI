@@ -13,7 +13,6 @@ default_bteq_apply_upsert_template_file_name = "BTEQ_apply_upsert_template.txt"
 default_sgk_template_file_name = "SGK_template.txt"
 default_TFN_template_file_name = "BTEQ_TFN_template.txt"
 
-
 smx_ext = "xlsx"
 System_sht = "System"
 Supplements_sht = "Supplements"

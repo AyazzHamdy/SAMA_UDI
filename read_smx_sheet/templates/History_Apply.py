@@ -81,8 +81,8 @@ def history_apply(cf, source_output_path, smx_table):
                                                                                     ld_tbl_alias, "FLAG_IND",
                                                                                     record_id, None)
 
-        end_date_updt = funcs.get_hist_end_dt_updt(end_date, "end_date", "=", None, ld_tbl_alias, record_id)
-
+        # end_date_updt = funcs.get_hist_end_dt_updt(end_date, "end_date", "=", None, ld_tbl_alias, record_id)
+        end_date_updt = funcs.get_hist_end_dt_updtt(history_df, table_name, end_date, "=", None,ld_tbl_alias, record_id)
         TBL_COLUMNS = funcs.get_sama_table_columns_comma_separated(history_df, table_name, None, record_id)
 
         bteq_script = template_string.format(SOURCE_SYSTEM=SOURCENAME, versionnumber=pm.ver_no,
