@@ -28,6 +28,7 @@ def sgk_insertion(cf, source_output_path, smx_table):
             template_string = template_string + i
 
     for SGK_tables_index, SGK_tables_row in SGK_tables.iterrows():
+        print("HI")
         RECORDID = SGK_tables_row['Record_ID']
         TABLENAME = SGK_tables_row['Entity'].upper()
         SOURCENAME = SGK_tables_row['Ssource'].upper()

@@ -581,10 +581,12 @@ def get_sgk_record(SGK_tables,TABLENAME,RECORDID,flag):
                                          ].reset_index()
 
     for null_tables_index,null_tables_row in null_tables_df.iterrows():
+        tech_cols_list = get_fsdm_tech_cols_list()
         Column_name = null_tables_row['Column']
-        null_statment = 'NULL AS ' + Column_name
-        and_Column_name = '\n\t' + null_statment + ','
-        null_cols = null_cols + and_Column_name
+        if Column_name not in tech_cols_list:
+            null_statment = 'NULL AS ' + Column_name
+            and_Column_name = '\n\t' + null_statment + ','
+            null_cols = null_cols + and_Column_name
     if flag == 'null_cols':
         return null_cols
 
