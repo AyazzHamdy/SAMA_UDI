@@ -271,7 +271,6 @@ def rule_col_analysis_sgk(smx_Rid_df):
     return left_joins
 
 def rule_cell_analysis_sgk(i_rule_cell_value, sgk_cntr):
-    print("rule_cell_value:\n", i_rule_cell_value)
     source_key = " "
     edw_key = " "
     SGK_left_join_clause = " "
@@ -560,6 +559,11 @@ def get_sgk_record(SGK_tables,TABLENAME,RECORDID,flag):
             sgk_key = tables_df_row['Column']
             src_key_dt = tables_df_row['Datatype']
             rule = tables_df_row['Rule']
+            if flag == 'sgk_id':
+                if tables_df_row['Column']=='SGK_ID':
+                    sgk_id = str(tables_df_row['Rule'])
+                    sgk_id = sgk_id.replace("Hardcode to " , "")
+                    return sgk_id
             if flag == 'sgk_key':
                 return sgk_key
             if flag == 'src_col':
@@ -820,7 +824,7 @@ def get_config_file_values(config_file_path=None):
     if config_file_path is None:
         try:
             config_file_path = get_config_file_path()
-            print("ana hna ", config_file_path)
+            print(config_file_path)
             config_file = open(config_file_path + "/" + pm.default_config_file_name, "r")
 
         except:
