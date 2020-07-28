@@ -6,8 +6,9 @@ ld_prefix="dd_ld_"
 fsdm_prefix="dd_fsdm"
 dup_prefix= "dd_dup_"
 bteq_run_file="C:\Logon\Logon_dev.txt"
-SGK_Source="SAPFICO"
+SGK_Source= "SAPFICO"
 
+read_sheets_parallel=1
 smx_path="C:/smx_sheets"
 templates_path= "C:/Users/TDInstaller/PycharmProjects/SAMA_UDI/Templates"
 home_output_folder= "C:/smx_scripts"

@@ -1,0 +1,15 @@
+DELETE FROM {ld_prefix}{Source_name}.{ld_tbl_name};
+
+INSERT INTO {ld_prefix}{Source_name}.{ld_tbl_name}
+(
+    {ld_tbl_cols}
+)
+SELECT
+    {Column_Mapping}
+    ,{Record_Id} AS R_ID
+    ,(SELECT COALESCE(MAX(B_ID),0) FROM DD_MD.BATCH_LOG WHERE B_SOURCE = '{Source_name}') AS B_ID
+    ,CURRENT_TIMESTAMP(6) AS INSRT_DTTM
+    ,CURRENT_TIMESTAMP(6) AS UPDT_DTTM
+
+FROM {STG_prefix}{Source_name}.{STG_tbl} STG
+{possible_left_joins};

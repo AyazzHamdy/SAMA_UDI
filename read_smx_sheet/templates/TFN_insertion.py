@@ -41,6 +41,10 @@ def TFN_insertion(cf, source_output_path, SMX_SHEET):
     record_ids_list = SMX_SHEET['Record_ID'].unique()
     bteq_script = ""
 
+    tfn_concat_file_name = 'TFN_CONCAT'
+    f_c = funcs.WriteFile(source_output_path, tfn_concat_file_name, "bteq")
+    f_c.write(template_head)
+
     for record_id in record_ids_list:
         TFN_record_id_df = funcs.get_sama_fsdm_record_id(SMX_SHEET, record_id)
 
@@ -74,4 +78,6 @@ def TFN_insertion(cf, source_output_path, SMX_SHEET):
 
         bteq_script = bteq_script.upper()
         f.write(bteq_script.replace('Â', ' '))
+        f_c.write(bteq_script.replace('Â', ' '))
         f.close()
+    f_c.close()
