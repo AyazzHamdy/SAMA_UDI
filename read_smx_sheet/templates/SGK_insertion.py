@@ -16,8 +16,8 @@ def sgk_insertion(cf, source_output_path, smx_table):
     current_date = funcs.get_current_date()
     template_string = ""
     SGK_tables = smx_table[smx_table['Entity'].str.endswith(str('_SGK'))]
-    if SOURCENAME != 'ALL':
-        SGK_tables = SGK_tables[SGK_tables['Ssource'] == SOURCENAME]
+    # if SOURCENAME != 'ALL':
+    #     SGK_tables = SGK_tables[SGK_tables['Ssource'] == SOURCENAME]
     try:
         template_file = open(template_path, "r")
     except:
