@@ -14,8 +14,8 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
         bteq_run_file = cf.bteq_run_file
 
         SOURCENAME = cf.sgk_source
-        if SOURCENAME != 'ALL':
-            SMX_SHEET = SMX_SHEET[SMX_SHEET['Ssource'] == SOURCENAME]
+        # if SOURCENAME != 'ALL':
+        #     SMX_SHEET = SMX_SHEET[SMX_SHEET['Ssource'] == SOURCENAME]
 
 
         if script_flag == 'Apply_Insert':

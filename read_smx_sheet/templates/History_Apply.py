@@ -22,8 +22,8 @@ def history_apply(cf, source_output_path, smx_table):
     current_date = funcs.get_current_date()
 
     SOURCENAME = cf.sgk_source
-    if SOURCENAME != 'ALL':
-        smx_table = smx_table[smx_table['Ssource'] == SOURCENAME]
+    # if SOURCENAME != 'ALL':
+    #     smx_table = smx_table[smx_table['Ssource'] == SOURCENAME]
 
     template_string = ""
     try:
