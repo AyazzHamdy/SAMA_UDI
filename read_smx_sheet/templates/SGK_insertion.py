@@ -28,10 +28,10 @@ def sgk_insertion(cf, source_output_path, smx_table):
             template_string = template_string + i
 
     for SGK_tables_index, SGK_tables_row in SGK_tables.iterrows():
-        print("HI")
         RECORDID = SGK_tables_row['Record_ID']
         TABLENAME = SGK_tables_row['Entity'].upper()
-        SOURCENAME = SGK_tables_row['Ssource'].upper()
+        #SOURCENAME = SGK_tables_row['Ssource'].upper()
+        SOURCENAME='FICO'
         filename = 'SAP'+SOURCENAME+'_'+TABLENAME+'_R'+str(RECORDID)
         f = funcs.WriteFile(source_output_path, filename, "bteq")
         filename = filename + '.bteq'
@@ -42,6 +42,7 @@ def sgk_insertion(cf, source_output_path, smx_table):
         RULE = funcs.get_sgk_record(SGK_tables,TABLENAME,RECORDID,'rule')
         SGKKEY = funcs.get_sgk_record(SGK_tables,TABLENAME,RECORDID,'sgk_key')
         DATATYPE = funcs.get_sgk_record(SGK_tables,TABLENAME,RECORDID,'data_type')
+        SGKID = funcs.get_sgk_record(SGK_tables,TABLENAME,RECORDID,'sgk_id')
 
         bteq_script = template_string.format(versionnumber=pm.ver_no,
                                              currentdate=current_date,
@@ -51,7 +52,7 @@ def sgk_insertion(cf, source_output_path, smx_table):
                                              SOURCENAME=SOURCENAME,TABLECOLUMNS=TABLECOLUMNS,
                                              SOURCECOLUMN=SOURCECOLUMN,SOURCEKEY=SOURCEKEY,
                                              NULLCOLUMNS=NULLCOLUMNS,RULE=RULE,SGKKEY=SGKKEY,
-                                             DATATYPE=DATATYPE
+                                             DATATYPE=DATATYPE,SGKID=SGKID
                                              )
         bteq_script = bteq_script.upper()
         f.write(bteq_script.replace('Â', ' '))
