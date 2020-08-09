@@ -12,7 +12,7 @@ default_bteq_apply_insert_template_file_name = "BTEQ_apply_insert_template.txt"
 default_bteq_apply_upsert_template_file_name = "BTEQ_apply_upsert_template.txt"
 default_sgk_template_file_name = "SGK_template.txt"
 default_TFN_template_file_name = "BTEQ_TFN_template.txt"
-
+tfn_concat_template_name = "BTEQ_TFN_CONCAT.txt"
 smx_ext = "xlsx"
 System_sht = "System"
 Supplements_sht = "Supplements"
@@ -24,5 +24,5 @@ staging_sheets = [Data_types_sht,STG_tables_sht]
 smx_sheets = [smx_sht]
 
 # AppName_<Major>.<Minor>.<BuildNo>
-ver_no = "| Build #2.11.12"
+ver_no = "| Build #2.11.14"
 # ################################################################################################

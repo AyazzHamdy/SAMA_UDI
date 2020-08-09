@@ -32,18 +32,18 @@ BT;
 
 UPDATE {ld_alias}
 
-FROM {LD_SCHEMA_NAME}{SOURCE_SYSTEM}.{TABLE_NAME}_{RECORD_ID} {ld_alias},
+FROM {LD_SCHEMA_NAME}{SOURCE_SYSTEM}.{TABLE_NAME}_R{RECORD_ID} {ld_alias},
 (
     SELECT
     {history_key}
     ,{ld_alias}.{start_date}
-    CASE
+    ,CASE
     WHEN {fsdm_alias}.{first_history_key} IS NULL THEN 'I'
     WHEN {COALESCED_history_col_LD_EQL_DATAMODEL}
     THEN 'D'
     ELSE 'U' END AS FLAG
 
-    FROM {LD_SCHEMA_NAME}{SOURCE_SYSTEM}.{TABLE_NAME}_{RECORD_ID} {ld_alias}
+    FROM {LD_SCHEMA_NAME}{SOURCE_SYSTEM}.{TABLE_NAME}_R{RECORD_ID} {ld_alias}
 
     LEFT OUTER JOIN {MODEL_SCHEMA_NAME}.{TABLE_NAME} {fsdm_alias}
     ON  {ld_fsdm_history_key_and_end_date_equality}
@@ -59,7 +59,7 @@ WHERE {ld_fsdm_history_key_and_strt_date_equality};
 UPDATE {fsdm_alias}
 
 FROM {MODEL_SCHEMA_NAME}.{TABLE_NAME} {fsdm_alias},
-{LD_SCHEMA_NAME}{SOURCE_SYSTEM}.{TABLE_NAME}_{RECORD_ID} {ld_alias}
+{LD_SCHEMA_NAME}{SOURCE_SYSTEM}.{TABLE_NAME}_R{RECORD_ID} {ld_alias}
 
 SET {end_date_updt}
     ,B_ID = {ld_alias}.B_ID
@@ -79,7 +79,7 @@ INSERT INTO {MODEL_SCHEMA_NAME}.{TABLE_NAME}
 SELECT
 {TABLE_COLUMNS}
 
-FROM {LD_SCHEMA_NAME}{SOURCE_SYSTEM}.{TABLE_NAME}_{RECORD_ID}
+FROM {LD_SCHEMA_NAME}{SOURCE_SYSTEM}.{TABLE_NAME}_R{RECORD_ID}
 
 WHERE FLAG IN ('I', 'U');
 
@@ -88,14 +88,14 @@ WHERE FLAG IN ('I', 'U');
 # APPLYING UDI MARKING 'D' AT TARGET  --DUP DATABASE
 ##########################################################################*/
 
-INSERT INTO {MODEL_DUP_SCHEMA_NAME}.{TABLE_NAME}_{RECORD_ID}
+INSERT INTO {MODEL_DUP_SCHEMA_NAME}{SOURCE_SYSTEM}.{TABLE_NAME}_R{RECORD_ID}
 (
 {TABLE_COLUMNS}
 )
 SELECT
 {TABLE_COLUMNS}
 
-FROM {LD_SCHEMA_NAME}{SOURCE_SYSTEM}.{TABLE_NAME}_{RECORD_ID}
+FROM {LD_SCHEMA_NAME}{SOURCE_SYSTEM}.{TABLE_NAME}_R{RECORD_ID}
 
 WHERE FLAG = 'D';
 

@@ -155,13 +155,30 @@ class GenerateScripts:
                         #             30058, 30348, 30459, 30461,
                         #             30463, 30465, 30467, 30473,
                         #             30475, 30476, 30479] #mujahid
+                        Rid_list =[30337,30048, 30059, 30333, 30050,30051,30049,30336] #my_8_trns
+                        Rid_list =[30161,30062,30110,30162,30213,30180,30210,30102,
+                                30083,30183,30080,30211,30113,30081,30130,30181,
+                                30153,30150,30111,30133,30212,30173,30070,30170,
+                                30220,30151,30082,30182,30131,30190,30073,
+                                30171,30140,30112,30090,30123,30120,30071,
+                                30223,30143,30200,30093,30193,30132,30160,30121,
+                                30100,30221,30203,30141,30152,30063,30091,30163,
+                                30060,30191,30072,30172,30103,30222,30201,30092,
+                                30192,30061,30122,30142,30101,30202] #zbk__PRTY_CLAS_VAL
+                        Rid_list = [30224,30067,30094,30194,30124,30144,30204,30085,
+                                30185,30215,30115,30116,30186,30064,30216,30164,
+                                30104,30187,30217,30086,30135,30136,30117,30087,
+                                30155,30075,30175,30225,30137,30156,30095,30214,
+                                30076,30125,30176,30157,30226,30205,30077,30177,
+                                30227,30195,30084,30184,30196,30145,30146,30114,
+                                30096,30065,30165,30126,30105,30097,30197,30206,
+                                30127,30154,30147,30134,30207,30166,30174,30106,
+                                30167,30107,30066,30074] #zbk__PRTY_PRTY_CLAS_XREF
                         smx_sheet = smx_sheet[smx_sheet.Record_ID.isin(Rid_list)]
                         self.parallel_templates.append(delayed(Apply_Insert_Upsert.apply_insert_upsert)(self.cf, main_output_path_apply, smx_sheet, "Apply_Insert"))
                         self.parallel_templates.append(delayed(Apply_Insert_Upsert.apply_insert_upsert)(self.cf, main_output_path_apply, smx_sheet, "Apply_Upsert"))
                         self.parallel_templates.append(delayed(History_Apply.history_apply)(self.cf, main_output_path_apply, smx_sheet))
-                        # self.parallel_templates.append(delayed(SGK_insertion.sgk_insertion)(self.cf, main_output_path_sgk, smx_sheet))
-                        # Rid_list = [30339, 30331, 30051, 30336, 30050, 30058, 30332, 30337, 30045, 30049, 30016, 30345, 30048, 30333, 30053, 30059, 30347, 30335]
-                        # self.parallel_templates.append(delayed(TFN_insertion.TFN_insertion)(self.cf, main_output_path_TFN,smx_sheet[smx_sheet.Record_ID.isin(Rid_list)]))
+                        self.parallel_templates.append(delayed(SGK_insertion.sgk_insertion)(self.cf, main_output_path_sgk, smx_sheet))
                         self.parallel_templates.append(delayed(TFN_insertion.TFN_insertion)(self.cf, main_output_path_TFN, smx_sheet))
 
                 except Exception as e_smx_file:
