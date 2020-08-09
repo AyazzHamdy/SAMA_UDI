@@ -586,8 +586,50 @@ def get_aliased_columns(columns_list, alias=None):
     columns_comma = columns_comma[0:len(columns_comma) - 1]
     return columns_comma
 
-def get_hist_end_dt_updtt(history_df, table_name,record_id,col_name,col_dtype):
-    print("")
+def get_hist_end_dt_updtt(history_df, table_name,end_date_col_name,operational_symbol, alias1=None, alias2=None, record_id=None):
+    end_dt_df = history_df.loc[(history_df['Entity'].str.upper() == table_name.upper())
+                               & (history_df['Record_ID'] == record_id)
+                               & (history_df['Column'].str.upper() == end_date_col_name.upper())
+                               ].reset_index()
+    if alias1 is None:
+        alias1 = ''
+    else:
+        alias1 = alias1 + '.'
+    if alias2 is None:
+        alias2 = ''
+    else:
+        alias2 = alias2 + '.'
+
+    end_dt_updt = ""
+    interval = " - INTERVAL '{}' {}"
+    # print("ccccc", end_dt_df['Datatype'].value)
+    col_dtype = end_dt_df['Datatype'].tolist()
+    col_dtype = str(col_dtype[0])
+    # print("Record_id", record_id)
+    # print("col_name", end_date_col_name)
+    # print("col_type", col_dtype)
+    # print("col_type", col_dtype, col_dtype[1])
+
+    if col_dtype.upper() == 'DATE':
+        interval = interval.format(str(1), 'DAY')
+    elif col_dtype.upper() == 'TIMESTAMP' or col_dtype.upper() == 'TIMESTAMP(6)':
+        interval = interval.format("0.000001", 'SECOND')
+    else: #timestamp but not of 6
+        dtype_split1 = col_dtype.split("(")  # ['timestamp', '3)']
+        # print("dtype_split1", dtype_split1)
+        precision = dtype_split1[1].split(")")[0]  #['3', ''][0]
+        # print("precision", precision)
+        precision_int = int(precision) - 1
+        interavl_span = "0.{}1"
+        repeat_zero = '0'*precision_int
+        interavl_span = interavl_span.format(repeat_zero)
+        # print("interavl_span", interavl_span)
+        interval = interval.format(str(interavl_span), 'SECOND')
+        # print("interval", interval)
+
+    end_dt_updt = alias1 + end_date_col_name + ' ' + operational_symbol + ' ' + alias2 + end_date_col_name + interval
+    # print("end_dt_updt", end_dt_updt)
+    return end_dt_updt
 
 
 def get_hist_end_dt_updt(column_name, columns_type, operational_symbol, alias1=None, alias2=None, record_id=None):

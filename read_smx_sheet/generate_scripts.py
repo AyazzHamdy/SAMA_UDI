@@ -174,6 +174,7 @@ class GenerateScripts:
                                 30096,30065,30165,30126,30105,30097,30197,30206,
                                 30127,30154,30147,30134,30207,30166,30174,30106,
                                 30167,30107,30066,30074] #zbk__PRTY_PRTY_CLAS_XREF
+                        Rid_list = [30038,30044,30390,30348,30027,30018,30045,30481] #for tahseen
                         smx_sheet = smx_sheet[smx_sheet.Record_ID.isin(Rid_list)]
                         self.parallel_templates.append(delayed(Apply_Insert_Upsert.apply_insert_upsert)(self.cf, main_output_path_apply, smx_sheet, "Apply_Insert"))
                         self.parallel_templates.append(delayed(Apply_Insert_Upsert.apply_insert_upsert)(self.cf, main_output_path_apply, smx_sheet, "Apply_Upsert"))
