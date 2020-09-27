@@ -38,13 +38,13 @@ UPDATE SET
 WHEN NOT MATCHED THEN 
 INSERT (
 	{table_columns}
-	,b_id
+	,batch_id
 	,insrt_dttm
 	,updt_dttm
 	)
 VALUES (	
 	{stg_columns}
-	,stg.batch_id b_id
+	,stg.batch_id batch_id
 	,current_timestamp(0) insrt_dttm
 	,current_timestamp(0) updt_dttm
 	);
