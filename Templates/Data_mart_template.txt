@@ -9,4 +9,5 @@ create table {dm_prefix}{schema_name}.{table_name} NO FALLBACK,
 	  ,filename VARCHAR(100) CHARACTER SET UNICODE NOT CASESPECIFIC
 	  ,insrt_dttm TIMESTAMP(6) TITLE 'Insert_Dttm'
 	  ,updt_dttm TIMESTAMP(6) TITLE 'Update_Dttm'
+	  ,dump_dttm TIMESTAMP(6) TITLE 'Dump_Dttm'
 	) {primary_index}{Table_name_pk}{pi_columns}{partition_statement}

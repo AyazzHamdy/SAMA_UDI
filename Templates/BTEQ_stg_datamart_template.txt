@@ -1,5 +1,5 @@
 /* ############################################################################
-#  FILE-NAME   : {filename}
+#  FILE-NAME   : {filename}.bteq
 #  PURPOSE     : TRANSFORMATION SCRIPT FROM STAGE TO DATAMART ....
 #  -------------------------------------------------------------------------
 #  DB-VERSION  : TD 16.20.32.11
@@ -35,18 +35,22 @@ USING {stg_prefix}{schema_name}.{table_name} stg
 WHEN MATCHED THEN 
 UPDATE SET
 {stg_equal_updt_cols}
+,dm.updt_dttm=current_timestamp(0)
+,dm."dump_dttm"=stg."dump_dttm"
 WHEN NOT MATCHED THEN 
 INSERT (
 	{table_columns}
 	,batch_id
 	,insrt_dttm
 	,updt_dttm
+	,dump_dttm
 	)
 VALUES (	
 	{stg_columns}
-	,stg.batch_id batch_id
+	,stg."batch_id" batch_id
 	,current_timestamp(0) insrt_dttm
-	,current_timestamp(0) updt_dttm
+	,NULL
+	,stg."dump_dttm"
 	);
 
 

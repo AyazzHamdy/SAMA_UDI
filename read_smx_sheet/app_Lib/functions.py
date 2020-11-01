@@ -81,6 +81,7 @@ def rename_reserved_word(Supplements, Reserved_words_source, word):
 def get_file_name(file):
     return os.path.splitext(os.path.basename(file))[0]
 
+
 def get_history_load_types(smx_sheet_df):
     load_types_list = smx_sheet_df['Load Type'].unique()
     hist_load_types = []
@@ -88,6 +89,7 @@ def get_history_load_types(smx_sheet_df):
         if 'History'.upper() in load_types_list[i].upper():
             hist_load_types.append(load_types_list[i])
     return hist_load_types
+
 
 def get_insert_load_types(smx_sheet_df):
     load_types_list = smx_sheet_df['Load Type'].unique()
@@ -98,6 +100,7 @@ def get_insert_load_types(smx_sheet_df):
     # print("insert_load_types", insert_load_types)
     return insert_load_types
 
+
 def get_upsert_load_types(smx_sheet_df):
     load_types_list = smx_sheet_df['Load Type'].unique()
     upsert_load_types = []
@@ -107,12 +110,14 @@ def get_upsert_load_types(smx_sheet_df):
     # print("upsert_load_types", upsert_load_types)
     return upsert_load_types
 
+
 def is_history_load_type(TFN_Rid_df):
     hist_load_types = get_history_load_types(TFN_Rid_df)
     if TFN_Rid_df[TFN_Rid_df['Load Type'].isin(hist_load_types)]:
         return True
     else:
         return False
+
 
 def get_apply_processes(smx_sheet, apply_type):
     # print("get_apply_processes", apply_type.upper())
@@ -130,17 +135,18 @@ def get_apply_processes(smx_sheet, apply_type):
     else:
         apply_tfns = smx_sheet
 
-
     # apply_processes = apply_tfns[(apply_tfns['Source_System'] != 'EMDAD_M')]
     emdad_Rids_list = get_EMDAD_Rids_list(smx_sheet)
     apply_processes = apply_tfns[~apply_tfns.Record_ID.isin(emdad_Rids_list)]
     apply_processes = apply_processes[~apply_processes['Entity'].str.endswith(str('_SGK'))]
     return apply_processes
 
+
 def get_EMDAD_Rids_list(smx_sheet):
     emdad_df = smx_sheet[smx_sheet['Source_System'] == 'EMDAD_M']
     emdad_Rids_list = emdad_df['Record_ID'].unique()
     return emdad_Rids_list
+
 
 def get_sama_stg_tables(STG_tables, source_name=None):
     if source_name:
@@ -165,6 +171,7 @@ def get_sama_fsdm_record_id(SMX_SHEET, R_id):
     ].reset_index()
     return smx_Rid.drop_duplicates()
 
+
 def get_Rid_Source_Table(SMX_R_id):
     tech_src_tbl_list = get_SMX_tech_Source_Table_vals()
     src_tbl_list = SMX_R_id['Source_Table'].unique()
@@ -174,12 +181,14 @@ def get_Rid_Source_Table(SMX_R_id):
         src_tbl = o_src_tbls_list[0]
     except:
         src_tbl = " "
-    src_tbl_name = '"'+src_tbl+'"' if str(src_tbl[0]) == str(0) else src_tbl
+    src_tbl_name = '"' + src_tbl + '"' if str(src_tbl[0]) == str(0) else src_tbl
     return src_tbl_name
+
 
 def get_SMX_tech_Source_Table_vals():
     tech_vals_list = ['HCV', 'JOB']
     return tech_vals_list
+
 
 def get_fsdm_tbl_alias(Table_name):
     alias_name = ' '
@@ -189,14 +198,17 @@ def get_fsdm_tbl_alias(Table_name):
     alias_name = alias_name.strip()
     return alias_name
 
+
 def get_ld_tbl_alias(fsdm_tbl_alias, rid):
     ld_tbl_alias = "{}_R{}_LD".format(fsdm_tbl_alias, rid)
     return ld_tbl_alias.strip()
 
-def get_TFN_rid_no_tech_cols(smx_Rid_df):  #remove the rows that have the tech cols from the df
+
+def get_TFN_rid_no_tech_cols(smx_Rid_df):  # remove the rows that have the tech cols from the df
     tech_cols = get_fsdm_tech_cols_list()
     TFN_df = smx_Rid_df[~smx_Rid_df.Column.isin(tech_cols)]
     return TFN_df
+
 
 def get_TFN_column_mapping(smx_Rid_df):
     # tech_cols = get_fsdm_tech_cols_list()
@@ -270,6 +282,7 @@ def rule_col_analysis_sgk(smx_Rid_df):
             left_joins += rule_output + "\n"
     return left_joins
 
+
 def rule_cell_analysis_sgk(i_rule_cell_value, sgk_cntr):
     print("rule_cell_value:\n", i_rule_cell_value)
     source_key = " "
@@ -281,36 +294,36 @@ def rule_cell_analysis_sgk(i_rule_cell_value, sgk_cntr):
     sgk_id_value = " "
     rule_cell_value = str(i_rule_cell_value).upper()
     if "LOOKUP" in rule_cell_value:
-        strt_index = rule_cell_value.find("LOOKUP")+len("LOOKUP")
+        strt_index = rule_cell_value.find("LOOKUP") + len("LOOKUP")
         rule_sbstring = rule_cell_value[strt_index:]
         rule_sbstring_list = rule_sbstring.split()
         # print("rule_sbstring_list", rule_sbstring_list)
         sgk_cntr = 0
         # print("len(rule_cell_value)", len(rule_sbstring_list), "__", len(rule_sbstring_list)-1 )
-        for i in range(len(rule_sbstring_list)-1):
-           # print("**", i, "..........\n")
-           if i == 0:
-               source_key = rule_sbstring_list[i]
-               # print("--source_key:", source_key)
+        for i in range(len(rule_sbstring_list) - 1):
+            # print("**", i, "..........\n")
+            if i == 0:
+                source_key = rule_sbstring_list[i]
+                # print("--source_key:", source_key)
 
-           elif "AGAINST" in rule_sbstring_list[i].upper():
-               edw_key = rule_sbstring_list[i + 1]
-               # print("--edw_key:", edw_key)
+            elif "AGAINST" in rule_sbstring_list[i].upper():
+                edw_key = rule_sbstring_list[i + 1]
+                # print("--edw_key:", edw_key)
 
-           elif "SGK" in rule_sbstring_list[i].upper():
-               if sgk_cntr == 0:
-                   sgk_tbl = rule_sbstring_list[i]
-                   # print("--sgk_tbl:", sgk_tbl)
-                   sgk_cntr += 1
-                   # left_join_clause = "LEFT JOIN {}.{}{}\n ON \nAND ".format("dd_fsdm", sgk_tbl, sgk_alias)
-               else:
-                   sgk_id_value = rule_sbstring_list[i+2]
-                   # print("--sgk_id_value:", sgk_id_value)
-                   # and_clause = "SGK.{} = {}".format(rule_sbstring_list[i], rule_sbstring_list[i+2])
+            elif "SGK" in rule_sbstring_list[i].upper():
+                if sgk_cntr == 0:
+                    sgk_tbl = rule_sbstring_list[i]
+                    # print("--sgk_tbl:", sgk_tbl)
+                    sgk_cntr += 1
+                    # left_join_clause = "LEFT JOIN {}.{}{}\n ON \nAND ".format("dd_fsdm", sgk_tbl, sgk_alias)
+                else:
+                    sgk_id_value = rule_sbstring_list[i + 2]
+                    # print("--sgk_id_value:", sgk_id_value)
+                    # and_clause = "SGK.{} = {}".format(rule_sbstring_list[i], rule_sbstring_list[i+2])
 
-        SGK_left_join_clause = "\nLEFT JOIN {}.{} {}\nON {}.{} = {}.{}\n    AND {}.SGK_ID = {}"\
-                               .format("dd_fsdm", sgk_tbl, sgk_alias, sgk_alias, edw_key, stg_alias, source_key,
-                                       sgk_alias, sgk_id_value)
+        SGK_left_join_clause = "\nLEFT JOIN {}.{} {}\nON {}.{} = {}.{}\n    AND {}.SGK_ID = {}" \
+            .format("dd_fsdm", sgk_tbl, sgk_alias, sgk_alias, edw_key, stg_alias, source_key,
+                    sgk_alias, sgk_id_value)
         # print("SGK_left_join_clause:\n", SGK_left_join_clause)
     return SGK_left_join_clause
 
@@ -321,7 +334,7 @@ def get_current_date():
 
 def get_history_variables(smx_sheet, rid, table_name):
     smx_TFN_Rid = smx_sheet[smx_sheet['Record_ID'] == rid]
-    smx_TFN_Rid = get_TFN_rid_no_tech_cols(smx_TFN_Rid) #remove the rows that have the tech cols from the df
+    smx_TFN_Rid = get_TFN_rid_no_tech_cols(smx_TFN_Rid)  # remove the rows that have the tech cols from the df
 
     possible_start_date = []
     possible_end_date = []
@@ -358,7 +371,7 @@ def get_fsdm_tbl_columns(smx_Rid, alias_name):
         alias = alias_name + '.'
     for column_name in columns_list:
         comma = '    ' + ',' if columns_list.index(column_name) > 0 else '    '
-        columns_comma += comma+alias+column_name + '\n'
+        columns_comma += comma + alias + column_name + '\n'
     columns_comma = columns_comma[0:len(columns_comma) - 1]
     return columns_comma.strip()
 
@@ -366,6 +379,7 @@ def get_fsdm_tbl_columns(smx_Rid, alias_name):
 def get_fsdm_tech_cols_list():
     tech_cols_list = ['R_ID', 'B_ID', 'INSRT_DTTM', 'UPDT_DTTM']
     return tech_cols_list
+
 
 def get_fsdm_tbl_non_technical_columns(smx_Rid, alias_name):
     tech_cols_list = get_fsdm_tech_cols_list()
@@ -380,7 +394,7 @@ def get_fsdm_tbl_non_technical_columns(smx_Rid, alias_name):
         alias = alias_name + '.'
     for column_name in columns_list:
         comma = '    ' + ',' if columns_list.index(column_name) > 0 else '    '
-        columns_comma += comma+alias+column_name + '\n'
+        columns_comma += comma + alias + column_name + '\n'
     columns_comma = columns_comma[0:len(columns_comma) - 1]
     return columns_comma.strip()
 
@@ -406,29 +420,31 @@ def get_sama_table_columns_comma_separated(tables_sheet, Table_name, alias=None,
     if alias is None:
         alias = ''
     else:
-        alias = alias+'.'
+        alias = alias + '.'
     for stg_tbl_indx, stg_tbl_row in tables_df.iterrows():
         if record_id is not None:
-            comma = '    ' + ',' if stg_tbl_indx > 0 else '    '
+            comma = '    ' + ',' if stg_tbl_indx > 0 else '        '
         else:
-            comma = '    ' + ',' if stg_tbl_indx > 0 else ''
+            comma = '        ' + ',' if stg_tbl_indx > 0 else ''
         if alias == 'sgk.':
             alias = ''
             comma = '' + ',' if stg_tbl_indx > 0 else '    '
         if record_id is None:
-            columns_comma += comma+alias+stg_tbl_row['COLUMN_NAME'] +'\n'
+            columns_comma += comma + alias + '"' + stg_tbl_row['COLUMN_NAME'] + '"' + '\n'
         else:
-            columns_comma += comma+alias+stg_tbl_row['Column'] +'\n'
+            columns_comma += comma + alias + stg_tbl_row['Column'] + '\n'
     columns_comma = columns_comma[0:len(columns_comma) - 1]
     return columns_comma
 
 
-def get_comparison_columns(tables_sheet, Table_name, apply_type, operational_symbol, alias1=None, alias2=None, record_id=None):
+def get_comparison_columns(tables_sheet, Table_name, apply_type, operational_symbol, alias1=None, alias2=None,
+                           record_id=None):
     conditional_statement = ''
     columns_comma = ""
     if apply_type.upper() == "HISTORY":
         tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
-                                     & ((tables_sheet['PK'].str.upper() == 'PK')|(tables_sheet['Historization column'].str.upper() == 'E'))
+                                     & ((tables_sheet['PK'].str.upper() == 'PK') | (
+                tables_sheet['Historization column'].str.upper() == 'E'))
                                      & (tables_sheet['Record_ID'] == record_id)
                                      ].reset_index()
     elif apply_type.upper() == "HISTORY_COL":
@@ -437,7 +453,7 @@ def get_comparison_columns(tables_sheet, Table_name, apply_type, operational_sym
 
         tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
                                      & (tables_sheet['PK'].str.upper() != 'PK')
-                                     & (tables_sheet['Record_ID'] == record_id)#.any(axis = 0)
+                                     & (tables_sheet['Record_ID'] == record_id)  # .any(axis = 0)
                                      ].reset_index()
         tables_df = tables_df[tables_df.Column.isin(hist_col_list)]
 
@@ -471,22 +487,22 @@ def get_comparison_columns(tables_sheet, Table_name, apply_type, operational_sym
         column_name = str(stg_tbl_row['Column'])
         numeric_data_types = ['INTEGER', 'BIGINT', 'SMALLINT', 'FLOAT']
         if data_type in numeric_data_types or 'DECIMAL' in data_type:
-            column_name = 'COALESCE('+alias1 + column_name + ',-1) ' + operational_symbol + ' COALESCE('+alias2 + column_name + ',-1)'
-        elif 'CHAR' in data_type:# == 'VARCHAR(50)':
-            column_name = 'COALESCE('+alias1 + column_name + ",'-') " + operational_symbol + ' COALESCE('+alias2 + column_name + ",'-')"
+            column_name = 'COALESCE(' + alias1 + column_name + ',-1) ' + operational_symbol + ' COALESCE(' + alias2 + column_name + ',-1)'
+        elif 'CHAR' in data_type:  # == 'VARCHAR(50)':
+            column_name = 'COALESCE(' + alias1 + column_name + ",'-') " + operational_symbol + ' COALESCE(' + alias2 + column_name + ",'-')"
         elif data_type == 'TIMESTAMP':
-            column_name = 'COALESCE('+alias1 + column_name + ",CAST('1001-01-01 00:00:00' AS TIMESTAMP(0))) " + operational_symbol + ' COALESCE('+alias2 + column_name + ",CAST('1001-01-01 00:00:00' AS TIMESTAMP(0)))"
+            column_name = 'COALESCE(' + alias1 + column_name + ",CAST('1001-01-01 00:00:00' AS TIMESTAMP(0))) " + operational_symbol + ' COALESCE(' + alias2 + column_name + ",CAST('1001-01-01 00:00:00' AS TIMESTAMP(0)))"
         elif data_type == 'DATE':
-            column_name = 'COALESCE('+alias1 + column_name + ",CAST('1001-01-01' AS DATE)) " + operational_symbol + ' COALESCE('+alias2 + column_name + ",CAST('1001-01-01' AS DATE))"
+            column_name = 'COALESCE(' + alias1 + column_name + ",CAST('1001-01-01' AS DATE)) " + operational_symbol + ' COALESCE(' + alias2 + column_name + ",CAST('1001-01-01' AS DATE))"
 
         comma = '    ' + '    AND ' if stg_tbl_indx > 0 else ' '
-        columns_comma += comma+column_name+'\n'
+        columns_comma += comma + column_name + '\n'
     columns_comma = columns_comma[0:len(columns_comma) - 1]
     return columns_comma
 
 
 def get_sama_pk_columns_comma_separated(tables_sheet, Table_name, alias='', record_id=None):
-    columns_df = get_sama_stg_table_columns_pk(tables_sheet,Table_name,record_id)
+    columns_df = get_sama_stg_table_columns_pk(tables_sheet, Table_name, record_id)
     columns_comma = ""
     if alias is None:
         alias = ''
@@ -497,14 +513,14 @@ def get_sama_pk_columns_comma_separated(tables_sheet, Table_name, alias='', reco
         if alias == 'one_pk.':
             return stg_tbl_row['Column']
         if record_id is None:
-            columns_comma += comma+alias+str(stg_tbl_row['COLUMN_NAME']) +'\n'
+            columns_comma += comma + alias + str(stg_tbl_row['COLUMN_NAME']) + '\n'
         else:
-            columns_comma += comma+alias+str(stg_tbl_row['Column'])+'\n'
+            columns_comma += comma + alias + str(stg_tbl_row['Column']) + '\n'
     columns_comma = columns_comma[0:len(columns_comma) - 1]
     return columns_comma
 
 
-def get_sama_stg_table_columns_minus_pk(tables_sheet, Table_name,record_id=None):
+def get_sama_stg_table_columns_minus_pk(tables_sheet, Table_name, record_id=None):
     if record_id is None:
         tables_df = tables_sheet.loc[(tables_sheet['TABLE_NAME'].str.upper() == Table_name.upper())
                                      & (tables_sheet['PRIMARY_KEY_FLAG'].str.upper() != 'Y')
@@ -520,31 +536,31 @@ def get_sama_stg_table_columns_minus_pk(tables_sheet, Table_name,record_id=None)
 def get_sama_stg_table_columns_pk(tables_sheet, Table_name, record_id=None, history_flag=None):
     if record_id is None:
         tables_df = tables_sheet.loc[(tables_sheet['TABLE_NAME'].str.upper() == Table_name.upper())
-                                         & (tables_sheet['PRIMARY_KEY_FLAG'].str.upper() == 'Y')
-                                         ].reset_index()
+                                     & (tables_sheet['PRIMARY_KEY_FLAG'].str.upper() == 'Y')
+                                     ].reset_index()
     elif record_id is not None and history_flag is not None:
         tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
-                                         & (tables_sheet['PK'].str.upper() == 'PK')
-                                         & (tables_sheet['Record_ID'] == record_id)
-                                         & (tables_sheet['Historization column'] != 'S')
-                                         ].reset_index()
+                                     & (tables_sheet['PK'].str.upper() == 'PK')
+                                     & (tables_sheet['Record_ID'] == record_id)
+                                     & (tables_sheet['Historization column'] != 'S')
+                                     ].reset_index()
     else:
         tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
-                                         & (tables_sheet['PK'].str.upper() == 'PK')
-                                         & (tables_sheet['Record_ID'] == record_id)
-                                         ].reset_index()
+                                     & (tables_sheet['PK'].str.upper() == 'PK')
+                                     & (tables_sheet['Record_ID'] == record_id)
+                                     ].reset_index()
     return tables_df
 
 
-def get_sgk_record(SGK_tables,TABLENAME,RECORDID,flag):
+def get_sgk_record(SGK_tables, TABLENAME, RECORDID, flag):
     null_cols = ''
     tables_df = SGK_tables.loc[(SGK_tables['Entity'].str.upper() == TABLENAME.upper())
-                                         & (SGK_tables['Record_ID'] == RECORDID)
-                                         ].reset_index()
+                               & (SGK_tables['Record_ID'] == RECORDID)
+                               ].reset_index()
     null_tables_df = tables_df.loc[(tables_df['Rule'] == 'NULL') | (tables_df['Rule'] == '')
-                                         ].reset_index()
+                                   ].reset_index()
 
-    for null_tables_index,null_tables_row in null_tables_df.iterrows():
+    for null_tables_index, null_tables_row in null_tables_df.iterrows():
         tech_cols_list = get_fsdm_tech_cols_list()
         Column_name = null_tables_row['Column']
         if Column_name not in tech_cols_list:
@@ -554,7 +570,7 @@ def get_sgk_record(SGK_tables,TABLENAME,RECORDID,flag):
     if flag == 'null_cols':
         return null_cols
 
-    for tables_df_index,tables_df_row in tables_df.iterrows():
+    for tables_df_index, tables_df_row in tables_df.iterrows():
         if tables_df_row['Rule'] != 'NULL' and tables_df_row['Rule'] != '':
             source_column = tables_df_row['Source_Column']
             sgk_key = tables_df_row['Column']
@@ -586,7 +602,9 @@ def get_aliased_columns(columns_list, alias=None):
     columns_comma = columns_comma[0:len(columns_comma) - 1]
     return columns_comma
 
-def get_hist_end_dt_updtt(history_df, table_name,end_date_col_name,operational_symbol, alias1=None, alias2=None, record_id=None):
+
+def get_hist_end_dt_updtt(history_df, table_name, end_date_col_name, operational_symbol, alias1=None, alias2=None,
+                          record_id=None):
     end_dt_df = history_df.loc[(history_df['Entity'].str.upper() == table_name.upper())
                                & (history_df['Record_ID'] == record_id)
                                & (history_df['Column'].str.upper() == end_date_col_name.upper())
@@ -614,14 +632,14 @@ def get_hist_end_dt_updtt(history_df, table_name,end_date_col_name,operational_s
         interval = interval.format(str(1), 'DAY')
     elif col_dtype.upper() == 'TIMESTAMP' or col_dtype.upper() == 'TIMESTAMP(6)':
         interval = interval.format("0.000001", 'SECOND')
-    else: #timestamp but not of 6
+    else:  # timestamp but not of 6
         dtype_split1 = col_dtype.split("(")  # ['timestamp', '3)']
         # print("dtype_split1", dtype_split1)
-        precision = dtype_split1[1].split(")")[0]  #['3', ''][0]
+        precision = dtype_split1[1].split(")")[0]  # ['3', ''][0]
         # print("precision", precision)
         precision_int = int(precision) - 1
         interavl_span = "0.{}1"
-        repeat_zero = '0'*precision_int
+        repeat_zero = '0' * precision_int
         interavl_span = interavl_span.format(repeat_zero)
         # print("interavl_span", interavl_span)
         interval = interval.format(str(interavl_span), 'SECOND')
@@ -650,16 +668,17 @@ def get_hist_end_dt_updt(column_name, columns_type, operational_symbol, alias1=N
     return end_dt_updt
 
 
-def get_conditional_stamenet(tables_sheet, Table_name,columns_type,operational_symbol,alias1=None,alias2=None,record_id=None,history_flag=None):
+def get_conditional_stamenet(tables_sheet, Table_name, columns_type, operational_symbol, alias1=None, alias2=None,
+                             record_id=None, history_flag=None):
     conditional_statement = ''
     if columns_type == 'pk' and record_id is None:
-        table_columns = get_sama_stg_table_columns_pk(tables_sheet,Table_name)
+        table_columns = get_sama_stg_table_columns_pk(tables_sheet, Table_name)
     elif columns_type != 'pk' and record_id is None:
-        table_columns = get_sama_stg_table_columns_minus_pk(tables_sheet,Table_name)
+        table_columns = get_sama_stg_table_columns_minus_pk(tables_sheet, Table_name)
     elif columns_type == 'pk' and record_id is not None:
-        table_columns = get_sama_stg_table_columns_pk(tables_sheet,Table_name,record_id,history_flag)
+        table_columns = get_sama_stg_table_columns_pk(tables_sheet, Table_name, record_id, history_flag)
     elif columns_type == 'non_pk' and record_id is not None:
-        table_columns = get_sama_stg_table_columns_minus_pk(tables_sheet,Table_name,record_id)
+        table_columns = get_sama_stg_table_columns_minus_pk(tables_sheet, Table_name, record_id)
     elif columns_type == 'non_pk_upsert_set' and record_id is not None:
         excluded_cols = ['R_ID', 'INSRT_DTTM']
         table_columns = get_sama_stg_table_columns_minus_pk(tables_sheet, Table_name, record_id)
@@ -693,7 +712,7 @@ def get_conditional_stamenet(tables_sheet, Table_name,columns_type,operational_s
         alias2 = alias2 + '.'
     for column_name_index, column_name_row in table_columns.iterrows():
         if record_id is None:
-            Column_name = column_name_row['COLUMN_NAME']
+            Column_name = '"' + column_name_row['COLUMN_NAME'] + '"'
         else:
             Column_name = column_name_row['Column']
         on_statement = alias1 + Column_name + ' ' + operational_symbol + ' ' + alias2 + Column_name
@@ -702,7 +721,13 @@ def get_conditional_stamenet(tables_sheet, Table_name,columns_type,operational_s
         else:
             and_statement = '        ' + 'and ' if column_name_index > 0 else '    '
 
-        on_statement = on_statement if column_name_index == len(table_columns) else on_statement + '\n'#len(table_columns) - 1 else on_statement + '\n'
+        if alias2 == 'dm.' and columns_type == 'pk':
+            and_statement = '        ' + 'and ' if column_name_index > 0 else '       '
+        elif alias2 == 'stg.' and columns_type == 'stg':
+            and_statement = '        ' + ', ' if column_name_index > 0 else '       '
+
+        on_statement = on_statement if column_name_index == len(
+            table_columns) else on_statement + '\n'  # len(table_columns) - 1 else on_statement + '\n'
         and_Column_name = and_statement + on_statement
         conditional_statement = conditional_statement + and_Column_name
     return conditional_statement.rstrip()
@@ -711,9 +736,9 @@ def get_conditional_stamenet(tables_sheet, Table_name,columns_type,operational_s
 def single_quotes(string):
     return "'%s'" % string
 
+
 def double_quotes(string):
     return '"%s"' % string
-
 
 
 def assertions(table_maping_row, Core_tables_list):
@@ -839,7 +864,7 @@ def is_smx_file(file, sheets):
     return True if len(required_sheets) == 0 else False
 
 
-def get_smx_files(smx_path, smx_ext, stg_sheets,smx_sheets,sheet_type):
+def get_smx_files(smx_path, smx_ext, stg_sheets, smx_sheets, sheet_type):
     smx_files = []
     all_files = md.get_files_in_dir(smx_path, smx_ext)
     for i in all_files:
@@ -849,6 +874,7 @@ def get_smx_files(smx_path, smx_ext, stg_sheets,smx_sheets,sheet_type):
         elif sheet_type == 'SMX':
             smx_files.append(i) if is_smx_file(file, smx_sheets) else None
     return smx_files
+
 
 def get_config_file_path():
     config_file_path = md.get_dirs()[1]
@@ -891,6 +917,37 @@ def get_config_file_values(config_file_path=None):
                     dt_now.strftime("%S")
         param_dic['output_path'] = param_dic["home_output_folder"] + "/" + dt_folder
         param_dic['read_sheets_parallel'] = 1
+    else:
+        param_dic = {}
+    return param_dic
+
+
+def get_config_file_values_sftp(config_file_path=None):
+    separator = "$$$"
+    parameters = ""
+    # config_file_path = os.path.dirname(sys.modules['__main__'].__file__)
+    if config_file_path is None:
+        try:
+            config_file_path = get_config_file_path()
+            config_file = open(config_file_path + "/" + pm.default_config_file_name, "r")
+
+        except:
+            config_file_path = input("Enter config.txt path please:")
+            config_file = open(config_file_path + "/" + pm.default_config_file_name, "r")
+    else:
+        try:
+            config_file = open(config_file_path, "r")
+        except:
+            config_file = None
+
+    if config_file:
+        for i in config_file.readlines():
+            line = i.strip()
+            if line != "":
+                if line[0] != '#':
+                    parameters = parameters + line + separator
+
+        param_dic = string_to_dict(parameters, separator)
     else:
         param_dic = {}
     return param_dic
@@ -965,4 +1022,4 @@ class TemplateLogError(WriteFile):
 
 
 if __name__ == "__main__":
-   get_config_file_values()
+    get_config_file_values()

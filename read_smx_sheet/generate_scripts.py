@@ -107,6 +107,9 @@ class GenerateScripts:
                         self.parallel_templates.append(delayed(Staging_DDL.stg_temp_DDL)(self.cf, main_output_path, STG_tables, Data_Types, 'Staging'))
                         self.parallel_templates.append(delayed(Staging_DDL.stg_temp_DDL)(self.cf, main_output_path, STG_tables, Data_Types, 'Data_mart'))
                         self.parallel_templates.append(delayed(Staging_DDL.stg_temp_DDL)(self.cf, main_output_path, STG_tables, Data_Types, 'OI_staging'))
+                        self.parallel_templates.append(delayed(Staging_DDL.stg_temp_DDL)(self.cf, main_output_path, STG_tables, Data_Types, 'UV_staging'))
+                        self.parallel_templates.append(delayed(Staging_DDL.stg_temp_DDL)(self.cf, main_output_path, STG_tables, Data_Types, 'LOG_staging'))
+
                         self.parallel_templates.append(delayed(BTEQ_Scripts.bteq_temp_script)(self.cf, bteq_stg_dm_scripts_output_path, STG_tables, 'from stg to datamart'))
                         self.parallel_templates.append(delayed(BTEQ_Scripts.bteq_temp_script)(self.cf, bteq_stg_oi_scripts_output_path, STG_tables, 'from stg to oi'))
                     elif self.scripts_generation_flag == 'SMX':
@@ -121,13 +124,13 @@ class GenerateScripts:
                         if source_name != 'ALL':
                              smx_sheet = smx_sheet[smx_sheet['Ssource'] == source_name]
 
-                        Rid_list = self.cf.Rid_List
+                        ##Rid_list = self.cf.Rid_List
+                        Rid_list = [30045,30053] ##PRTY_APPLYS
+                        print(Rid_list)
                         if not Rid_list:
                             smx_sheet = smx_sheet
                         else:
                             smx_sheet = smx_sheet[smx_sheet.Record_ID.isin(Rid_list)]
-
-
 
                         self.parallel_templates.append(delayed(Apply_Insert_Upsert.apply_insert_upsert)(self.cf, main_output_path_apply, smx_sheet, "Apply_Insert"))
                         self.parallel_templates.append(delayed(Apply_Insert_Upsert.apply_insert_upsert)(self.cf, main_output_path_apply, smx_sheet, "Apply_Upsert"))
