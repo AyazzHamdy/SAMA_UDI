@@ -2,8 +2,6 @@ import os
 import sys
 import pysftp
 import subprocess
-cnopts = pysftp.CnOpts()
-cnopts.hostkeys = None
 
 sys.path.append(os.getcwd())
 from read_smx_sheet.app_Lib import manage_directories as md, functions as funcs
@@ -469,6 +467,8 @@ class FrontEnd:
         print(self.substring)
         self.refresh_config_file_values_sftp()
         try:
+            cnopts = pysftp.CnOpts()
+            cnopts.hostkeys = None
             with pysftp.Connection(host=self.hostname, username=self.username, password=self.password,
                                    cnopts=cnopts) as sftp:
                 sftp.cwd(self.source_path)
