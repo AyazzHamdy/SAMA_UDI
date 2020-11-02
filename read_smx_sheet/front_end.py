@@ -1,7 +1,7 @@
 import os
 import sys
 import pysftp
-from read_smx_sheet.Logging_Decorator import Logging_decorator
+import subprocess
 cnopts = pysftp.CnOpts()
 cnopts.hostkeys = None
 
@@ -33,6 +33,8 @@ class FrontEnd:
         self.msg_generating = "In Progress... "
         self.color_msg_generating = "blue"
         self.msg_done = "Done, Elapsed Time: "
+        self.msg_done_sftp = "Done"
+        self.msg_error_sftp = "Error"
         self.color_msg_done = "green"
         self.color_msg_done_with_error = "red"
         self.color_error_messager = "red"
@@ -466,16 +468,31 @@ class FrontEnd:
         print(self.destination_path)
         print(self.substring)
         self.refresh_config_file_values_sftp()
-        with pysftp.Connection(host=self.hostname, username=self.username, password=self.password, cnopts=cnopts) as sftp:
-            sftp.cwd(self.source_path)
-            directory_structure = sftp.listdir_attr()
+        try:
+            with pysftp.Connection(host=self.hostname, username=self.username, password=self.password,
+                                   cnopts=cnopts) as sftp:
+                sftp.cwd(self.source_path)
+                directory_structure = sftp.listdir_attr()
 
-            for attr in directory_structure:
-                if attr.filename.contains(self.substring):
-                    file = attr.filename
-                    sftp.get(self.source_path + file, self.destination_path + file)
-                    print("Moved " + file + " to " + self.destination_path)
-            funcs.TemplateLogError(self.destination_path, "SFTP SCRIPT", self.substring, traceback.format_exc()).log_error()
+                for attr in directory_structure:
+                    if attr.filename.contains(self.substring):
+                        file = attr.filename
+                        sftp.get(self.source_path + file, self.destination_path + file)
+                        print("Moved " + file + " to " + self.destination_path)
+                message = self.msg_done_sftp
+                color = self.color_msg_done
+        except :
+            message = self.msg_error_sftp
+            color = self.color_error_messager
+            funcs.TemplateLogError(self.destination_path, "SFTP SCRIPT", self.substring,
+                                   traceback.format_exc()).log_error()
+        self.change_status_label(message, color)
+        if sys.platform == "win32":
+            os.startfile(self.destination_path)
+        else:
+            opener = "open" if sys.platform == "darwin" else "xdg-open"
+            subprocess.call([opener, self.destination_path])
+
 
     def generating_indicator(self, thread):
         def r():
