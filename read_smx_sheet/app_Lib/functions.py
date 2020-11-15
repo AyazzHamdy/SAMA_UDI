@@ -226,39 +226,75 @@ def get_TFN_column_mapping(smx_Rid_df):
         src_col = tfn_Rid_row['Source_Column'].upper()
         load_type = tfn_Rid_row['Load Type'].upper()
 
+        record_id = tfn_Rid_row['Record_ID']
         rule = tfn_Rid_row['Rule']
         # print("rule", rule)
         rule = str(rule).replace("\n", " ")
         # print("rule2", rule)
-        if src_tbl == 'HCV' and src_col == 'HCV':
+        rule = rule.upper()
+
+        rule_Comment = ""
+        if rule == "1:1":
+            rule_Comment = ""
+        elif ("HARDCODE TO" in rule) or ("SET TO" in rule):
+            rule = rule.strip()
+            applied_rule = rule.replace("HARDCODE TO", " ").replace("SET TO", " ").strip()
+            applied_rule_len = len(applied_rule)
+            rule_len = len(rule)
+
+            if "HARDCODE TO" in rule:
+                rule_Comment = "" if rule_len == applied_rule_len + len("HARDCODE TO ") else rule
+                # print(record_id, applied_rule_len, rule_len,">>>>>>>>", rule_Comment)
+                print(record_id, "applied rule", applied_rule, applied_rule_len, "rule", rule, rule_len, ">>>>>>>>",
+                      rule_Comment)
+
+            elif "SET TO" in rule:
+                rule_Comment = "" if rule_len == applied_rule_len + len("SET TO ") else rule
+
+        final_rule_comment = "/*{}*/".format(rule_Comment) if rule_Comment != "" else ""
+
+        if src_tbl == 'HCV' and src_col == 'HCV' and "_END_" not in col_name:
             if rule == 'NULL':
                 HCV = 'NULL'
+                column_clause = "{} AS {} {}".format(HCV, col_name, final_rule_comment)
             else:
-                applied_rule = rule.replace("Hardcode to", " ").replace("HARDCODE TO", " ").strip()
+                applied_rule = rule.replace("HARDCODE TO", " ").replace("SET TO", " ").replace("'", "").strip()
+                numeric_dtypes = get_numeric_dtypes()
+                applied_rule = applied_rule if col_dtype in numeric_dtypes else "'" + applied_rule + "'"
                 HCV = applied_rule
-            column_clause = "CAST( {} AS {} ) AS {} /*{}*/".format(HCV, col_dtype, col_name, rule)
-            columns_comma += comma + column_clause + '\n'
+                column_clause = "CAST( {} AS {}) AS {} {}".format(HCV, col_dtype, col_name, final_rule_comment)
 
         elif rule == "1:1" and src_tbl != 'JOB':
-            column_clause = "CAST( {}{} AS {} ) AS {} /*{}*/".format(stg_alias, src_col, col_dtype, col_name, rule)
-            columns_comma += comma + column_clause + '\n'
+            rule = " "
+            column_clause = "CAST( {}{} AS {}) AS {} {}".format(stg_alias, src_col, col_dtype, col_name,
+                                                                final_rule_comment)
 
         elif src_tbl == 'JOB' and "_STRT_" in col_name:
             HCV_strt = "CURRENT_{}".format(col_dtype)
-            column_clause = "CAST( {} AS {} ) AS {} /*{}*/".format(HCV_strt, col_dtype, col_name, rule)
-            columns_comma += comma + column_clause + '\n'
-        elif "HISTORY" in load_type and src_tbl == 'JOB' and "_END_" in col_name:
-            HCV_end = "9999-12-31 23:59:59.999999"
+            column_clause = "CAST( {} AS {}) AS {} {}".format(HCV_strt, col_dtype, col_name, final_rule_comment)
+
+        elif "HISTORY" in load_type and "_END_" in col_name:  # and src_tbl == 'JOB'
+            if col_dtype.upper() == "DATE":
+                HCV_end = "9999-12-31"
+            else:
+                HCV_end = "9999-12-31 23:59:59.999999"
             HCV_end = single_quotes(HCV_end)
-            column_clause = "CAST( {} AS {} ) AS {} /* {}*/".format(HCV_end, col_dtype, col_name, rule)
-            columns_comma += comma + column_clause + '\n'
+            column_clause = "CAST( {} AS {}) AS {} {}".format(HCV_end, col_dtype, col_name, final_rule_comment)
+
         else:
-            column_clause = col_name + "/* mapped to {}.{} following rule: {}*/".format(src_tbl, src_col, rule)
-            columns_comma += comma + column_clause + '\n'
+            rule_comment = "/* mapped to {}.{} following rule: {}*/".format(src_tbl, src_col, rule)
+            column_clause = "CAST(  AS {}) AS {} {}".format(col_dtype, col_name, rule_comment)
+            # column_clause = col_name + "/* mapped to {}.{} following rule: {}*/".format(src_tbl, src_col, rule)
+            # columns_comma += comma + column_clause + '\n'
+
+        columns_comma += comma + column_clause + '\n'
 
     columns_comma = columns_comma[0:len(columns_comma) - 1]
     return columns_comma
 
+def get_numeric_dtypes():
+    numeric_data_types = ['INTEGER', 'BIGINT', 'SMALLINT', 'FLOAT']
+    return numeric_data_types
 
 def handle_default_col_dtype(dtype):
     if dtype == 'TIMESTAMP':
