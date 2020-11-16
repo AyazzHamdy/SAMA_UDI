@@ -21,8 +21,8 @@ def history_apply(cf, source_output_path, smx_table):
     bteq_run_file = cf.bteq_run_file
     current_date = funcs.get_current_date()
 
-    SOURCENAME = cf.sgk_source
-    SOURCENAME = 'SAPFICO'
+    # SOURCENAME = cf.sgk_source
+
     # if SOURCENAME != 'ALL':
     #     smx_table = smx_table[smx_table['Ssource'] == SOURCENAME]
 
@@ -46,6 +46,7 @@ def history_apply(cf, source_output_path, smx_table):
 
         record_id = r_id
         table_name = history_df['Entity'].unique()[0]
+        SOURCENAME = history_df['Stg_Schema'].unique()[0]
         filename = table_name + '_R' + str(record_id)
         BTEQ_file_name = "UDI_{}_{}".format(SOURCENAME, filename)
 

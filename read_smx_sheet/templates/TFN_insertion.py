@@ -17,7 +17,7 @@ def TFN_insertion(cf, source_output_path, SMX_SHEET):
     STG_prefix = cf.stg_prefix
 
     current_date = funcs.get_current_date()
-    Source_name = cf.sgk_source
+    # Source_name = cf.sgk_source
     # if Source_name != 'ALL':
     #     SMX_SHEET = SMX_SHEET[SMX_SHEET['Ssource'] == Source_name]
 
@@ -77,6 +77,8 @@ def TFN_insertion(cf, source_output_path, SMX_SHEET):
 
         Record_id = record_id
 
+        Source_name = TFN_record_id_df['Stg_Schema'].unique()[0]
+
         fsdm_table_name = TFN_record_id_df['Entity'].unique()[0]
         ld_table_name = fsdm_table_name + "_R" + str(Record_id)
         BTEQ_file_name = "{}_{}_R{}".format(Source_name, fsdm_table_name, Record_id)
@@ -84,9 +86,10 @@ def TFN_insertion(cf, source_output_path, SMX_SHEET):
         f.write(template_head)
 
         ld_tbl_columns = funcs.get_fsdm_tbl_columns(TFN_record_id_df, alias_name=None)
-        src_table = funcs.get_Rid_Source_Table(TFN_record_id_df)
-
+        # src_table = funcs.get_Rid_Source_Table(TFN_record_id_df)
+        src_table = TFN_record_id_df['From_Rule'].unique()[0]
         col_mapping = funcs.get_TFN_column_mapping(TFN_record_id_df)
+
         left_joins = funcs.rule_col_analysis_sgk(TFN_record_id_df)
         left_joins = "\n" + left_joins if left_joins != "" else left_joins
 

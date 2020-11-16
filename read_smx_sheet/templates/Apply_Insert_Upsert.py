@@ -13,7 +13,7 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
         DupDB_prefix = cf.modelDup_prefix
         bteq_run_file = cf.bteq_run_file
 
-        SOURCENAME = cf.sgk_source
+        # SOURCENAME = cf.sgk_source
         # if SOURCENAME != 'ALL':
         #     SMX_SHEET = SMX_SHEET[SMX_SHEET['Ssource'] == SOURCENAME]
 
@@ -61,7 +61,7 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
             # source_system = funcs.get_Rid_Source_System(smx_record_id_df)
             # source_system = source_system.replace('Mobile Payments - ', '')
             Record_id = record_id
-            schema_name = SOURCENAME
+            schema_name = smx_record_id_df['Stg_Schema'].unique()[0]
             # ld_DB = ld_prefix+schema_name
 
             Table_name = smx_record_id_df['Entity'].unique()[0]
@@ -70,7 +70,7 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
             ld_tbl_alias = funcs.get_ld_tbl_alias(fsdm_tbl_alias, Record_id)
             fsdm_tbl_alias = fsdm_tbl_alias + "_FSDM"
             ld_table_name = Table_name + "_R" + str(Record_id)
-            BTEQ_file_name = "UDI_{}_{}".format(SOURCENAME, ld_table_name)
+            BTEQ_file_name = "UDI_{}_{}".format(schema_name, ld_table_name)
 
             f = funcs.WriteFile(apply_folder_path, BTEQ_file_name, "bteq")
             f.write(template_head)
@@ -81,8 +81,13 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
             fsdm_tbl_columns = funcs.get_fsdm_tbl_columns(smx_record_id_df, alias_name=None)
 
             on_clause = funcs.get_conditional_stamenet(smx_record_id_df, Table_name, "pk", "=", ld_tbl_alias, fsdm_tbl_alias, Record_id)
+            where_clause = funcs.get_conditional_stamenet(smx_record_id_df, Table_name, "pk", "=", ld_tbl_alias,
+                                                          "FLAG_IND", Record_id)
 
-            where_clause = funcs.get_conditional_stamenet(smx_record_id_df, Table_name, "pk", "=", ld_tbl_alias, "FLAG_IND", Record_id)
+            # from_clause = smx_record_id_df['From_Rule'].unique()[0]
+            # join_clause = smx_record_id_df['Join_Rule'].unique()[0]
+            # filter_Clause = smx_record_id_df['Filter_Rule'].unique()[0]
+
 
             FSDM_tbl_pk= funcs.get_sama_pk_columns_comma_separated(smx_record_id_df, Table_name, alias=fsdm_tbl_alias, record_id=Record_id)
             FSDM_first_tbl_pk = FSDM_tbl_pk.split(',')[0]
