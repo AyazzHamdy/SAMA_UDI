@@ -4,7 +4,7 @@ from read_smx_sheet.parameters import parameters as pm
 from datetime import date
 
 @Logging_decorator
-def TFN_insertion(cf, source_output_path, SMX_SHEET):
+def TFN_insertion(cf, source_output_path, secondary_output_path_TFN, SMX_SHEET):
 
     template_path = cf.templates_path + "/" + pm.default_TFN_template_file_name
     template_smx_path = cf.smx_path + "/" + "Templates" + "/" + pm.default_TFN_template_file_name
@@ -82,13 +82,28 @@ def TFN_insertion(cf, source_output_path, SMX_SHEET):
         fsdm_table_name = TFN_record_id_df['Entity'].unique()[0]
         ld_table_name = fsdm_table_name + "_R" + str(Record_id)
         BTEQ_file_name = "{}_{}_R{}".format(Source_name, fsdm_table_name, Record_id)
-        f = funcs.WriteFile(source_output_path, BTEQ_file_name, "bteq")
-        f.write(template_head)
+
+        special_handline_flag = TFN_record_id_df['SPECIAL_HANDLING_FLAG'].unique()[0]
+        if special_handline_flag.upper() == "N":
+            f = funcs.WriteFile(source_output_path, BTEQ_file_name, "bteq")
+            f.write(template_head)
+        else:
+            f = funcs.WriteFile(secondary_output_path_TFN, BTEQ_file_name, "bteq")
+            f.write(template_head)
+
 
         ld_tbl_columns = funcs.get_fsdm_tbl_columns(TFN_record_id_df, alias_name=None)
+        col_mapping = funcs.get_TFN_column_mapping(TFN_record_id_df)
+
         # src_table = funcs.get_Rid_Source_Table(TFN_record_id_df)
         src_table = TFN_record_id_df['From_Rule'].unique()[0]
-        col_mapping = funcs.get_TFN_column_mapping(TFN_record_id_df)
+
+        join_clause = TFN_record_id_df['Join_Rule'].unique()[0]
+
+        where_clause = TFN_record_id_df['Filter_Rule'].unique()[0]
+
+        if where_clause.split(' ', 1)[0].upper() not in ['QUALIFY', 'GROUP'] and where_clause != "":
+            where_clause = 'WHERE' + ' ' + where_clause
 
         left_joins = funcs.rule_col_analysis_sgk(TFN_record_id_df)
         left_joins = "\n" + left_joins if left_joins != "" else left_joins
@@ -104,7 +119,8 @@ def TFN_insertion(cf, source_output_path, SMX_SHEET):
                                              Column_Mapping=col_mapping,
                                              STG_prefix=STG_prefix,
                                              STG_tbl=src_table,
-                                             possible_left_joins=left_joins
+                                             possible_left_joins=join_clause,
+                                             possible_filters=where_clause
                                              )
 
         concat_bteq_script = concat_template_string.format(ld_prefix=ld_prefix,

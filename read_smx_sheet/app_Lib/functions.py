@@ -219,12 +219,16 @@ def get_TFN_column_mapping(smx_Rid_df):
     sgk_alias = "SGK."
     for tfn_Rid_indx, tfn_Rid_row in TFN_df.iterrows():
         comma = '    ' + ',' if tfn_Rid_indx > 0 else ''
+
+        col_source = tfn_Rid_row['Source_Table'].upper()
         col_name = tfn_Rid_row['Column'].upper()
         col_dtype = tfn_Rid_row['Datatype'].upper()
         col_dtype = handle_default_col_dtype(col_dtype)
         src_tbl = tfn_Rid_row['Source_Table'].upper()
         src_col = tfn_Rid_row['Source_Column'].upper()
         load_type = tfn_Rid_row['Load Type'].upper()
+
+        historization_col = tfn_Rid_row['Historization_Column'].upper() if "HISTORY" in load_type else ""
 
         record_id = tfn_Rid_row['Record_ID']
         rule = tfn_Rid_row['Rule']
@@ -266,14 +270,18 @@ def get_TFN_column_mapping(smx_Rid_df):
 
         elif rule == "1:1" and src_tbl != 'JOB':
             rule = " "
-            column_clause = "CAST( {}{} AS {}) AS {} {}".format(stg_alias, src_col, col_dtype, col_name,
-                                                                final_rule_comment)
+
+            # column_clause = "CAST( {}{} AS {}) AS {} {}".format(stg_alias, src_col, col_dtype, col_name,
+            #                                                     final_rule_comment)
+            column_clause = "CAST( {}.{} AS {}) AS {} {}".format(col_source, src_col, col_dtype, col_name,
+                                                            rule)
 
         elif src_tbl == 'JOB' and "_STRT_" in col_name:
             HCV_strt = "CURRENT_{}".format(col_dtype)
             column_clause = "CAST( {} AS {}) AS {} {}".format(HCV_strt, col_dtype, col_name, final_rule_comment)
 
-        elif "HISTORY" in load_type and "_END_" in col_name:  # and src_tbl == 'JOB'
+        #elif "HISTORY" in load_type and "_END_" in col_name:  # and src_tbl == 'JOB'
+        elif "HISTORY" in load_type and historization_col == "E":
             if col_dtype.upper() == "DATE":
                 HCV_end = "9999-12-31"
             else:
