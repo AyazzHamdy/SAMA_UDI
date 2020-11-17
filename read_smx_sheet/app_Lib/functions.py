@@ -380,27 +380,32 @@ def get_history_variables(smx_sheet, rid, table_name):
     smx_TFN_Rid = smx_sheet[smx_sheet['Record_ID'] == rid]
     smx_TFN_Rid = get_TFN_rid_no_tech_cols(smx_TFN_Rid)  # remove the rows that have the tech cols from the df
 
-    possible_start_date = []
-    possible_end_date = []
+
 
     fsdm_tbl_col_list = smx_TFN_Rid['Column'].str.upper()
     fsdm_tbl_col_list = fsdm_tbl_col_list.tolist()
 
-    for i in range(len(fsdm_tbl_col_list)):
-        col_name = fsdm_tbl_col_list[i]
-        if "_STRT_" in col_name:
-            possible_start_date.append(col_name)
-        elif "_END_" in col_name:
-            possible_end_date.append(col_name)
+    # possible_start_date = []
+    # possible_end_date = []
+    # for i in range(len(fsdm_tbl_col_list)):
+    #     col_name = fsdm_tbl_col_list[i]
+    #     if "_STRT_" in col_name:
+    #         possible_start_date.append(col_name)
+    #     elif "_END_" in col_name:
+    #         possible_end_date.append(col_name)
 
-    historization_keys = smx_TFN_Rid[smx_TFN_Rid['PK'].str.upper() == 'PK']['Column'].tolist()
-    historization_columns = smx_TFN_Rid[smx_TFN_Rid['PK'].str.upper() != 'PK']['Column'].tolist()
-    historization_keys = [item for item in historization_keys if item not in possible_start_date]
-    historization_columns = [item for item in historization_columns if item not in possible_end_date]
+    start_date = smx_TFN_Rid[smx_TFN_Rid['Historization_Column'].str.upper() == 'S']['Column'].tolist()
+    end_date = smx_TFN_Rid[smx_TFN_Rid['Historization_Column'].str.upper() == 'E']['Column'].tolist()
+    #historization_keys = smx_TFN_Rid[smx_TFN_Rid['PK'].str.upper() == 'PK']['Column'].tolist()
+    historization_keys = smx_TFN_Rid[smx_TFN_Rid['Historization_Column'].str.upper() == 'HKEY']['Column'].tolist()
+    #historization_columns = smx_TFN_Rid[smx_TFN_Rid['PK'].str.upper() != 'PK']['Column'].tolist()
+    historization_columns = smx_TFN_Rid[smx_TFN_Rid['Historization_Column'].str.upper() == 'HCOL']['Column'].tolist()
+    # historization_keys = [item for item in historization_keys if item not in possible_start_date]
+    # historization_columns = [item for item in historization_columns if item not in possible_end_date]
 
     # print("possible_start_date: ", possible_start_date, "possible_end_date: ", possible_end_date, "historization_keys: ", historization_keys, "historization_columns: ", historization_columns )
-    return possible_start_date, possible_end_date, historization_keys, historization_columns
-
+    # return possible_start_date, possible_end_date, historization_keys, historization_columns
+    return start_date, end_date, historization_keys, historization_columns
 
 def get_fsdm_tbl_columns(smx_Rid, alias_name):
     # smx_Rid = SMX_SHEET.loc[
