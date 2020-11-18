@@ -458,28 +458,26 @@ class FrontEnd:
     def start_sftp(self):
         self.refresh_config_file_values_sftp()
         f = funcs.WriteFile(self.destination_path, self.log_file, "txt")
+        filename = ''
         try:
             cnopts = pysftp.CnOpts()
             cnopts.hostkeys = None
             with pysftp.Connection(host=self.hostname, username=self.username, password=self.password,
                                    cnopts=cnopts) as sftp:
                 for filename in os.listdir(self.source_path):
-                    print('HELLO')
                     print(filename)
                     if self.substring in filename:
-                        print('HIIIIIII')
-                        print(filename)
                         sftp.cwd(self.source_path)
                         sftp.get(self.source_path+'/'+filename, self.destination_path+'/'+filename)
                         print("Moved " + filename + " to " + self.destination_path)
-                        f.write("THE FILE " + filename + ' WAS MOVED SUCCESSFULLY FROM ' + self.source_path + " TO " + self.destination_path + " AT " + self.current_date + '\n\n' + '*****************************************' + '\n\n')
+                        f.write("THE FILE  " + filename + '  WAS MOVED SUCCESSFULLY FROM  ' + self.source_path + "  TO  " + self.destination_path + "  AT  " + self.current_date + '\n\n' + '*****************************************' + '\n\n')
                 message = self.msg_done_sftp
                 color = self.color_msg_done
         except :
             message = self.msg_error_sftp
             color = self.color_error_messager
             f.write(
-                "ERROR IN MOVING THE FILE " + filename + ' FROM ' + self.source_path + " TO " + self.destination_path + " AT " + self.current_date +
+                "ERROR IN MOVING THE FILE  " + filename + '  FROM  ' + self.source_path + "  TO  " + self.destination_path + "  AT  " + self.current_date +
                 ' DUE TO ' + traceback.format_exc() + '\n\n' + '*****************************************' + '\n\n')
 
         self.change_status_label(message, color)
