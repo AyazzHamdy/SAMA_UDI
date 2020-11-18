@@ -514,10 +514,18 @@ def get_comparison_columns(tables_sheet, Table_name, apply_type, operational_sym
                                      ].reset_index()
         tech_cols = get_fsdm_tech_cols_list()
         tables_df = tables_df[~tables_df.Column.isin(tech_cols)]
+
+
         if apply_type.upper() == "UPSERT":
-            tables_df = tables_df.drop(tables_df[('_STRT_' in tables_df['Column'].str.upper())
-                                                 & (tables_df['Source_Column'].str.upper() == 'JOB')
-                                                 ].index, inplace=True)
+            job_source_columns_list = tables_df[tables_df['Source_Table'].str.upper() == 'JOB']['Column'].tolist()
+            for i in range(len(job_source_columns_list)):
+                col_name = job_source_columns_list[i]
+                if "_STRT_" in col_name:
+                    tables_df = tables_df.drop(tables_df[(tables_df['Column'].str.upper() == col_name)
+                                                         & (tables_df['Source_Table'].str.upper() == 'JOB')
+                                                         ].index)
+                    break
+            print("tables_df 3 :: \n", tables_df[['Column','Source_Table']])
 
     else:
         tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
