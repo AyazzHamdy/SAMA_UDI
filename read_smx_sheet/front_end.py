@@ -2,6 +2,7 @@ import os
 import sys
 import pysftp
 import subprocess
+from datetime import datetime
 
 sys.path.append(os.getcwd())
 from read_smx_sheet.app_Lib import manage_directories as md, functions as funcs
@@ -37,6 +38,9 @@ class FrontEnd:
         self.color_msg_done_with_error = "red"
         self.color_error_messager = "red"
         self.scripts_generation_flag = "Project ACA"
+        self.log_file = "LOG FILE"
+        now = datetime.now()
+        self.current_date = now.strftime("%d/%m/%Y %H:%M:%S")
 
         tab_parent = ttk.Notebook(self.root)
 
@@ -320,13 +324,6 @@ class FrontEnd:
             self.destination_path = self.config_file_values["destination_path"]
             self.substring = self.config_file_values["substring"]
 
-            print(self.hostname)
-            print(self.username)
-            print(self.password)
-            print(self.source_path)
-            print(self.destination_path)
-            print(self.substring)
-
             self.generate_button.config(state=NORMAL)
             self.change_status_label(self.msg_ready, self.color_msg_ready)
         except:
@@ -459,33 +456,32 @@ class FrontEnd:
         thread2.start()
 
     def start_sftp(self):
-        print(self.hostname)
-        print(self.username)
-        print(self.password)
-        print(self.source_path)
-        print(self.destination_path)
-        print(self.substring)
         self.refresh_config_file_values_sftp()
+        f = funcs.WriteFile(self.destination_path, self.log_file, "txt")
         try:
             cnopts = pysftp.CnOpts()
             cnopts.hostkeys = None
             with pysftp.Connection(host=self.hostname, username=self.username, password=self.password,
                                    cnopts=cnopts) as sftp:
-                sftp.cwd(self.source_path)
-                directory_structure = sftp.listdir_attr()
-
-                for attr in directory_structure:
-                    if attr.filename.contains(self.substring):
-                        file = attr.filename
-                        sftp.get(self.source_path + file, self.destination_path + file)
-                        print("Moved " + file + " to " + self.destination_path)
+                for filename in os.listdir(self.source_path):
+                    print('HELLO')
+                    print(filename)
+                    if self.substring in filename:
+                        print('HIIIIIII')
+                        print(filename)
+                        sftp.cwd(self.source_path)
+                        sftp.get(self.source_path+'/'+filename, self.destination_path+'/'+filename)
+                        print("Moved " + filename + " to " + self.destination_path)
+                        f.write("THE FILE " + filename + ' WAS MOVED SUCCESSFULLY FROM ' + self.source_path + " TO " + self.destination_path + " AT " + self.current_date + '\n\n' + '*****************************************' + '\n\n')
                 message = self.msg_done_sftp
                 color = self.color_msg_done
         except :
             message = self.msg_error_sftp
             color = self.color_error_messager
-            funcs.TemplateLogError(self.destination_path, "SFTP SCRIPT", self.substring,
-                                   traceback.format_exc()).log_error()
+            f.write(
+                "ERROR IN MOVING THE FILE " + filename + ' FROM ' + self.source_path + " TO " + self.destination_path + " AT " + self.current_date +
+                ' DUE TO ' + traceback.format_exc() + '\n\n' + '*****************************************' + '\n\n')
+
         self.change_status_label(message, color)
         if sys.platform == "win32":
             os.startfile(self.destination_path)
