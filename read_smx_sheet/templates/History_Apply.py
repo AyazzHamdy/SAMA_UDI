@@ -5,7 +5,7 @@ from datetime import date
 from os import path, makedirs
 
 @Logging_decorator
-def history_apply(cf, source_output_path, smx_table):
+def history_apply(cf, source_output_path, secondary_output_path_HIST, smx_table):
 
     hist_load_types = funcs.get_history_load_types(smx_table)
 
@@ -50,7 +50,15 @@ def history_apply(cf, source_output_path, smx_table):
         filename = table_name + '_R' + str(record_id)
         BTEQ_file_name = "UDI_{}_{}".format(SOURCENAME, filename)
 
-        f = funcs.WriteFile(apply_folder_path, BTEQ_file_name, "bteq")
+        # f = funcs.WriteFile(apply_folder_path, BTEQ_file_name, "bteq")
+        special_handling_flag = history_df['SPECIAL_HANDLING_FLAG'].unique()[0]
+        if special_handling_flag.upper() == "N":
+            f = funcs.WriteFile(apply_folder_path, BTEQ_file_name, "bteq")
+        else:
+            f = funcs.WriteFile(secondary_output_path_HIST, BTEQ_file_name, "bteq")
+
+
+
         filename = filename + '.bteq'
 
         fsdm_tbl_alias = funcs.get_fsdm_tbl_alias(table_name)
@@ -84,7 +92,10 @@ def history_apply(cf, source_output_path, smx_table):
                                                                                     record_id, None)
 
         # end_date_updt = funcs.get_hist_end_dt_updt(end_date, "end_date", "=", None, ld_tbl_alias, record_id)
+
         end_date_updt = funcs.get_hist_end_dt_updtt(history_df, table_name, end_date, "=", None,ld_tbl_alias, record_id)
+        if special_handling_flag.upper() == "Y":
+            end_date_updt = end_date_updt + " /*" + history_df[history_df['Historization_Column'].str.upper() == 'E']['Rule'] + "*/"
         TBL_COLUMNS = funcs.get_sama_table_columns_comma_separated(history_df, table_name, None, record_id)
 
         bteq_script = template_string.format(SOURCE_SYSTEM=SOURCENAME, versionnumber=pm.ver_no,

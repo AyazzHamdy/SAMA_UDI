@@ -276,7 +276,7 @@ def get_TFN_column_mapping(smx_Rid_df):
             column_clause = "CAST( {}.{} AS {}) AS {} {}".format(col_source, src_col, col_dtype, col_name,
                                                             rule)
 
-        elif src_tbl == 'JOB' and "_STRT_" in col_name:
+        elif src_tbl == 'JOB' and ("_STRT_" in col_name or historization_col == "S"):
             HCV_strt = "CURRENT_{}".format(col_dtype)
             column_clause = "CAST( {} AS {}) AS {} {}".format(HCV_strt, col_dtype, col_name, final_rule_comment)
 
@@ -514,6 +514,11 @@ def get_comparison_columns(tables_sheet, Table_name, apply_type, operational_sym
                                      ].reset_index()
         tech_cols = get_fsdm_tech_cols_list()
         tables_df = tables_df[~tables_df.Column.isin(tech_cols)]
+        if apply_type.upper() == "UPSERT":
+            tables_df = tables_df.drop(tables_df[('_STRT_' in tables_df['Column'].str.upper())
+                                                 & (tables_df['Source_Column'].str.upper() == 'JOB')
+                                                 ].index, inplace=True)
+
     else:
         tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
                                      & (tables_sheet['PK'].str.upper() == 'PK')
