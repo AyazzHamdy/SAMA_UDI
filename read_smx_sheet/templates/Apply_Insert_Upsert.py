@@ -24,11 +24,19 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
             template_path = cf.templates_path + "/" + pm.default_bteq_apply_insert_template_file_name
             template_smx_path = cf.smx_path + "/" + pm.default_bteq_apply_insert_template_file_name
 
-        else:
+        elif script_flag == 'Apply_Upsert':
             SMX_SHEET = funcs.get_apply_processes(SMX_SHEET, "Apply_Upsert")
             folder_name = 'Apply_Upsert'
             template_path = cf.templates_path + "/" + pm.default_bteq_apply_upsert_template_file_name
             template_smx_path = cf.smx_path + "/" + pm.default_bteq_apply_upsert_template_file_name
+
+        else:  # script_flag == 'Apply_Delete_Insert':
+            SMX_SHEET = funcs.get_apply_processes(SMX_SHEET, "Apply_Delete_Insert")
+            folder_name = 'Apply_Delete_Insert'
+            template_path = cf.templates_path + "/" + pm.default_bteq_apply_delete_insert_template_file_name
+            template_smx_path = cf.smx_path + "/" + pm.default_bteq_apply_delete_insert_template_file_name
+
+
 
         apply_folder_path = path.join(source_output_path, folder_name)
         makedirs(apply_folder_path)
@@ -132,7 +140,7 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
                                                      duplicate_when=duplicate_when,
                                                      duplicate_then=duplicate_then
                                                      )
-            else:
+            elif script_flag == 'Apply_Upsert':
 
                 ld_equal_fsdm_pk_update = funcs.get_conditional_stamenet(smx_record_id_df, Table_name, "pk", "=",
                                                                          fsdm_tbl_alias, ld_tbl_alias,
@@ -163,7 +171,18 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
                                                      duplicate_when=duplicate_when,
                                                      duplicate_then=duplicate_then
                                                      )
-
+            else:
+                bteq_script = template_string.format(filename=BTEQ_file_name,  # versionnumber=pm.ver_no,
+                                                     currentdate=current_date,
+                                                     bteq_run_file=bteq_run_file,
+                                                     ld_prefix=ld_prefix,
+                                                     schema_name=schema_name,
+                                                     ld_table_name=ld_table_name,
+                                                     table_columns=fsdm_tbl_columns,
+                                                     fsdm_prefix=FSDM_prefix,
+                                                     fsdm_table_name=Table_name,
+                                                     record_id=Record_id
+                                                     )
             bteq_script = bteq_script.upper()
             f.write(bteq_script.replace('Â', ' '))
             f.close()

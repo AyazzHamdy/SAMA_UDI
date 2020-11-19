@@ -1,0 +1,62 @@
+/* ############################################################################
+#  FILE-NAME   : {filename}.bteq
+#  PURPOSE     : TRANSFORMATION SCRIPT FROM LOAD READY TABLE with Load Strategy - DELETE-INSERT
+#  -------------------------------------------------------------------------
+#  DB-VERSION  : TD 16.20.32.11
+#  OS-VERSION  : MS WINDOWS SERVER 2012 R2
+#  -------------------------------------------------------------------------
+#
+#  AUTHOR      : Scripts Generator
+#  DEPARTMENT  : TERADATA
+#  VERSION     : 1.0
+#  DATE        : {currentdate}
+#
+#  COPYRIGHT © 2020, TERADATA KSA
+#  -------------------------------------------------------------------------
+#  HISTORY:
+#
+#  DATE [YYYY-MM-DD]       VERSION            DEVELOPER            DESCRIPTION OF CHANGE
+#  --------------          -------            ----------           ---------------------
+#  {currentdate}               1.0             Scripts Generator         INITIAL VERSION
+############################################################################*/
+
+/*########################################################################
+# LOGGIN ON
+#########################################################################*/
+.run FILE={bteq_run_file};
+
+/*############################################################################
+#  UDI MARKING AT LD
+############################################################################*/
+
+
+BT;
+
+UPDATE {ld_prefix}{schema_name}.{ld_table_name} SET FLAG = 'DI';
+
+/*############################################################################
+#  APPLYING UDI MARKING 'DI' AT TARGET
+############################################################################*/
+
+DELETE FROM  {fsdm_prefix}.{fsdm_table_name} WHERE R_ID = {record_id};
+
+
+INSERT INTO {fsdm_prefix}.{fsdm_table_name}
+(
+    {table_columns}
+)
+SELECT
+    {table_columns}
+
+FROM {ld_prefix}{schema_name}.{ld_table_name}
+WHERE FLAG = 'DI';
+
+
+ET;
+
+/*############################################################################
+#  CLOSING THE BTEQ SCRIPT, SESSION CLOSED AND LOGGING OFF
+############################################################################*/
+
+.LOGOFF;
+.QUIT;

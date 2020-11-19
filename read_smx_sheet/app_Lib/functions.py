@@ -88,6 +88,7 @@ def get_history_load_types(smx_sheet_df):
     for i in range(len(load_types_list)):
         if 'History'.upper() in load_types_list[i].upper():
             hist_load_types.append(load_types_list[i])
+    hist_load_types = ['HISTORY']
     return hist_load_types
 
 
@@ -98,6 +99,7 @@ def get_insert_load_types(smx_sheet_df):
         if 'Insert'.upper() in load_types_list[i].upper():
             insert_load_types.append(load_types_list[i])
     # print("insert_load_types", insert_load_types)
+    insert_load_types = ['INSERT']
     return insert_load_types
 
 
@@ -108,6 +110,7 @@ def get_upsert_load_types(smx_sheet_df):
         if 'Upsert'.upper() in load_types_list[i].upper():
             upsert_load_types.append(load_types_list[i])
     # print("upsert_load_types", upsert_load_types)
+    upsert_load_types = ['UPSERT']
     return upsert_load_types
 
 
@@ -132,6 +135,10 @@ def get_apply_processes(smx_sheet, apply_type):
     elif apply_type.upper() == "APPLY_HISTORY":
         hist_load_types = get_history_load_types(smx_sheet)
         apply_tfns = smx_sheet.loc[smx_sheet['Load Type'].isin(hist_load_types)]
+    elif apply_type.upper() == "APPLY_HISTORY_LEGACY":
+        apply_tfns = smx_sheet.loc[smx_sheet['Load Type'] == 'HISTORY_LEGACY']
+    elif apply_type.upper() == "Apply_Delete_Insert":
+        apply_tfns = smx_sheet.loc[smx_sheet['Load Type'] == 'DELETE_INSERT']
     else:
         apply_tfns = smx_sheet
 
