@@ -8,7 +8,7 @@ dup_prefix= "dd_dup_"
 bteq_run_file="C:\Logon\Logon_dev.txt"
 SGK_Source= "ESALSIHBE"
 
-Rid_list = [30512]
+Rid_list = [30525]
 
 read_sheets_parallel=1
 smx_path="C:/smx_sheets"

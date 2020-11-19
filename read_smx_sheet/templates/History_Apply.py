@@ -1,7 +1,6 @@
 from read_smx_sheet.app_Lib import functions as funcs
 from read_smx_sheet.Logging_Decorator import Logging_decorator
 from read_smx_sheet.parameters import parameters as pm
-from datetime import date
 from os import path, makedirs
 
 @Logging_decorator
@@ -65,8 +64,6 @@ def history_apply(cf, source_output_path, secondary_output_path_HIST, smx_table)
         ld_tbl_alias = funcs.get_ld_tbl_alias(fsdm_tbl_alias, record_id)
         fsdm_tbl_alias = fsdm_tbl_alias+"_FSDM"
         strt_date, end_date, hist_keys, hist_cols = funcs.get_history_variables(history_df, record_id, table_name)
-        # print("hist_keys, hist_keys", hist_keys)
-        # print("hist_cols, hist_cols", hist_cols)
         first_history_key = hist_keys[0]
         strt_date = strt_date[0]
         end_date = end_date[0]
@@ -94,9 +91,19 @@ def history_apply(cf, source_output_path, secondary_output_path_HIST, smx_table)
         # end_date_updt = funcs.get_hist_end_dt_updt(end_date, "end_date", "=", None, ld_tbl_alias, record_id)
 
         end_date_updt = funcs.get_hist_end_dt_updtt(history_df, table_name, end_date, "=", None,ld_tbl_alias, record_id)
+
+        print("end_date_updt  \n", end_date_updt)
+
         if special_handling_flag.upper() == "Y":
-            end_date_updt = end_date_updt + " /*" + history_df[history_df['Historization_Column'].str.upper() == 'E']['Rule'] + "*/"
+            # end_date_updt = end_date_updt + " /*" + history_df[history_df['Historization_Column'].str.upper() == 'E']['Rule'] + "*/"
+            possible_special_handling_comments = history_df[history_df['Historization_Column'].str.upper() == 'E']['Rule'].values
+            print("possible_special_handling_comments:\n", possible_special_handling_comments)
+            possible_special_handling_comments = "/*" + str(possible_special_handling_comments).replace("\n", " ") + "*/"
+
         TBL_COLUMNS = funcs.get_sama_table_columns_comma_separated(history_df, table_name, None, record_id)
+
+        interval = funcs.get_hist_end_Date_interval(history_df, table_name, record_id)
+        print("interval\n", interval)
 
         bteq_script = template_string.format(SOURCE_SYSTEM=SOURCENAME, versionnumber=pm.ver_no,
                                              currentdate=current_date,
@@ -112,7 +119,10 @@ def history_apply(cf, source_output_path, secondary_output_path_HIST, smx_table)
                                              COALESCED_history_col_LD_EQL_DATAMODEL=COALESCED_history_col_LD_EQL_DATAMODEL,
                                              ld_fsdm_history_key_and_end_date_equality=ld_fsdm_history_key_and_end_date_equality,
                                              ld_fsdm_history_key_and_strt_date_equality=ld_fsdm_history_key_and_strt_date_equality,
-                                             end_date_updt=end_date_updt
+                                             # end_date_updt=end_date_updt,
+                                             end_date=end_date,
+                                             interval=interval,
+                                             possible_special_handling_comments=possible_special_handling_comments
                                              )
         bteq_script = bteq_script.upper()
         f.write(bteq_script.replace('Â', ' '))

@@ -10,6 +10,7 @@ default_staging_template_file_name = "Staging_template.txt"
 default_bteq_stg_datamart_template_file_name = "BTEQ_stg_datamart_template.txt"
 default_bteq_oi_stg_template_file_name = "BTEQ_oi_stg_template.txt"
 default_history_apply_template_file_name = "History_template.txt"
+default_history_legacy_apply_template_file_name = 'BTEQ_history_legacy_template.txt'
 default_bteq_apply_insert_template_file_name = "BTEQ_apply_insert_template.txt"
 default_bteq_apply_upsert_template_file_name = "BTEQ_apply_upsert_template.txt"
 default_bteq_apply_delete_insert_template_file_name = "BTEQ_delete_insert_template.txt"

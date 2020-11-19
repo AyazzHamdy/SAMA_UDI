@@ -126,19 +126,19 @@ def get_apply_processes(smx_sheet, apply_type):
     # print("get_apply_processes", apply_type.upper())
     if apply_type.upper() == "APPLY_INSERT":
         insrt_load_types = get_insert_load_types(smx_sheet)
-        apply_tfns = smx_sheet.loc[smx_sheet['Load Type'].isin(insrt_load_types)]
+        apply_tfns = smx_sheet.loc[smx_sheet['Load Type'].str.upper().isin(insrt_load_types)]
         # print("insrt_load_types", insrt_load_types)
     elif apply_type.upper() == "APPLY_UPSERT":
         upsrt_load_types = get_upsert_load_types(smx_sheet)
-        apply_tfns = smx_sheet.loc[smx_sheet['Load Type'].isin(upsrt_load_types)]
+        apply_tfns = smx_sheet.loc[smx_sheet['Load Type'].str.upper().isin(upsrt_load_types)]
         # print("upsrt_load_types", upsrt_load_types)
     elif apply_type.upper() == "APPLY_HISTORY":
         hist_load_types = get_history_load_types(smx_sheet)
-        apply_tfns = smx_sheet.loc[smx_sheet['Load Type'].isin(hist_load_types)]
+        apply_tfns = smx_sheet.loc[smx_sheet['Load Type'].str.upper().isin(hist_load_types)]
     elif apply_type.upper() == "APPLY_HISTORY_LEGACY":
-        apply_tfns = smx_sheet.loc[smx_sheet['Load Type'] == 'HISTORY_LEGACY']
+        apply_tfns = smx_sheet.loc[smx_sheet['Load Type'].str.upper() == 'HISTORY_LEGACY']
     elif apply_type.upper() == "Apply_Delete_Insert":
-        apply_tfns = smx_sheet.loc[smx_sheet['Load Type'] == 'DELETE_INSERT']
+        apply_tfns = smx_sheet.loc[smx_sheet['Load Type'].str.upper() == 'DELETE_INSERT']
     else:
         apply_tfns = smx_sheet
 
@@ -403,6 +403,7 @@ def get_history_variables(smx_sheet, rid, table_name):
 
     start_date = smx_TFN_Rid[smx_TFN_Rid['Historization_Column'].str.upper() == 'S']['Column'].tolist()
     end_date = smx_TFN_Rid[smx_TFN_Rid['Historization_Column'].str.upper() == 'E']['Column'].tolist()
+    print("end_date: ", end_date)
     #historization_keys = smx_TFN_Rid[smx_TFN_Rid['PK'].str.upper() == 'PK']['Column'].tolist()
     historization_keys = smx_TFN_Rid[smx_TFN_Rid['Historization_Column'].str.upper() == 'HKEY']['Column'].tolist()
     #historization_columns = smx_TFN_Rid[smx_TFN_Rid['PK'].str.upper() != 'PK']['Column'].tolist()
@@ -463,6 +464,16 @@ def get_Rid_Source_System(SMX_Rid):
     return src_system_name
 
 
+def get_list_values_comma_separated(input_list, new_line_flag):
+
+    output =''
+    for i in range(len(input_list)):
+        list_val = input_list[i]
+        output = output + ',' + list_val
+
+    output = output.replace(',', '\n    ,') if new_line_flag.upper() == 'Y' else output
+    return output
+
 def get_sama_table_columns_comma_separated(tables_sheet, Table_name, alias=None, record_id=None):
     if record_id is None:
         tables_df = tables_sheet.loc[
@@ -499,8 +510,8 @@ def get_comparison_columns(tables_sheet, Table_name, apply_type, operational_sym
     columns_comma = ""
     if apply_type.upper() == "HISTORY":
         tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
-                                     & ((tables_sheet['PK'].str.upper() == 'PK') | (
-                tables_sheet['Historization column'].str.upper() == 'E'))
+                                     # & ((tables_sheet['PK'].str.upper() == 'PK') | (tables_sheet['Historization_Column'].str.upper() == 'E'))
+                                     & (tables_sheet['Historization_Column'].str.upper() in ('HKEY', 'E'))
                                      & (tables_sheet['Record_ID'] == record_id)
                                      ].reset_index()
     elif apply_type.upper() == "HISTORY_COL":
@@ -508,7 +519,8 @@ def get_comparison_columns(tables_sheet, Table_name, apply_type, operational_sym
         tables_sheet = tables_sheet[tables_sheet.Column.isin(hist_col_list)]
 
         tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
-                                     & (tables_sheet['PK'].str.upper() != 'PK')
+                                     # & (tables_sheet['PK'].str.upper() != 'PK')
+                                     & (tables_sheet['Historization_Column'].str.upper() == "HCOL")
                                      & (tables_sheet['Record_ID'] == record_id)  # .any(axis = 0)
                                      ].reset_index()
         tables_df = tables_df[tables_df.Column.isin(hist_col_list)]
@@ -532,7 +544,7 @@ def get_comparison_columns(tables_sheet, Table_name, apply_type, operational_sym
                                                          & (tables_df['Source_Table'].str.upper() == 'JOB')
                                                          ].index)
                     break
-            print("tables_df 3 :: \n", tables_df[['Column','Source_Table']])
+
 
     else:
         tables_df = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
@@ -676,7 +688,7 @@ def get_hist_end_dt_updtt(history_df, table_name, end_date_col_name, operational
                           record_id=None):
     end_dt_df = history_df.loc[(history_df['Entity'].str.upper() == table_name.upper())
                                & (history_df['Record_ID'] == record_id)
-                               & (history_df['Column'].str.upper() == end_date_col_name.upper())
+                               & (history_df['Historization_Column'].str.upper() == 'E')
                                ].reset_index()
     if alias1 is None:
         alias1 = ''
@@ -688,6 +700,7 @@ def get_hist_end_dt_updtt(history_df, table_name, end_date_col_name, operational
         alias2 = alias2 + '.'
 
     end_dt_updt = ""
+    # interval = get_interval(end_dt_df)
     interval = " - INTERVAL '{}' {}"
     # print("ccccc", end_dt_df['Datatype'].value)
     col_dtype = end_dt_df['Datatype'].tolist()
@@ -712,12 +725,43 @@ def get_hist_end_dt_updtt(history_df, table_name, end_date_col_name, operational
         interavl_span = interavl_span.format(repeat_zero)
         # print("interavl_span", interavl_span)
         interval = interval.format(str(interavl_span), 'SECOND')
-        # print("interval", interval)
+        print("interval", interval)
 
-    end_dt_updt = alias1 + end_date_col_name + ' ' + operational_symbol + ' ' + alias2 + end_date_col_name + interval
+    end_dt_updt = alias1 + end_date_col_name + ' ' + operational_symbol + ' ' + alias2 + end_date_col_name + "-" + interval
     # print("end_dt_updt", end_dt_updt)
     return end_dt_updt
 
+def get_hist_end_Date_interval(history_df, table_name, record_id):
+    end_dt_df = history_df.loc[(history_df['Entity'].str.upper() == table_name.upper())
+                               & (history_df['Record_ID'] == record_id)
+                               & (history_df['Historization_Column'].str.upper() == 'E')
+                               ].reset_index()
+    interval = "  INTERVAL '{}' {}"
+    # print("ccccc", end_dt_df['Datatype'].value)
+    col_dtype = end_dt_df['Datatype'].tolist()
+    col_dtype = str(col_dtype[0])
+    # print("Record_id", record_id)
+    # print("col_name", end_date_col_name)
+    # print("col_type", col_dtype)
+    # print("col_type", col_dtype, col_dtype[1])
+
+    if col_dtype.upper() == 'DATE':
+        interval = interval.format(str(1), 'DAY')
+    elif col_dtype.upper() == 'TIMESTAMP' or col_dtype.upper() == 'TIMESTAMP(6)':
+        interval = interval.format("0.000001", 'SECOND')
+    else:  # timestamp but not of 6
+        dtype_split1 = col_dtype.split("(")  # ['timestamp', '3)']
+        # print("dtype_split1", dtype_split1)
+        precision = dtype_split1[1].split(")")[0]  # ['3', ''][0]
+        # print("precision", precision)
+        precision_int = int(precision) - 1
+        interavl_span = "0.{}1"
+        repeat_zero = '0' * precision_int
+        interavl_span = interavl_span.format(repeat_zero)
+        # print("interavl_span", interavl_span)
+        interval = interval.format(str(interavl_span), 'SECOND')
+        # print("interval", interval)
+    return interval
 
 def get_hist_end_dt_updt(column_name, columns_type, operational_symbol, alias1=None, alias2=None, record_id=None):
     if alias1 is None:
@@ -770,6 +814,14 @@ def get_conditional_stamenet(tables_sheet, Table_name, columns_type, operational
                                          & (tables_sheet['Record_ID'] == record_id)
                                          ].reset_index()
         table_columns = table_columns[table_columns.Column.isin(hist_keys_list)]
+
+    elif columns_type == 'hist_keys' and record_id is not None:
+        hist_keys_list = get_history_variables(tables_sheet, record_id, Table_name)[2]
+        table_columns = tables_sheet.loc[(tables_sheet['Entity'].str.upper() == Table_name.upper())
+                                         & (tables_sheet['Record_ID'] == record_id)
+                                         ].reset_index()
+        table_columns = table_columns[table_columns.Column.isin(hist_keys_list)]
+
 
     if alias1 is None:
         alias1 = ''
