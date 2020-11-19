@@ -1,0 +1,107 @@
+/* ############################################################################
+#  FILE-NAME   : UDI_{SOURCE_SYSTEM}_{filename}
+#  PURPOSE     : TRANSFORMATION SCRIPT FROM LOAD READY TO TAGET-TABLE HISTORY HANDLED LEGACY...
+#  -------------------------------------------------------------------------
+#  DB-VERSION  : TD 16.20.32.11
+#  OS-VERSION  : MS WINDOWS SERVER 2012 R2
+#  -------------------------------------------------------------------------
+#
+#  AUTHOR      : Scripts Generator
+#  DEPARTMENT  : TERADATA
+#  VERSION     : 1.0
+#  DATE        : {currentdate}
+#
+#  COPYRIGHT © 2020, TERADATA KSA
+#  -------------------------------------------------------------------------
+#  HISTORY:
+#
+#  DATE [YYYY-MM-DD]       VERSION            DEVELOPER            DESCRIPTION OF CHANGE
+#  --------------          -------            ----------           ---------------------
+#  {currentdate}               1.0             Scripts Generator         INITIAL VERSION
+############################################################################*/
+
+/*########################################################################
+# LOGGIN ON
+#########################################################################*/
+.run FILE={bteq_run_file};
+
+/*############################################################################
+#  UPDATE FLAG ACCORDING TO HISTORY ALGORITHM
+############################################################################*/
+BT;
+
+--QUERY 1
+DELETE FROM {ld_schema_name}{source_system}.{table_name}_HH_R{record_id};
+
+--QUERY 2
+INSERT INTO  {ld_schema_name}{source_system}.{table_name}_HH_R{record_id}
+(
+{table_columns}
+)
+SELECT
+{HH_aliased_table_columns}
+
+FROM
+(
+      SELECT
+        {LRD_aliased_table_columns}
+
+      FROM  {ld_schema_name}{source_system}.{table_name}_R{record_id} {ld_alias}
+
+      UNION ALL
+
+      SELECT
+        {FSDM_aliased_table_columns}
+
+      FROM   {model_schema_name}.{table_name} {fsdm_alias}
+
+      INNER JOIN {ld_schema_name}{source_system}.{table_name}_R{record_id} {ld_alias}
+      ON {ld_fsdm_history_key_equality}
+
+)HH_DATA
+QUALIFY ROW_NUMBER() OVER (PARTITION BY {history_keys}, {start_date} ORDER BY B_ID ASC)=1;
+
+
+--QUERY 3
+
+DELETE FROM {model_schema_name}.{table_name} {fsdm_alias}
+WHERE ({history_keys}) IN (
+    SELECT DISTINCT {history_key}
+    FROM {ld_schema_name}{source_system}.{table_name}_HH_R{record_id} {ld_alias}
+);
+
+--QUERY 4
+INSERT INTO {model_schema_name}.{table_name}
+(
+    {table_columns}
+)
+SELECT
+    {history_keys}
+    ,{history_columns}
+    ,{start_date}
+    ,COALESCE(MAX({start_date} - {time_interval}) OVER (PARTITION BY  {history_keys}  ORDER BY  {start_date} ROWS BETWEEN 1 FOLLOWING AND 1 FOLLOWING) , CAST({high_date}))  {end_date}
+    ,R_ID
+    ,B_ID
+    ,INSRT_DTTM
+    ,UPDT_DTTM
+
+FROM(
+
+    SELECT
+       {table_columns}
+       , MAX({history_columns}) OVER (PARTITION BY  {history_keys}  ORDER BY  {start_date} ROWS BETWEEN 1 PRECEDING AND 1 PRECEDING) PRE_{history_column}
+
+    FROM  {ld_schema_name}{source_system}.{table_name}_HH_R{record_id}
+){table_name}_HH
+
+WHERE ({table_name}_HH.PRE_{history_column} IS NULL)
+OR ( {table_name}_HH.PRE_{history_column} <> {table_name}_HH.{history_column});
+
+ET;
+
+/*############################################################################
+#  CLOSING THE BTEQ SCRIPT, SESSION CLOSED AND LOGGING OFF
+############################################################################*/
+
+.LOGOFF;
+.QUIT;

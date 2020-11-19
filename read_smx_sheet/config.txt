@@ -6,7 +6,14 @@ ld_prefix="dd_ld_"
 fsdm_prefix="dd_fsdm"
 dup_prefix= "dd_dup_"
 bteq_run_file="C:\Logon\Logon_dev.txt"
+SGK_Source= "ESALSIHBE"
 
-smx_path="/Users/dinaelhusseiny/Desktop/UDI"
-templates_path= "/Users/dinaelhusseiny/Desktop/Templates"
-home_output_folder= "/Users/dinaelhusseiny/Desktop/UDI"
+Rid_list = [30512]
+
+read_sheets_parallel=1
+smx_path="C:/smx_sheets"
+templates_path= "C:/Users/TDInstaller/PycharmProjects/SAMA_UDI/Templates"
+home_output_folder= "C:/smx_scripts"
+
+
+
