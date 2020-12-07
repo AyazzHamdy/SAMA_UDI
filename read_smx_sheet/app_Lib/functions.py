@@ -635,6 +635,7 @@ def get_sama_stg_table_columns_pk(tables_sheet, Table_name, record_id=None, hist
 
 def get_sgk_record(SGK_tables, TABLENAME, RECORDID, flag):
     null_cols = ''
+    source_column_value = ''
     tables_df = SGK_tables.loc[(SGK_tables['Entity'].str.upper() == TABLENAME.upper())
                                & (SGK_tables['Record_ID'] == RECORDID)
                                ].reset_index()
@@ -654,19 +655,35 @@ def get_sgk_record(SGK_tables, TABLENAME, RECORDID, flag):
     for tables_df_index, tables_df_row in tables_df.iterrows():
         if tables_df_row['Rule'] != 'NULL' and tables_df_row['Rule'] != '':
             source_column = tables_df_row['Source_Column']
-            sgk_key = tables_df_row['Column']
-            src_key_dt = tables_df_row['Datatype']
+            source_table = tables_df_row['Source_Table']
             rule = tables_df_row['Rule']
-            if flag == 'sgk_key':
-                return sgk_key
-            if flag == 'src_col':
-                return source_column
-            if flag == 'rule':
+            join_rule = tables_df_row['Join_Rule']
+            filter_rule = tables_df_row['Filter_Rule']
+            sgk_key = tables_df_row['Column']
+
+            src_key_dt = tables_df_row['Datatype']
+            if tables_df_row['Column'].upper() == 'SGK_ID' and flag == 'sgk_id':
                 return rule
-            if flag == 'src_key' and rule == '1:1':
+            if flag == 'src_col' and rule == 'Generate SGK':
+                return source_column
+            if flag == 'src_tbl' and rule == 'Generate SGK':
+                return source_table
+            if flag == 'join_rule' and rule == 'Generate SGK':
+                if join_rule is not None:
+                    return join_rule + '\n'
+                else:
+                    return ''
+            if flag == 'filter_rule' and rule == 'Generate SGK':
+                return filter_rule
+            if flag == 'sgk_key' and rule == 'Generate SGK':
                 return sgk_key
-            if flag == 'data_type' and rule == '1:1':
-                return src_key_dt
+            if rule == 'Generate SGK':
+                source_column_value = source_column
+            if source_column == source_column_value and rule != 'Generate SGK':
+                if flag == 'src_key':
+                    return sgk_key
+                if flag == 'data_type':
+                    return src_key_dt
 
 
 def get_aliased_columns(columns_list, alias=None):
