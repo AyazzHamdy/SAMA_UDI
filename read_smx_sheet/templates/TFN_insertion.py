@@ -73,6 +73,7 @@ def TFN_insertion(cf, source_output_path, secondary_output_path_TFN, SMX_SHEET):
 
 
     for record_id in record_ids_list:
+        print(record_id)
         TFN_record_id_df = funcs.get_sama_fsdm_record_id(SMX_SHEET, record_id)
 
         Record_id = record_id
@@ -84,6 +85,7 @@ def TFN_insertion(cf, source_output_path, secondary_output_path_TFN, SMX_SHEET):
         BTEQ_file_name = "{}_{}_R{}".format(Source_name, fsdm_table_name, Record_id)
 
         special_handline_flag = TFN_record_id_df['SPECIAL_HANDLING_FLAG'].unique()[0]
+        print("special_handline_flag", special_handline_flag)
         if special_handline_flag.upper() == "N":
             f = funcs.WriteFile(source_output_path, BTEQ_file_name, "bteq")
             f.write(template_head)
@@ -101,6 +103,17 @@ def TFN_insertion(cf, source_output_path, secondary_output_path_TFN, SMX_SHEET):
         join_clause = TFN_record_id_df['Join_Rule'].unique()[0]
 
         where_clause = TFN_record_id_df['Filter_Rule'].unique()[0]
+
+        if where_clause.split(' ', 2)[0].upper() == 'GROUP' and where_clause.split(' ', 2)[1].upper() == 'BY':
+            where_clause_comment = '-- smx menationed : ' + where_clause + ' so it was repalced by distinct grouping'
+            columns_Count = len(TFN_record_id_df.index)
+            where_clause = 'GROUP BY '
+            for i in range(columns_Count):
+                j = i+1
+                where_clause = where_clause + str(j) + ', '
+
+            where_clause = where_clause[0:len(where_clause)-2]
+            where_clause = where_clause + where_clause_comment
 
         if where_clause.split(' ', 1)[0].upper() not in ['QUALIFY', 'GROUP'] and where_clause != "":
             where_clause = 'WHERE' + ' ' + where_clause

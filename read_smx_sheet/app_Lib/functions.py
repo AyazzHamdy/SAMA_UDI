@@ -237,6 +237,11 @@ def get_TFN_column_mapping(smx_Rid_df):
 
         historization_col = tfn_Rid_row['Historization_Column'].upper() if "HISTORY" in load_type else ""
 
+        if src_tbl[0].isdigit():
+            src_tbl = '"' + src_tbl + '"'
+        else:
+            src_tbl = src_tbl
+
         record_id = tfn_Rid_row['Record_ID']
         rule = tfn_Rid_row['Rule']
         # print("rule", rule)
@@ -256,15 +261,16 @@ def get_TFN_column_mapping(smx_Rid_df):
             if "HARDCODE TO" in rule:
                 rule_Comment = "" if rule_len == applied_rule_len + len("HARDCODE TO ") else rule
                 # print(record_id, applied_rule_len, rule_len,">>>>>>>>", rule_Comment)
-                print(record_id, "applied rule", applied_rule, applied_rule_len, "rule", rule, rule_len, ">>>>>>>>",
-                      rule_Comment)
+                # print(record_id, "applied rule", applied_rule, applied_rule_len, "rule", rule, rule_len, ">>>>>>>>",
+                #       rule_Comment)
 
             elif "SET TO" in rule:
                 rule_Comment = "" if rule_len == applied_rule_len + len("SET TO ") else rule
 
         final_rule_comment = "/*{}*/".format(rule_Comment) if rule_Comment != "" else ""
 
-        if src_tbl == 'HCV' and src_col == 'HCV' and "_END_" not in col_name:
+        if src_tbl == 'HCV' and src_col == 'HCV' and ("_END_" not in col_name
+                                                      or ("_END_"  in col_name and load_type == 'UPSERT')):
             if rule == 'NULL':
                 HCV = 'NULL'
                 column_clause = "{} AS {} {}".format(HCV, col_name, final_rule_comment)
@@ -275,15 +281,19 @@ def get_TFN_column_mapping(smx_Rid_df):
                 HCV = applied_rule
                 column_clause = "CAST( {} AS {}) AS {} {}".format(HCV, col_dtype, col_name, final_rule_comment)
 
-        elif rule == "1:1" and src_tbl != 'JOB':
+        elif rule == "1:1" and src_tbl not in ('JOB', 'ETL'):
             rule = " "
-
             # column_clause = "CAST( {}{} AS {}) AS {} {}".format(stg_alias, src_col, col_dtype, col_name,
             #                                                     final_rule_comment)
-            column_clause = "CAST( {}.{} AS {}) AS {} {}".format(col_source, src_col, col_dtype, col_name,
-                                                            rule)
+            column_clause = "CAST( {}.{} AS {}) AS {} {}".format(src_tbl, src_col, col_dtype, col_name, rule)
 
         elif src_tbl == 'JOB' and ("_STRT_" in col_name or historization_col == "S"):
+            HCV_strt = "CURRENT_{}".format(col_dtype)
+            column_clause = "CAST( {} AS {}) AS {} {}".format(HCV_strt, col_dtype, col_name, final_rule_comment)
+
+        elif src_tbl == 'ETL' and rule == "1:1" and src_col == 'INSRT_DTTM':
+            if col_dtype.upper() == 'TIMESTAMP':
+                col_dtype = 'TIMESTAMP(6)'
             HCV_strt = "CURRENT_{}".format(col_dtype)
             column_clause = "CAST( {} AS {}) AS {} {}".format(HCV_strt, col_dtype, col_name, final_rule_comment)
 
@@ -297,6 +307,7 @@ def get_TFN_column_mapping(smx_Rid_df):
             column_clause = "CAST( {} AS {}) AS {} {}".format(HCV_end, col_dtype, col_name, final_rule_comment)
 
         else:
+
             rule_comment = "/* mapped to {}.{} following rule: {}*/".format(src_tbl, src_col, rule)
             column_clause = "CAST(  AS {}) AS {} {}".format(col_dtype, col_name, rule_comment)
             # column_clause = col_name + "/* mapped to {}.{} following rule: {}*/".format(src_tbl, src_col, rule)
@@ -335,7 +346,7 @@ def rule_col_analysis_sgk(smx_Rid_df):
 
 
 def rule_cell_analysis_sgk(i_rule_cell_value, sgk_cntr):
-    print("rule_cell_value:\n", i_rule_cell_value)
+    # print("rule_cell_value:\n", i_rule_cell_value)
     source_key = " "
     edw_key = " "
     SGK_left_join_clause = " "
@@ -403,7 +414,7 @@ def get_history_variables(smx_sheet, rid, table_name):
 
     start_date = smx_TFN_Rid[smx_TFN_Rid['Historization_Column'].str.upper() == 'S']['Column'].tolist()
     end_date = smx_TFN_Rid[smx_TFN_Rid['Historization_Column'].str.upper() == 'E']['Column'].tolist()
-    print("end_date: ", end_date)
+
     #historization_keys = smx_TFN_Rid[smx_TFN_Rid['PK'].str.upper() == 'PK']['Column'].tolist()
     historization_keys = smx_TFN_Rid[smx_TFN_Rid['Historization_Column'].str.upper() == 'HKEY']['Column'].tolist()
     #historization_columns = smx_TFN_Rid[smx_TFN_Rid['PK'].str.upper() != 'PK']['Column'].tolist()
@@ -411,9 +422,37 @@ def get_history_variables(smx_sheet, rid, table_name):
     # historization_keys = [item for item in historization_keys if item not in possible_start_date]
     # historization_columns = [item for item in historization_columns if item not in possible_end_date]
 
-    # print("possible_start_date: ", possible_start_date, "possible_end_date: ", possible_end_date, "historization_keys: ", historization_keys, "historization_columns: ", historization_columns )
-    # return possible_start_date, possible_end_date, historization_keys, historization_columns
     return start_date, end_date, historization_keys, historization_columns
+
+def get_hist_legacy_hist_cols_clauses(hist_cols_list, history_keys_list, start_date, table_name):
+    max_output = ',MAX({history_column}) OVER (PARTITION BY  {history_keys_list}  ORDER BY  {start_date} ROWS BETWEEN 1 PRECEDING AND 1 PRECEDING) PRE_{history_column}'
+    pre_histcol_null_output = '{table_name}_HH.PRE_{history_column} IS NULL \n AND '
+    pre_histcol_not_equal_hist_col_output = '{table_name}_HH.PRE_{history_column} <> {table_name}_HH.{history_column} \n OR '
+
+    max_hist_cols_clause = ''
+    pre_hist_cols_null_clause = ''
+    pre_histcols_not_equal_histcols_clause = ''
+
+    for i in range(len(hist_cols_list)):
+        hist_col = hist_cols_list[i]
+
+        hist_col_max_clause = max_output.format(history_column=hist_col, history_keys_list=history_keys_list,
+                                                start_date=start_date) + "\n"
+        max_hist_cols_clause = max_hist_cols_clause + hist_col_max_clause
+
+        pre_hist_col_null_clause = pre_histcol_null_output.format(table_name=table_name, history_column=hist_col)
+        pre_hist_cols_null_clause = pre_hist_cols_null_clause + pre_hist_col_null_clause
+
+        pre_histcol_not_equal_histcol_clause = pre_histcol_not_equal_hist_col_output.format(table_name=table_name,
+                                                                                            history_column=hist_col)
+        pre_histcols_not_equal_histcols_clause = pre_histcols_not_equal_histcols_clause \
+                                                 + pre_histcol_not_equal_histcol_clause
+
+    pre_hist_cols_null_clause = pre_hist_cols_null_clause[0:len(pre_hist_cols_null_clause) - 4]
+    pre_histcols_not_equal_histcols_clause = \
+        pre_histcols_not_equal_histcols_clause[0:len(pre_histcols_not_equal_histcols_clause) - 3]
+
+    return max_hist_cols_clause, pre_hist_cols_null_clause, pre_histcols_not_equal_histcols_clause
 
 def get_fsdm_tbl_columns(smx_Rid, alias_name):
     # smx_Rid = SMX_SHEET.loc[
@@ -466,10 +505,10 @@ def get_Rid_Source_System(SMX_Rid):
 
 def get_list_values_comma_separated(input_list, new_line_flag):
 
-    output =''
+    output = ''
     for i in range(len(input_list)):
         list_val = input_list[i]
-        output = output + ',' + list_val
+        output = list_val if i == 0 else output + ',' + list_val
 
     output = output.replace(',', '\n    ,') if new_line_flag.upper() == 'Y' else output
     return output
@@ -490,7 +529,7 @@ def get_sama_table_columns_comma_separated(tables_sheet, Table_name, alias=None,
         alias = alias + '.'
     for stg_tbl_indx, stg_tbl_row in tables_df.iterrows():
         if record_id is not None:
-            comma = '    ' + ',' if stg_tbl_indx > 0 else '        '
+            comma = '    ' + ',' if stg_tbl_indx > 0 else '    '
         else:
             comma = '        ' + ',' if stg_tbl_indx > 0 else ''
         if alias == 'sgk.':
@@ -565,12 +604,18 @@ def get_comparison_columns(tables_sheet, Table_name, apply_type, operational_sym
 
     for stg_tbl_indx, stg_tbl_row in tables_df.iterrows():
         data_type = stg_tbl_row['Datatype'].upper()
+        if data_type == 'TIMESTAMP':
+            data_type = 'TIMESTAMP(6)'
+        else:
+            data_type = data_type
         column_name = str(stg_tbl_row['Column'])
         numeric_data_types = ['INTEGER', 'BIGINT', 'SMALLINT', 'FLOAT']
         if data_type in numeric_data_types or 'DECIMAL' in data_type:
             column_name = 'COALESCE(' + alias1 + column_name + ',-1) ' + operational_symbol + ' COALESCE(' + alias2 + column_name + ',-1)'
         elif 'CHAR' in data_type:  # == 'VARCHAR(50)':
             column_name = 'COALESCE(' + alias1 + column_name + ",'-') " + operational_symbol + ' COALESCE(' + alias2 + column_name + ",'-')"
+        elif data_type == 'TIMESTAMP(6)':
+            column_name = 'COALESCE(' + alias1 + column_name + ",CAST('1001-01-01 00:00:00.000000' AS TIMESTAMP(6))) " + operational_symbol + ' COALESCE(' + alias2 + column_name + ",CAST('1001-01-01 00:00:00.000000' AS TIMESTAMP(6)))"
         elif data_type == 'TIMESTAMP':
             column_name = 'COALESCE(' + alias1 + column_name + ",CAST('1001-01-01 00:00:00' AS TIMESTAMP(0))) " + operational_symbol + ' COALESCE(' + alias2 + column_name + ",CAST('1001-01-01 00:00:00' AS TIMESTAMP(0)))"
         elif data_type == 'DATE':
@@ -732,23 +777,23 @@ def get_hist_end_dt_updtt(history_df, table_name, end_date_col_name, operational
     return end_dt_updt
 
 def get_hist_end_Date_interval(history_df, table_name, record_id):
+
+
     end_dt_df = history_df.loc[(history_df['Entity'].str.upper() == table_name.upper())
                                & (history_df['Record_ID'] == record_id)
                                & (history_df['Historization_Column'].str.upper() == 'E')
                                ].reset_index()
-    interval = "  INTERVAL '{}' {}"
-    # print("ccccc", end_dt_df['Datatype'].value)
+    interval = " INTERVAL '{}' {}"
+
     col_dtype = end_dt_df['Datatype'].tolist()
     col_dtype = str(col_dtype[0])
-    # print("Record_id", record_id)
-    # print("col_name", end_date_col_name)
-    # print("col_type", col_dtype)
-    # print("col_type", col_dtype, col_dtype[1])
 
     if col_dtype.upper() == 'DATE':
         interval = interval.format(str(1), 'DAY')
+
     elif col_dtype.upper() == 'TIMESTAMP' or col_dtype.upper() == 'TIMESTAMP(6)':
         interval = interval.format("0.000001", 'SECOND')
+
     else:  # timestamp but not of 6
         dtype_split1 = col_dtype.split("(")  # ['timestamp', '3)']
         # print("dtype_split1", dtype_split1)
@@ -762,6 +807,33 @@ def get_hist_end_Date_interval(history_df, table_name, record_id):
         interval = interval.format(str(interavl_span), 'SECOND')
         # print("interval", interval)
     return interval
+
+
+def get_hist_high_date(history_df, table_name, record_id):
+    end_dt_df = history_df.loc[(history_df['Entity'].str.upper() == table_name.upper())
+                               & (history_df['Record_ID'] == record_id)
+                               & (history_df['Historization_Column'].str.upper() == 'E')
+                               ].reset_index()
+    high_date = '9999-12-31'
+    col_dtype = end_dt_df['Datatype'].tolist()
+    col_dtype = str(col_dtype[0])
+    if col_dtype.upper() == 'DATE':
+        high_date = '9999-12-31'
+    elif col_dtype.upper() == 'TIMESTAMP' or col_dtype.upper() == 'TIMESTAMP(6)':
+        high_date = '9999-12-31 23:59:59.999999'
+    elif col_dtype.upper() == 'TIMESTAMP(0)':
+        high_date = '9999-12-31 23:59:59'
+    else:  # timestamp but not of 6
+        high_date = '9999-12-31 23:59:59.{}'
+        dtype_split1 = col_dtype.split("(")  # ['timestamp', '3)']
+        precision = dtype_split1[1].split(")")[0]  # ['3', ''][0]
+        precision_int = int(precision)
+        repeat_sub_sec = '9' * precision_int
+        high_date = high_date.format(repeat_sub_sec)
+        high_date = str(high_date)
+
+    return high_date, col_dtype
+
 
 def get_hist_end_dt_updt(column_name, columns_type, operational_symbol, alias1=None, alias2=None, record_id=None):
     if alias1 is None:

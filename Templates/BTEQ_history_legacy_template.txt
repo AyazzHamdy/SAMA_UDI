@@ -1,6 +1,6 @@
 /* ############################################################################
 #  FILE-NAME   : : UDI_{source_system}_{table_name}_R{record_id}.bteq
-#  PURPOSE     : TRANSFORMATION SCRIPT FROM LOAD READY TO TAGET-TABLE HISTORY HANDLED LEGACY...
+#  PURPOSE     : TRANSFORMATION SCRIPT FROM LOAD READY TO TAGET TABLE HISTORY HANDLED LEGACY...
 #  -------------------------------------------------------------------------
 #  DB-VERSION  : TD 16.20.32.11
 #  OS-VERSION  : MS WINDOWS SERVER 2012 R2
@@ -79,7 +79,7 @@ SELECT
     {history_keys_columns}
     ,{history_columns}
     ,{start_date}
-    ,COALESCE(MAX({start_date} - {time_interval}) OVER (PARTITION BY  {history_keys_list}  ORDER BY  {start_date} ROWS BETWEEN 1 FOLLOWING AND 1 FOLLOWING) , CAST({high_date}))  {end_date}
+    ,COALESCE(MAX({start_date} - {time_interval}) OVER (PARTITION BY  {history_keys_list}  ORDER BY  {start_date} ROWS BETWEEN 1 FOLLOWING AND 1 FOLLOWING) , CAST('{high_date}' AS {end_date_dtype}))  {end_date}
     ,R_ID
     ,B_ID
     ,INSRT_DTTM
@@ -88,14 +88,15 @@ SELECT
 FROM(
 
     SELECT
-       {table_columns}
-       , MAX({history_columns}) OVER (PARTITION BY  {history_keys_list}  ORDER BY  {start_date} ROWS BETWEEN 1 PRECEDING AND 1 PRECEDING) PRE_{history_column}
+     {table_columns}
+     {max_history_columns_clause}
+
 
     FROM  {ld_schema_name}{source_system}.{table_name}_HH_R{record_id}
 ){table_name}_HH
 
-WHERE ({table_name}_HH.PRE_{history_column} IS NULL)
-OR ( {table_name}_HH.PRE_{history_column} <> {table_name}_HH.{history_column});
+WHERE (pre_hist_cols_null)
+OR (hh_tbl_pre_not_eql_hh_tbl_hist_col);
 
 ET;
 
