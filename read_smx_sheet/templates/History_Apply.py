@@ -88,22 +88,18 @@ def history_apply(cf, source_output_path, secondary_output_path_HIST, smx_table)
                                                                                     ld_tbl_alias, "FLAG_IND",
                                                                                     record_id, None)
 
-        # end_date_updt = funcs.get_hist_end_dt_updt(end_date, "end_date", "=", None, ld_tbl_alias, record_id)
 
-        end_date_updt = funcs.get_hist_end_dt_updtt(history_df, table_name, end_date, "=", None,ld_tbl_alias, record_id)
+        # end_date_updt = funcs.get_hist_end_dt_updtt(history_df, table_name, end_date, "=", None,ld_tbl_alias, record_id)
 
-        print("end_date_updt  \n", end_date_updt)
-
+        possible_special_handling_comments = ""
         if special_handling_flag.upper() == "Y":
-            # end_date_updt = end_date_updt + " /*" + history_df[history_df['Historization_Column'].str.upper() == 'E']['Rule'] + "*/"
             possible_special_handling_comments = history_df[history_df['Historization_Column'].str.upper() == 'E']['Rule'].values
-            print("possible_special_handling_comments:\n", possible_special_handling_comments)
             possible_special_handling_comments = "/*" + str(possible_special_handling_comments).replace("\n", " ") + "*/"
 
         TBL_COLUMNS = funcs.get_sama_table_columns_comma_separated(history_df, table_name, None, record_id)
 
         interval = funcs.get_hist_end_Date_interval(history_df, table_name, record_id)
-        print("interval\n", interval)
+
 
         bteq_script = template_string.format(SOURCE_SYSTEM=SOURCENAME, versionnumber=pm.ver_no,
                                              currentdate=current_date,

@@ -52,23 +52,36 @@ def history_legacy_apply(cf, source_output_path, secondary_output_path_HIST, smx
         fsdm_tbl_alias = fsdm_tbl_alias + "_FSDM"
         strt_date, end_date, hist_keys, hist_cols = funcs.get_history_variables(history_df, record_id, table_name)
 
-        first_history_key = hist_keys[0]
         strt_date = strt_date[0]
         end_date = end_date[0]
+        # hist_cols = hist_cols[0]
 
         history_keys_list = funcs.get_list_values_comma_separated(hist_keys,'N')
-        history_keys_columns= funcs.get_list_values_comma_separated(hist_keys, 'Y')
+        history_keys_columns = funcs.get_list_values_comma_separated(hist_keys, 'Y')
+        history_columns = funcs.get_list_values_comma_separated(hist_cols, 'Y')
+
+        max_history_columns_clause, pre_hist_cols_null_clause, hh_tbl_pre_not_eql_hh_tbl_hist_col = \
+            funcs.get_hist_legacy_hist_cols_clauses(hist_cols, hist_keys, strt_date, table_name)
+
+
         TBL_COLUMNS = funcs.get_sama_table_columns_comma_separated(history_df, table_name, None, record_id)
 
-        HH_alias_TBL_COLUMNS = funcs.get_sama_table_columns_comma_separated(history_df, table_name, 'HH_DATA', record_id)
-        LRD_alias_TBL_COLUMNS = funcs.get_sama_table_columns_comma_separated(history_df, table_name, ld_tbl_alias, record_id)
-        FSDM_alias_TBL_COLUMNS = funcs.get_sama_table_columns_comma_separated(history_df, table_name, fsdm_tbl_alias,
+        HH_alias_TBL_COLUMNS = \
+            funcs.get_sama_table_columns_comma_separated(history_df, table_name, 'HH_DATA', record_id)
+        LRD_alias_TBL_COLUMNS = \
+            funcs.get_sama_table_columns_comma_separated(history_df, table_name, ld_tbl_alias, record_id)
+        FSDM_alias_TBL_COLUMNS = \
+            funcs.get_sama_table_columns_comma_separated(history_df, table_name, fsdm_tbl_alias,
                                                                              record_id)
 
         ld_fsdm_history_key_equality = funcs.get_conditional_stamenet(history_df, table_name,
                                                                                    'hist_keys', '=',
                                                                                    ld_tbl_alias, fsdm_tbl_alias,
                                                                                    record_id, None)
+
+        interval = funcs.get_hist_end_Date_interval(history_df, table_name, record_id)
+
+        high_date, end_date_dtype = funcs.get_hist_high_date(history_df, table_name, record_id)
 
         bteq_script = template_string.format(source_system=source_name, versionnumber=pm.ver_no,
                                              currentdate=current_date,
@@ -90,14 +103,16 @@ def history_legacy_apply(cf, source_output_path, secondary_output_path_HIST, smx
                                              history_keys_list=history_keys_list,
                                              history_keys_columns=history_keys_columns,
 
-                                             history_column=hist_cols,# get them from list as comma separated
+                                             max_history_columns_clause=max_history_columns_clause,
+                                             pre_hist_cols_null=pre_hist_cols_null_clause,
+                                             hh_tbl_pre_not_eql_hh_tbl_hist_col=hh_tbl_pre_not_eql_hh_tbl_hist_col,
+                                             history_columns=history_columns,
                                              start_date=strt_date,
-                                             end_date=end_date
-                                             # ,
-                                             # time_interval=,
-                                             # high_date=
+                                             end_date=end_date,
+                                             time_interval=interval,
+                                             high_date=high_date,
+                                             end_date_dtype=end_date_dtype
                                               )
         bteq_script = bteq_script.upper()
-        f.write(bteq_script.replace('Â', ' '))
-        f.write(bteq_script.replace('\t', '    '))
+        f.write(bteq_script.replace('Â', ' ').replace('\t', '    '))
         f.close()
