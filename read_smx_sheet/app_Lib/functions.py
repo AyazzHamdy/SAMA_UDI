@@ -722,13 +722,10 @@ def get_sgk_record(SGK_tables, TABLENAME, RECORDID, flag):
                 return filter_rule
             if flag == 'sgk_key' and rule == 'SGK':
                 return sgk_key
-            if rule == 'SGK':
-                source_column_value = source_column
-            if source_column == source_column_value and rule != 'SGK':
-                if flag == 'src_key':
-                    return sgk_key
-                if flag == 'data_type':
-                    return src_key_dt
+            if flag == 'src_key' and rule == 'Natural Key':
+                return sgk_key
+            if flag == 'data_type' and rule == 'Natural Key':
+                return src_key_dt
 
 
 def get_aliased_columns(columns_list, alias=None):
