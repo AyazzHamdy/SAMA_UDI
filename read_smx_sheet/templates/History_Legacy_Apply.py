@@ -84,8 +84,8 @@ def history_legacy_apply(cf, source_output_path, secondary_output_path_HIST, smx
 
         high_date, end_date_dtype = funcs.get_hist_high_date(history_df, table_name, record_id)
 
-        end_dt_coalesce_stmnt = "COALESCE(MAX({start_date} - {time_interval}) OVER (PARTITION BY  {history_keys_list} ORDER BY  {start_date} ROWS BETWEEN 1 FOLLOWING AND 1 FOLLOWING), CAST('{high_date}' AS {end_date_dtype}))  {end_date}".format(start_date=strt_date,
-                                                                                         time_interval=interval,
+        end_dt_coalesce_stmnt = "COALESCE(MAX({start_date} ) OVER (PARTITION BY  {history_keys_list} ORDER BY  {start_date} ROWS BETWEEN 1 FOLLOWING AND 1 FOLLOWING), CAST('{high_date}' AS {end_date_dtype}))  {end_date}".format(start_date=strt_date,
+
                                                                                          history_keys_list=history_keys_list,
                                                                                          high_date=high_date,
                                                                                          end_date_dtype=end_date_dtype,
@@ -109,7 +109,7 @@ def history_legacy_apply(cf, source_output_path, secondary_output_path_HIST, smx
                                              model_schema_name=model_Schema_name,
                                              fsdm_alias=fsdm_tbl_alias,
 
-                                             tbl_cols_minus_enddt=TBL_COLS_EndDt_Coalesced,
+                                             TBL_COLS_EndDt_Coalesced=TBL_COLS_EndDt_Coalesced,
                                              ld_fsdm_history_key_and_strt_date_equality=ld_fsdm_history_key_and_strt_date_equality,
 
                                              history_keys_list=history_keys_list,
@@ -121,7 +121,7 @@ def history_legacy_apply(cf, source_output_path, secondary_output_path_HIST, smx
                                              history_columns=history_columns,
                                              start_date=strt_date,
                                              end_date=end_date,
-                                             time_interval=interval,
+
                                              high_date=high_date,
                                              end_date_dtype=end_date_dtype
                                               )
