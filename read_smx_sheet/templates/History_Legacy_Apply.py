@@ -59,9 +59,9 @@ def history_legacy_apply(cf, source_output_path, secondary_output_path_HIST, smx
         history_keys_list = funcs.get_list_values_comma_separated(hist_keys,'N')
         history_keys_columns = funcs.get_list_values_comma_separated(hist_keys, 'Y')
         history_columns = funcs.get_list_values_comma_separated(hist_cols, 'Y')
-
+        #history_columns_list = funcs.get_list_values_comma_separated(hist_cols, 'N')
         max_history_columns_clause, pre_hist_cols_null_clause, hh_tbl_pre_not_eql_hh_tbl_hist_col = \
-            funcs.get_hist_legacy_hist_cols_clauses(hist_cols, hist_keys, strt_date, table_name)
+            funcs.get_hist_legacy_hist_cols_clauses(hist_cols, history_keys_list, strt_date, table_name)
 
 
         TBL_COLUMNS = funcs.get_sama_table_columns_comma_separated(history_df, table_name, None, record_id)
@@ -74,14 +74,24 @@ def history_legacy_apply(cf, source_output_path, secondary_output_path_HIST, smx
             funcs.get_sama_table_columns_comma_separated(history_df, table_name, fsdm_tbl_alias,
                                                                              record_id)
 
-        ld_fsdm_history_key_equality = funcs.get_conditional_stamenet(history_df, table_name,
-                                                                                   'hist_keys', '=',
+
+        ld_fsdm_history_key_and_strt_date_equality = funcs.get_conditional_stamenet(history_df, table_name,
+                                                                                   'hist_key_strt_date', '=',
                                                                                    ld_tbl_alias, fsdm_tbl_alias,
                                                                                    record_id, None)
 
         interval = funcs.get_hist_end_Date_interval(history_df, table_name, record_id)
 
         high_date, end_date_dtype = funcs.get_hist_high_date(history_df, table_name, record_id)
+
+        end_dt_coalesce_stmnt = "COALESCE(MAX({start_date} - {time_interval}) OVER (PARTITION BY  {history_keys_list} ORDER BY  {start_date} ROWS BETWEEN 1 FOLLOWING AND 1 FOLLOWING), CAST('{high_date}' AS {end_date_dtype}))  {end_date}".format(start_date=strt_date,
+                                                                                         time_interval=interval,
+                                                                                         history_keys_list=history_keys_list,
+                                                                                         high_date=high_date,
+                                                                                         end_date_dtype=end_date_dtype,
+                                                                                         end_date=end_date)
+
+        TBL_COLS_EndDt_Coalesced = TBL_COLUMNS.replace(end_date, end_dt_coalesce_stmnt)
 
         bteq_script = template_string.format(source_system=source_name, versionnumber=pm.ver_no,
                                              currentdate=current_date,
@@ -99,7 +109,9 @@ def history_legacy_apply(cf, source_output_path, secondary_output_path_HIST, smx
                                              model_schema_name=model_Schema_name,
                                              fsdm_alias=fsdm_tbl_alias,
 
-                                             ld_fsdm_history_key_equality=ld_fsdm_history_key_equality,
+                                             tbl_cols_minus_enddt=TBL_COLS_EndDt_Coalesced,
+                                             ld_fsdm_history_key_and_strt_date_equality=ld_fsdm_history_key_and_strt_date_equality,
+
                                              history_keys_list=history_keys_list,
                                              history_keys_columns=history_keys_columns,
 

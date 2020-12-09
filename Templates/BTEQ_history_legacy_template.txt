@@ -56,7 +56,7 @@ FROM
       FROM   {model_schema_name}.{table_name} {fsdm_alias}
 
       INNER JOIN {ld_schema_name}{source_system}.{table_name}_R{record_id} {ld_alias}
-      ON {ld_fsdm_history_key_equality}
+      ON {ld_fsdm_history_key_and_strt_date_equality}
 
 )HH_DATA
 QUALIFY ROW_NUMBER() OVER (PARTITION BY {history_keys_list}, {start_date} ORDER BY B_ID ASC)=1;
@@ -65,8 +65,8 @@ QUALIFY ROW_NUMBER() OVER (PARTITION BY {history_keys_list}, {start_date} ORDER 
 --QUERY 3
 
 DELETE FROM {model_schema_name}.{table_name} {fsdm_alias}
-WHERE ({history_keys_list}) IN (
-    SELECT DISTINCT {history_keys_list}
+WHERE ({history_keys_list}, {start_date}) IN (
+    SELECT DISTINCT {history_keys_list}, {start_date}
     FROM {ld_schema_name}{source_system}.{table_name}_HH_R{record_id} {ld_alias}
 );
 
@@ -76,27 +76,20 @@ INSERT INTO {model_schema_name}.{table_name}
     {table_columns}
 )
 SELECT
-    {history_keys_columns}
-    ,{history_columns}
-    ,{start_date}
-    ,COALESCE(MAX({start_date} - {time_interval}) OVER (PARTITION BY  {history_keys_list}  ORDER BY  {start_date} ROWS BETWEEN 1 FOLLOWING AND 1 FOLLOWING) , CAST('{high_date}' AS {end_date_dtype}))  {end_date}
-    ,R_ID
-    ,B_ID
-    ,INSRT_DTTM
-    ,UPDT_DTTM
+{tbl_cols_minus_enddt}
 
 FROM(
 
     SELECT
      {table_columns}
-     {max_history_columns_clause}
+    {max_history_columns_clause}
 
 
     FROM  {ld_schema_name}{source_system}.{table_name}_HH_R{record_id}
 ){table_name}_HH
 
-WHERE (pre_hist_cols_null)
-OR (hh_tbl_pre_not_eql_hh_tbl_hist_col);
+WHERE ( {pre_hist_cols_null} )
+OR ( {hh_tbl_pre_not_eql_hh_tbl_hist_col} );
 
 ET;
 

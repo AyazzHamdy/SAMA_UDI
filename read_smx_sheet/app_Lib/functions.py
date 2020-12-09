@@ -438,7 +438,7 @@ def get_hist_legacy_hist_cols_clauses(hist_cols_list, history_keys_list, start_d
 
         hist_col_max_clause = max_output.format(history_column=hist_col, history_keys_list=history_keys_list,
                                                 start_date=start_date) + "\n"
-        max_hist_cols_clause = max_hist_cols_clause + hist_col_max_clause
+        max_hist_cols_clause = max_hist_cols_clause + '    ' + hist_col_max_clause
 
         pre_hist_col_null_clause = pre_histcol_null_output.format(table_name=table_name, history_column=hist_col)
         pre_hist_cols_null_clause = pre_hist_cols_null_clause + pre_hist_col_null_clause
