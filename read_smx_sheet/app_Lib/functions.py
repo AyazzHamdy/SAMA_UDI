@@ -234,6 +234,7 @@ def get_TFN_column_mapping(smx_Rid_df):
         src_tbl = tfn_Rid_row['Source_Table'].upper()
         src_col = tfn_Rid_row['Source_Column'].upper()
         load_type = tfn_Rid_row['Load Type'].upper()
+        tbl_name = tfn_Rid_row['Entity'].upper()
 
         historization_col = tfn_Rid_row['Historization_Column'].upper() if "HISTORY" in load_type else ""
 
@@ -303,6 +304,7 @@ def get_TFN_column_mapping(smx_Rid_df):
                 HCV_end = "9999-12-31"
             else:
                 HCV_end = "9999-12-31 23:59:59.999999"
+            HCV_end = get_hist_high_date(TFN_df, tbl_name, record_id)[0]
             HCV_end = single_quotes(HCV_end)
             column_clause = "CAST( {} AS {}) AS {} {}".format(HCV_end, col_dtype, col_name, final_rule_comment)
 
