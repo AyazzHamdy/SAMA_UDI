@@ -709,22 +709,22 @@ def get_sgk_record(SGK_tables, TABLENAME, RECORDID, flag):
             src_key_dt = tables_df_row['Datatype']
             if tables_df_row['Column'].upper() == 'SGK_ID' and flag == 'sgk_id':
                 return rule
-            if flag == 'src_col' and rule == 'Generate SGK':
+            if flag == 'src_col' and rule == 'SGK':
                 return source_column
-            if flag == 'src_tbl' and rule == 'Generate SGK':
+            if flag == 'src_tbl' and rule == 'SGK':
                 return source_table
-            if flag == 'join_rule' and rule == 'Generate SGK':
+            if flag == 'join_rule' and rule == 'SGK':
                 if join_rule is not None:
                     return join_rule + '\n'
                 else:
                     return ''
-            if flag == 'filter_rule' and rule == 'Generate SGK':
+            if flag == 'filter_rule' and rule == 'SGK':
                 return filter_rule
-            if flag == 'sgk_key' and rule == 'Generate SGK':
+            if flag == 'sgk_key' and rule == 'SGK':
                 return sgk_key
-            if rule == 'Generate SGK':
+            if rule == 'SGK':
                 source_column_value = source_column
-            if source_column == source_column_value and rule != 'Generate SGK':
+            if source_column == source_column_value and rule != 'SGK':
                 if flag == 'src_key':
                     return sgk_key
                 if flag == 'data_type':
