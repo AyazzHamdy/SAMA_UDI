@@ -31,22 +31,22 @@
 
  BT;
 
-UPDATE {LD_SCHEMA_NAME}{SOURCE_SYSTEM}.{TABLE_NAME}_R{RECORD_ID} SET FLAG = 'DI' ;
+UPDATE {ld_Schema_name}{source_system}.{table_name}_R{record_id} SET FLAG = 'DI' ;
 
 /*############################################################################
 #  APPLYING UDI MARKING 'DI' AT TARGET
 ############################################################################*/
 
-DELETE FROM  {MODEL_SCHEMA_NAME}.{TABLE_NAME} WHERE R_ID = {RECORD_ID};
+DELETE FROM  {model_schema_name}.{table_name} WHERE R_ID = {record_id};
 
-INSERT INTO {MODEL_SCHEMA_NAME}.{TABLE_NAME}
+INSERT INTO {model_schema_name}.{table_name}
 (
-{TBL_COLUMNS}
+{table_columns}
 )
 SELECT
-{TBL_COLUMNS}
+{table_columns}
 
-FROM {LD_SCHEMA_NAME}{SOURCE_SYSTEM}.{TABLE_NAME}_R{RECORD_ID}
+FROM {ld_Schema_name}{source_system}.{table_name}_R{record_id}
  WHERE FLAG IN ( 'DI' ) ;
 
 ET;

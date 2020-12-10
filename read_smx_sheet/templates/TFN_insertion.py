@@ -73,7 +73,7 @@ def TFN_insertion(cf, source_output_path, secondary_output_path_TFN, SMX_SHEET):
 
 
     for record_id in record_ids_list:
-        print(record_id)
+
         TFN_record_id_df = funcs.get_sama_fsdm_record_id(SMX_SHEET, record_id)
 
         Record_id = record_id
@@ -85,7 +85,7 @@ def TFN_insertion(cf, source_output_path, secondary_output_path_TFN, SMX_SHEET):
         BTEQ_file_name = "{}_{}_R{}".format(Source_name, fsdm_table_name, Record_id)
 
         special_handline_flag = TFN_record_id_df['SPECIAL_HANDLING_FLAG'].unique()[0]
-        print("special_handline_flag", special_handline_flag)
+
         if special_handline_flag.upper() == "N":
             f = funcs.WriteFile(source_output_path, BTEQ_file_name, "bteq")
             f.write(template_head)

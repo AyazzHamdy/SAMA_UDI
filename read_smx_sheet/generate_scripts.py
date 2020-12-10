@@ -136,7 +136,8 @@ class GenerateScripts:
                         else:
                             print("RIDLIST2")
                             smx_sheet = smx_sheet[smx_sheet.Record_ID.isin(Rid_list)]
-
+                        x= smx_sheet[smx_sheet['Source_System'].str.upper() == 'EMDAD_M'].index
+                        print("hennaaaaa::", x ,"hhhhhhhhhhhhhhhhh")
                         self.parallel_templates.append(delayed(Apply_Insert_Upsert.apply_insert_upsert)(self.cf, main_output_path_apply, smx_sheet, "Apply_Insert"))
                         self.parallel_templates.append(delayed(Apply_Insert_Upsert.apply_insert_upsert)(self.cf, main_output_path_apply, smx_sheet, "Apply_Upsert"))
                         self.parallel_templates.append(delayed(Apply_Insert_Upsert.apply_insert_upsert)(self.cf, main_output_path_apply, smx_sheet, "Apply_Delete_Insert"))

@@ -123,35 +123,36 @@ def is_history_load_type(TFN_Rid_df):
 
 
 def get_apply_processes(smx_sheet, apply_type):
-    # print("get_apply_processes", apply_type.upper())
     if apply_type.upper() == "APPLY_INSERT":
         insrt_load_types = get_insert_load_types(smx_sheet)
         apply_tfns = smx_sheet.loc[smx_sheet['Load Type'].str.upper().isin(insrt_load_types)]
-        # print("insrt_load_types", insrt_load_types)
     elif apply_type.upper() == "APPLY_UPSERT":
         upsrt_load_types = get_upsert_load_types(smx_sheet)
         apply_tfns = smx_sheet.loc[smx_sheet['Load Type'].str.upper().isin(upsrt_load_types)]
-        # print("upsrt_load_types", upsrt_load_types)
     elif apply_type.upper() == "APPLY_HISTORY":
         hist_load_types = get_history_load_types(smx_sheet)
         apply_tfns = smx_sheet.loc[smx_sheet['Load Type'].str.upper().isin(hist_load_types)]
     elif apply_type.upper() == "APPLY_HISTORY_LEGACY":
         apply_tfns = smx_sheet.loc[smx_sheet['Load Type'].str.upper() == 'HISTORY_LEGACY']
+    elif apply_type.upper() == "APPLY_HISTORY_DELETE_INSERT":
+        apply_tfns = smx_sheet.loc[smx_sheet['Load Type'].str.upper() == 'DELETE INSERT - HISTORY HANDLED']
     elif apply_type.upper() == "Apply_Delete_Insert":
         apply_tfns = smx_sheet.loc[smx_sheet['Load Type'].str.upper() == 'DELETE_INSERT']
     else:
         apply_tfns = smx_sheet
 
     # apply_processes = apply_tfns[(apply_tfns['Source_System'] != 'EMDAD_M')]
-    emdad_Rids_list = get_EMDAD_Rids_list(smx_sheet)
+    emdad_Rids_list = get_EMDAD_Rids_list(apply_tfns)
+    print("get_tfn r ids emdad r ids", emdad_Rids_list)
     apply_processes = apply_tfns[~apply_tfns.Record_ID.isin(emdad_Rids_list)]
     apply_processes = apply_processes[~apply_processes['Entity'].str.endswith(str('_SGK'))]
     return apply_processes
 
 
 def get_EMDAD_Rids_list(smx_sheet):
-    emdad_df = smx_sheet[smx_sheet['Source_System'] == 'EMDAD_M']
+    emdad_df = smx_sheet.loc[smx_sheet['Source_System'].str.upper() == 'EMDAD_M']
     emdad_Rids_list = emdad_df['Record_ID'].unique()
+    # print("get_EMDAD_Rids_list::", emdad_df)
     return emdad_Rids_list
 
 
@@ -300,10 +301,10 @@ def get_TFN_column_mapping(smx_Rid_df):
 
         #elif "HISTORY" in load_type and "_END_" in col_name:  # and src_tbl == 'JOB'
         elif "HISTORY" in load_type and historization_col == "E":
-            if col_dtype.upper() == "DATE":
-                HCV_end = "9999-12-31"
-            else:
-                HCV_end = "9999-12-31 23:59:59.999999"
+            # if col_dtype.upper() == "DATE":
+            #     HCV_end = "9999-12-31"
+            # else:
+            #     HCV_end = "9999-12-31 23:59:59.999999"
             HCV_end = get_hist_high_date(TFN_df, tbl_name, record_id)[0]
             HCV_end = single_quotes(HCV_end)
             column_clause = "CAST( {} AS {}) AS {} {}".format(HCV_end, col_dtype, col_name, final_rule_comment)
