@@ -9,8 +9,8 @@ def history_delete_insert_apply(cf, source_output_path, secondary_output_path_HI
     apply_folder_path = path.join(source_output_path, folder_name)
     makedirs(apply_folder_path)
 
-    template_path = cf.templates_path + "/" + pm.default_history_apply_template_file_name
-    template_smx_path = cf.smx_path + "/" + "Templates" + "/" + pm.default_history_apply_template_file_name
+    template_path = cf.templates_path + "/" + pm.default_history_deleteInsert_apply_template_file_name
+    template_smx_path = cf.smx_path + "/" + "Templates" + "/" + pm.default_history_deleteInsert_apply_template_file_name
     LD_SCHEMA_NAME = cf.ld_prefix
     MODEL_SCHEMA_NAME = cf.modelDB_prefix
     bteq_run_file = cf.bteq_run_file

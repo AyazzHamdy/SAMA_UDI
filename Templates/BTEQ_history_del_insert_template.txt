@@ -1,5 +1,5 @@
 /* ############################################################################
-#  FILE-NAME   : : UDI_{source_system}_{table_name}_R{record_id}.bteq
+#  FILE-NAME   : UDI_{source_system}_{table_name}_R{record_id}.bteq
 #  PURPOSE     : TRANSFORMATION SCRIPT FROM LOAD READY TO TAGET TABLE WITH LOAD STRATEGY - DELETE-INSERT HISTORY HANDELED
 #  -------------------------------------------------------------------------
 #  DB-VERSION  : TD 16.20.32.11

@@ -3,7 +3,7 @@ sys.path.append(os.getcwd())
 from read_smx_sheet.app_Lib import manage_directories as md, functions as funcs
 from dask import compute, delayed, config
 from dask.diagnostics import ProgressBar
-from read_smx_sheet.templates import Staging_DDL, BTEQ_Scripts, Apply_Insert_Upsert, History_Apply, TFN_insertion,History_Legacy_Apply
+from read_smx_sheet.templates import Staging_DDL, BTEQ_Scripts, Apply_Insert_Upsert, History_Apply, TFN_insertion, History_Legacy_Apply, History_Delete_Insert_Apply
 from read_smx_sheet.templates import SGK_insertion
 from read_smx_sheet.parameters import parameters as pm
 import traceback
@@ -131,20 +131,18 @@ class GenerateScripts:
                         # Rid_list = [30045,30053] ##PRTY_APPLYS
                         print("RIDLIST", Rid_list)
                         if not Rid_list:
-                            print("RIDLIST1")
-                            smx_sheet = smx_sheet
+                           smx_sheet = smx_sheet
                         else:
-                            print("RIDLIST2")
                             smx_sheet = smx_sheet[smx_sheet.Record_ID.isin(Rid_list)]
-                        x= smx_sheet[smx_sheet['Source_System'].str.upper() == 'EMDAD_M'].index
-                        print("hennaaaaa::", x ,"hhhhhhhhhhhhhhhhh")
-                        self.parallel_templates.append(delayed(Apply_Insert_Upsert.apply_insert_upsert)(self.cf, main_output_path_apply, smx_sheet, "Apply_Insert"))
-                        self.parallel_templates.append(delayed(Apply_Insert_Upsert.apply_insert_upsert)(self.cf, main_output_path_apply, smx_sheet, "Apply_Upsert"))
-                        self.parallel_templates.append(delayed(Apply_Insert_Upsert.apply_insert_upsert)(self.cf, main_output_path_apply, smx_sheet, "Apply_Delete_Insert"))
-                        self.parallel_templates.append(delayed(History_Apply.history_apply)(self.cf, main_output_path_apply,secondary_output_path_HIST, smx_sheet))
-                        self.parallel_templates.append(delayed(History_Legacy_Apply.history_legacy_apply)(self.cf, main_output_path_apply,secondary_output_path_HIST, smx_sheet))
-                        self.parallel_templates.append(delayed(SGK_insertion.sgk_insertion)(self.cf, main_output_path_sgk, smx_sheet))
-                        self.parallel_templates.append(delayed(TFN_insertion.TFN_insertion)(self.cf, main_output_path_TFN, secondary_output_path_TFN,smx_sheet))
+
+                        # # self.parallel_templates.append(delayed(Apply_Insert_Upsert.apply_insert_upsert)(self.cf, main_output_path_apply, smx_sheet, "Apply_Insert"))
+                        # # self.parallel_templates.append(delayed(Apply_Insert_Upsert.apply_insert_upsert)(self.cf, main_output_path_apply, smx_sheet, "Apply_Upsert"))
+                        # # self.parallel_templates.append(delayed(Apply_Insert_Upsert.apply_insert_upsert)(self.cf, main_output_path_apply, smx_sheet, "Apply_Delete_Insert"))
+                        # # self.parallel_templates.append(delayed(History_Apply.history_apply)(self.cf, main_output_path_apply,secondary_output_path_HIST, smx_sheet))
+                        # # self.parallel_templates.append(delayed(History_Legacy_Apply.history_legacy_apply)(self.cf, main_output_path_apply,secondary_output_path_HIST, smx_sheet))
+                        # self.parallel_templates.append(delayed(History_Delete_Insert_Apply.history_delete_insert_apply)(self.cf, main_output_path_apply,secondary_output_path_HIST, smx_sheet))
+                        # # self.parallel_templates.append(delayed(SGK_insertion.sgk_insertion)(self.cf, main_output_path_sgk, smx_sheet))
+                        # # self.parallel_templates.append(delayed(TFN_insertion.TFN_insertion)(self.cf, main_output_path_TFN, secondary_output_path_TFN,smx_sheet))
 
                 except Exception as e_smx_file:
                     # print(error)
