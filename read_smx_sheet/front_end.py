@@ -459,17 +459,19 @@ class FrontEnd:
         self.refresh_config_file_values_sftp()
         f = funcs.WriteFile(self.destination_path, self.log_file, "txt")
         filename = ''
+        f.write('START OF SFTP FUNCTION :'+'\n')
         try:
             cnopts = pysftp.CnOpts()
             cnopts.hostkeys = None
             with pysftp.Connection(host=self.hostname, username=self.username, password=self.password,
                                    cnopts=cnopts) as sftp:
                 for filename in os.listdir(self.source_path):
-                    print(filename)
+                    f.write('FILE TO BE MOVED IS : '+filename)
                     if self.substring in filename:
+                        f.write('CREATING THE PATH : ' + self.source_path+'\n')
                         sftp.cwd(self.source_path)
+                        f.write('STARTING MOVING TO DESTINATION PATH : ' + self.destination_path+'\n')
                         sftp.get(self.source_path+'/'+filename, self.destination_path+'/'+filename)
-                        print("Moved " + filename + " to " + self.destination_path)
                         f.write("THE FILE  " + filename + '  WAS MOVED SUCCESSFULLY FROM  ' + self.source_path + "  TO  " + self.destination_path + "  AT  " + self.current_date + '\n\n' + '*****************************************' + '\n\n')
                 message = self.msg_done_sftp
                 color = self.color_msg_done
