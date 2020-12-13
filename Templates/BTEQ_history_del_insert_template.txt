@@ -1,6 +1,6 @@
 /* ############################################################################
-#  FILE-NAME   : : UDI_{source_system}_{table_name}_R{record_id}.bteq
-#  PURPOSE     : TRANSFORMATION SCRIPT FROM LOAD READY TO TAGET TABLE HISTORY HANDLED LEGACY...
+#  FILE-NAME   : UDI_{source_system}_{table_name}_R{record_id}.bteq
+#  PURPOSE     : TRANSFORMATION SCRIPT FROM LOAD READY TO TAGET TABLE WITH LOAD STRATEGY - DELETE-INSERT HISTORY HANDELED
 #  -------------------------------------------------------------------------
 #  DB-VERSION  : TD 16.20.32.11
 #  OS-VERSION  : MS WINDOWS SERVER 2012 R2
@@ -26,70 +26,28 @@
 .run FILE={bteq_run_file};
 
 /*############################################################################
-#  UPDATE FLAG ACCORDING TO HISTORY ALGORITHM
+#  UDI MARKING AT LD
 ############################################################################*/
-BT;
 
---QUERY 1
-DELETE FROM {ld_schema_name}{source_system}.{table_name}_HH_R{record_id};
+ BT;
 
---QUERY 2
-INSERT INTO  {ld_schema_name}{source_system}.{table_name}_HH_R{record_id}
+UPDATE {ld_Schema_name}{source_system}.{table_name}_R{record_id} SET FLAG = 'DI' ;
+
+/*############################################################################
+#  APPLYING UDI MARKING 'DI' AT TARGET
+############################################################################*/
+
+DELETE FROM  {model_schema_name}.{table_name} WHERE R_ID = {record_id};
+
+INSERT INTO {model_schema_name}.{table_name}
 (
 {table_columns}
 )
 SELECT
-{HH_aliased_table_columns}
+{table_columns}
 
-FROM
-(
-      SELECT
-        {LRD_aliased_table_columns}
-
-      FROM  {ld_schema_name}{source_system}.{table_name}_R{record_id} {ld_alias}
-
-      UNION ALL
-
-      SELECT
-        {FSDM_aliased_table_columns}
-
-      FROM   {model_schema_name}.{table_name} {fsdm_alias}
-
-      INNER JOIN {ld_schema_name}{source_system}.{table_name}_R{record_id} {ld_alias}
-      ON {ld_fsdm_history_key_and_strt_date_equality}
-
-)HH_DATA
-QUALIFY ROW_NUMBER() OVER (PARTITION BY {history_keys_list}, {start_date} ORDER BY B_ID ASC)=1;
-
-
---QUERY 3
-
-DELETE FROM {model_schema_name}.{table_name} {fsdm_alias}
-WHERE ({history_keys_list}, {start_date}) IN (
-    SELECT DISTINCT {history_keys_list}, {start_date}
-    FROM {ld_schema_name}{source_system}.{table_name}_HH_R{record_id} {ld_alias}
-);
-
---QUERY 4
-INSERT INTO {model_schema_name}.{table_name}
-(
-    {table_columns}
-)
-SELECT
-{TBL_COLS_EndDt_Coalesced}
-
-FROM(
-
-    SELECT
-     {table_columns}
-    {max_history_columns_clause}
-
-
-    FROM  {ld_schema_name}{source_system}.{table_name}_HH_R{record_id}
-){table_name}_HH
-
-WHERE ( {pre_hist_cols_null} )
-OR ( {hh_tbl_pre_not_eql_hh_tbl_hist_col} );
+FROM {ld_Schema_name}{source_system}.{table_name}_R{record_id}
+ WHERE FLAG IN ( 'DI' ) ;
 
 ET;
 
