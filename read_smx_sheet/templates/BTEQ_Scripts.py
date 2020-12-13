@@ -20,15 +20,17 @@ def bteq_temp_script(cf, source_output_path, STG_tables,script_flag):
     bteq_run_file = cf.bteq_run_file
     template_string = ""
     template_head = ""
-    try:
-        template_file = open(template_path, "r")
-    except:
-        template_file = open(template_smx_path, "r")
+    # try:
+    #     template_file = open(template_path, "r")
+    # except:
+    #     template_file = open(template_smx_path, "r")
+    #
+    # for i in template_file.readlines():
+    #     if i != "":
+    #         template_string = template_string + i
 
-    for i in template_file.readlines():
-        if i != "":
-            template_string = template_string + i
     stg_tables_df = funcs.get_sama_stg_tables(STG_tables, None)
+
     for stg_tables_df_index, stg_tables_df_row in stg_tables_df.iterrows():
         Table_name = stg_tables_df_row['TABLE_NAME']
         schema_name = stg_tables_df_row['SCHEMA_NAME']
@@ -39,20 +41,54 @@ def bteq_temp_script(cf, source_output_path, STG_tables,script_flag):
         stg_equal_datamart_pk = funcs.get_conditional_stamenet(STG_tables, Table_name, 'pk', '=', 'stg', 'dm')
         stg_equal_updt_cols = funcs.get_conditional_stamenet(STG_tables, Table_name, 'stg', '=', None, 'stg')
 
+        dm_first_pk = funcs.get_stg_tbl_first_pk(stg_tables_df, Table_name)
+
         if stg_equal_datamart_pk != '':
             stg_equal_datamart_pk = "ON" + stg_equal_datamart_pk
 
+        use_leftjoin_dm_template = True if funcs.is_all_tbl_cols_pk(stg_tables_df, Table_name) else False
+
+        if use_leftjoin_dm_template and script_flag == 'from stg to datamart':  #overwrite the template paths if tbl cols are all pk
+            template_path = cf.templates_path + "/" + pm.default_bteq_stg_datamart_leftjoin_template_file_name
+            template_smx_path = cf.smx_path + "/" + "Templates" + "/" + pm.default_bteq_stg_datamart_leftjoin_template_file_name
+
+        try:
+            template_file = open(template_path, "r")
+        except:
+            template_file = open(template_smx_path, "r")
+
+        for i in template_file.readlines():
+            if i != "":
+                template_string = template_string + i
+
+
         if script_flag == 'from stg to datamart':
-            bteq_script = template_string.format(currentdate=today,versionnumber=pm.ver_no,
-                                                 filename = filename,
-                                                 bteq_run_file=bteq_run_file, stg_prefix=stg_prefix,
-                                                 dm_prefix=data_mart_prefix,
-                                                 schema_name=schema_name,
-                                                 table_name=Table_name, stg_columns=stg_columns,
-                                                 stg_equal_datamart_pk=stg_equal_datamart_pk,
-                                                 stg_equal_updt_cols=stg_equal_updt_cols,
-                                                 table_columns=table_columns
-                                                 )
+            if use_leftjoin_dm_template is False:
+                bteq_script = template_string.format(currentdate=today, versionnumber=pm.ver_no,
+                                                     filename=filename,
+                                                     bteq_run_file=bteq_run_file, stg_prefix=stg_prefix,
+                                                     dm_prefix=data_mart_prefix,
+                                                     schema_name=schema_name,
+                                                     table_name=Table_name, stg_columns=stg_columns,
+                                                     stg_equal_datamart_pk=stg_equal_datamart_pk,
+                                                     stg_equal_updt_cols=stg_equal_updt_cols,
+                                                     table_columns=table_columns
+                                                     )
+            else:
+
+
+                bteq_script = template_string.format(currentdate=today, versionnumber=pm.ver_no,
+                                                     filename=filename,
+                                                     bteq_run_file=bteq_run_file, stg_prefix=stg_prefix,
+                                                     dm_prefix=data_mart_prefix,
+                                                     schema_name=schema_name,
+                                                     table_name=Table_name, stg_columns=stg_columns,
+                                                     stg_equal_datamart_pk=stg_equal_datamart_pk,
+                                                     stg_equal_updt_cols=stg_equal_updt_cols,
+                                                     table_columns=table_columns,
+                                                     dm_first_pk=dm_first_pk
+                                                     )
+
         elif script_flag == 'from stg to oi':
             bteq_script = template_string.format(currentdate=today,versionnumber=pm.ver_no,
                                                  filename = filename,

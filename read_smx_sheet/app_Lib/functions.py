@@ -648,6 +648,24 @@ def get_sama_pk_columns_comma_separated(tables_sheet, Table_name, alias='', reco
     columns_comma = columns_comma[0:len(columns_comma) - 1]
     return columns_comma
 
+def is_all_tbl_cols_pk(tables_sheet, Table_name):
+    tbl_pk_cols_df = get_sama_stg_table_columns_pk(tables_sheet, Table_name)
+    table_df = get_stg_tbl_df(tables_sheet, Table_name)
+    if len(tbl_pk_cols_df.index) == len(table_df.index):
+        return True
+    else:
+        return False
+
+def get_stg_tbl_first_pk(tables_sheet, Table_name):
+    tbl_pk_cols_df = get_sama_stg_table_columns_pk(tables_sheet, Table_name)
+    pk_list = tbl_pk_cols_df['PRIMARY_KEY_FLAG'].tolist()
+    first_pk = pk_list[0]
+    return first_pk
+
+def get_stg_tbl_df(tables_sheet, Table_name):
+    table_df = tables_sheet.loc[(tables_sheet['TABLE_NAME'].str.upper() == Table_name.upper())].reset_index()
+
+    return table_df
 
 def get_sama_stg_table_columns_minus_pk(tables_sheet, Table_name, record_id=None):
     if record_id is None:
