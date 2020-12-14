@@ -471,7 +471,14 @@ class FrontEnd:
                         f.write('CREATING THE PATH : ' + self.source_path+'\n'+'\n')
                         sftp.cwd(self.source_path)
                         f.write('STARTING MOVING TO DESTINATION PATH : ' + self.destination_path+'\n'+'\n')
-                        sftp.get(self.source_path+'/'+filename, self.destination_path+'/'+filename)
+                        if sys.platform == "win32":
+                            f.write('REMOTE FILEPATH: ' + self.source_path + '\\' + filename + '\n' + '\n')
+                            f.write('LOCAL FILEPATH: ' + self.destination_path + '\\' + filename + '\n' + '\n')
+                            sftp.get(self.source_path + '\\' + filename, self.destination_path + '\\' + filename)
+                        else:
+                            f.write('REMOTE FILEPATH: ' + self.source_path + '/' + filename + '\n' + '\n')
+                            f.write('LOCAL FILEPATH: ' + self.destination_path + '/' + filename + '\n' + '\n')
+                            sftp.get(self.source_path + '/' + filename, self.destination_path + '/' + filename)
                         f.write("THE FILE  " + filename + '  WAS MOVED SUCCESSFULLY FROM  ' + self.source_path + "  TO  " + self.destination_path + "  AT  " + self.current_date + '\n\n' + '*****************************************' + '\n\n')
                 message = self.msg_done_sftp
                 color = self.color_msg_done
