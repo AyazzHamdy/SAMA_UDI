@@ -115,7 +115,7 @@ def TFN_insertion(cf, source_output_path, secondary_output_path_TFN, SMX_SHEET):
             where_clause = where_clause[0:len(where_clause)-2]
             where_clause = where_clause + where_clause_comment
 
-        if where_clause.split(' ', 1)[0].upper() not in ['QUALIFY', 'GROUP'] and where_clause != "":
+        if where_clause.split(' ', 1)[0].upper() not in ['QUALIFY', 'GROUP', 'WHERE'] and where_clause != "":
             where_clause = 'WHERE' + ' ' + where_clause
 
         left_joins = funcs.rule_col_analysis_sgk(TFN_record_id_df)
