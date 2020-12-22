@@ -672,7 +672,7 @@ def is_all_tbl_cols_pk(tables_sheet, Table_name):
         return False
 
 def get_stg_tbl_first_pk(tables_sheet, Table_name):
-    tbl_pk_cols_df = get_sama_stg_table_columns_pk(tables_sheet, Table_name)
+    tbl_pk_cols_df = get_sama_stg_table_columns_pk(tables_sheet, Table_name, None, None)
     pk_list = tbl_pk_cols_df['PRIMARY_KEY_FLAG'].tolist()
     first_pk = pk_list[0]
     return first_pk

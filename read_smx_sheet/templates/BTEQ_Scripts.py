@@ -41,16 +41,19 @@ def bteq_temp_script(cf, source_output_path, STG_tables,script_flag):
         stg_equal_datamart_pk = funcs.get_conditional_stamenet(STG_tables, Table_name, 'pk', '=', 'stg', 'dm')
         stg_equal_updt_cols = funcs.get_conditional_stamenet(STG_tables, Table_name, 'stg', '=', None, 'stg')
 
-        dm_first_pk = funcs.get_stg_tbl_first_pk(stg_tables_df, Table_name)
+
 
         if stg_equal_datamart_pk != '':
             stg_equal_datamart_pk = "ON" + stg_equal_datamart_pk
 
-        use_leftjoin_dm_template = True if funcs.is_all_tbl_cols_pk(stg_tables_df, Table_name) else False
 
-        if use_leftjoin_dm_template and script_flag == 'from stg to datamart':  #overwrite the template paths if tbl cols are all pk
-            template_path = cf.templates_path + "/" + pm.default_bteq_stg_datamart_leftjoin_template_file_name
-            template_smx_path = cf.smx_path + "/" + "Templates" + "/" + pm.default_bteq_stg_datamart_leftjoin_template_file_name
+        use_leftjoin_dm_template = False
+        if script_flag == 'from stg to datamart':
+            use_leftjoin_dm_template = True if funcs.is_all_tbl_cols_pk(STG_tables, Table_name) else False
+
+            if use_leftjoin_dm_template and script_flag == 'from stg to datamart':  #overwrite the template paths if tbl cols are all pk
+                template_path = cf.templates_path + "/" + pm.default_bteq_stg_datamart_leftjoin_template_file_name
+                template_smx_path = cf.smx_path + "/" + "Templates" + "/" + pm.default_bteq_stg_datamart_leftjoin_template_file_name
 
         try:
             template_file = open(template_path, "r")
@@ -63,6 +66,7 @@ def bteq_temp_script(cf, source_output_path, STG_tables,script_flag):
 
 
         if script_flag == 'from stg to datamart':
+
             if use_leftjoin_dm_template is False:
                 bteq_script = template_string.format(currentdate=today, versionnumber=pm.ver_no,
                                                      filename=filename,
@@ -75,7 +79,7 @@ def bteq_temp_script(cf, source_output_path, STG_tables,script_flag):
                                                      table_columns=table_columns
                                                      )
             else:
-
+                dm_first_pk = funcs.get_stg_tbl_first_pk(STG_tables, Table_name)
 
                 bteq_script = template_string.format(currentdate=today, versionnumber=pm.ver_no,
                                                      filename=filename,
