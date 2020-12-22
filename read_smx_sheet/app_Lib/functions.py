@@ -136,7 +136,7 @@ def get_apply_processes(smx_sheet, apply_type):
         apply_tfns = smx_sheet.loc[smx_sheet['Load Type'].str.upper() == 'HISTORY_LEGACY']
     elif apply_type.upper() == "APPLY_HISTORY_DELETE_INSERT":
         apply_tfns = smx_sheet.loc[smx_sheet['Load Type'].str.upper() == 'DELETE INSERT - HISTORY HANDLED']
-    elif apply_type.upper() == "Apply_Delete_Insert":
+    elif apply_type.upper() == "APPLY_DELETE_INSERT":
         apply_tfns = smx_sheet.loc[smx_sheet['Load Type'].str.upper() == 'DELETE_INSERT']
     else:
         apply_tfns = smx_sheet
@@ -545,6 +545,20 @@ def get_sama_table_columns_comma_separated(tables_sheet, Table_name, alias=None,
     columns_comma = columns_comma[0:len(columns_comma) - 1]
     return columns_comma
 
+def drop_strt_date_from_df(rid_df):
+    # apply_type = rid_df['Load Type'].unique()[0]
+        output_rid_df = rid_df
+    # if apply_type.upper() == "UPSERT":
+        job_source_columns_list = rid_df[rid_df['Source_Table'].str.upper() == 'JOB']['Column'].tolist()
+        for i in range(len(job_source_columns_list)):
+            col_name = job_source_columns_list[i]
+            if "_STRT_" in col_name:
+
+                output_rid_df = rid_df.drop(rid_df[(rid_df['Column'].str.upper() == col_name)
+                                                     & (rid_df['Source_Table'].str.upper() == 'JOB')
+                                                     ].index)
+                break
+        return output_rid_df
 
 def get_comparison_columns(tables_sheet, Table_name, apply_type, operational_symbol, alias1=None, alias2=None,
                            record_id=None):
@@ -578,14 +592,15 @@ def get_comparison_columns(tables_sheet, Table_name, apply_type, operational_sym
 
 
         if apply_type.upper() == "UPSERT":
-            job_source_columns_list = tables_df[tables_df['Source_Table'].str.upper() == 'JOB']['Column'].tolist()
-            for i in range(len(job_source_columns_list)):
-                col_name = job_source_columns_list[i]
-                if "_STRT_" in col_name:
-                    tables_df = tables_df.drop(tables_df[(tables_df['Column'].str.upper() == col_name)
-                                                         & (tables_df['Source_Table'].str.upper() == 'JOB')
-                                                         ].index)
-                    break
+           tables_df = drop_strt_date_from_df(tables_df)
+           #  job_source_columns_list = tables_df[tables_df['Source_Table'].str.upper() == 'JOB']['Column'].tolist()
+           #  for i in range(len(job_source_columns_list)):
+           #      col_name = job_source_columns_list[i]
+           #      if "_STRT_" in col_name:
+           #          tables_df = tables_df.drop(tables_df[(tables_df['Column'].str.upper() == col_name)
+           #                                               & (tables_df['Source_Table'].str.upper() == 'JOB')
+           #                                               ].index)
+           #          break
 
 
     else:
@@ -887,6 +902,39 @@ def get_hist_end_dt_updt(column_name, columns_type, operational_symbol, alias1=N
         end_dt_updt = alias1 + column_name + ' ' + operational_symbol + ' ' + alias2 + column_name + interval
     return end_dt_updt
 
+#
+# def get_rid_strt_date(r_id_df):
+#     strt_dt_col_df = r_id_df[r_id_df['Column'].str.contains("_STRT_")]  # get the strt date col
+#     if strt_dt_col_df.empty:
+#         strt_date_col_name = ''
+#     else:
+#         strt_date_col_name = strt_dt_col_df['Column'].str
+#
+#     return strt_date_col_name
+#
+# def exclude_upsert_strt_dt_update(r_id_df):
+#     load_type = r_id_df['Load Type'].unique()[0]
+#     updated_r_id_df = r_id_df
+#     if load_type.upper() == 'UPSERT':
+#         strt_date_col_name = get_rid_strt_date(r_id_df)
+#         if strt_date_col_name != '':
+#                 upsert_strt_dt_col_df = r_id_df[r_id_df['Column'].str.contains("_STRT_")]  #get the strt date col
+#                 # strt_dt_colname = r_id_df['Column'].unique()
+#                 if upsert_strt_dt_col_df.empty:
+#                     return r_id_df
+#                 print('exclude_upsert_strt_dt_update', upsert_strt_dt_col_df)
+#                 source_tbl = upsert_strt_dt_col_df['Source_Table'].unique()[0]
+#                 src_system = upsert_strt_dt_col_df['Source_System'].unique()[0]
+#                 src_col = upsert_strt_dt_col_df['Source_Column'].unique()[0]
+#                 print('source_tbl  ', source_tbl ) #, source_tbl.item(), source_tbl[0])
+#                 print('src_system  ', src_system ) #, src_system.item(), src_system[0])
+#                 print('src_col  ', src_col ) #, src_col.item(), src_col[0])
+#                 if source_tbl == 'JOB' and src_system == 'ETL' and 'INSRT_DTTM' in src_col:
+#                     excluded_strt_dt_column = upsert_strt_dt_col_df['Column'].str
+#                     print('excluded_strt_dt_column', excluded_strt_dt_column)
+#                     updated_r_id_df = r_id_df[~r_id_df.Column.isin(excluded_strt_dt_column)]
+#
+#     return updated_r_id_df
 
 def get_conditional_stamenet(tables_sheet, Table_name, columns_type, operational_symbol, alias1=None, alias2=None,
                              record_id=None, history_flag=None):
@@ -903,6 +951,7 @@ def get_conditional_stamenet(tables_sheet, Table_name, columns_type, operational
         excluded_cols = ['R_ID', 'INSRT_DTTM']
         table_columns = get_sama_stg_table_columns_minus_pk(tables_sheet, Table_name, record_id)
         table_columns = table_columns[~table_columns.Column.isin(excluded_cols)]
+        table_columns = drop_strt_date_from_df(table_columns)
     elif columns_type == 'hist_key_end_date' and record_id is not None:
         hist_keys_list = get_history_variables(tables_sheet, record_id, Table_name)[2]
         end_date_list = get_history_variables(tables_sheet, record_id, Table_name)[1]
