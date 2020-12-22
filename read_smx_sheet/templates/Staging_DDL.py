@@ -15,16 +15,6 @@ def stg_temp_DDL(cf, source_output_path, STG_tables, Data_types, script_flag):
         f = funcs.WriteFile(source_output_path, file_name, "sql")
         template_path = cf.templates_path + "/" + pm.oi_staging_template_file_name
         template_smx_path = cf.smx_path + "/" + pm.oi_staging_template_file_name
-    elif script_flag == 'LOG_staging':
-        file_name = 'LOG_STAGING_DDL'
-        f = funcs.WriteFile(source_output_path, file_name, "sql")
-        template_path = cf.templates_path + "/" + pm.log_staging_template_file_name
-        template_smx_path = cf.smx_path + "/" + pm.log_staging_template_file_name
-    elif script_flag == 'UV_staging':
-        file_name = 'UV_STAGING_DDL'
-        f = funcs.WriteFile(source_output_path, file_name, "sql")
-        template_path = cf.templates_path + "/" + pm.uv_staging_template_file_name
-        template_smx_path = cf.smx_path + "/" + pm.uv_staging_template_file_name
     else:
         file_name = 'STAGING_DDL'
         f = funcs.WriteFile(source_output_path, file_name, "sql")
@@ -139,14 +129,6 @@ def stg_temp_DDL(cf, source_output_path, STG_tables, Data_types, script_flag):
                                                           table_name=Table_name, columns=columns,
                                                           pi_columns=pi_columns, primary_index=primary_index,
                                                           Table_name_pk=Table_name_pk)
-            elif script_flag == 'UV_staging':
-                create_stg_table = template_string.format(schema_name=schema_name,
-                                                          table_name=Table_name, columns=columns,
-                                                          pi_columns=pi_columns, primary_index=primary_index,
-                                                          Table_name_pk=Table_name_pk)
-            elif script_flag == 'LOG_staging':
-                create_stg_table = template_string.format(schema_name=schema_name,
-                                                          table_name=Table_name)
             else:
                 create_stg_table = template_string.format(stg_prefix=stg_prefix,
                                                           dup_suffix=dup_suffix, schema_name=schema_name,

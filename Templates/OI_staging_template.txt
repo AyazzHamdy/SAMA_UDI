@@ -1,4 +1,4 @@
-create table {oi_prefix}{schema_name}.{table_name} NO FALLBACK,
+create table {oi_prefix}{schema_name}."{table_name}", NO FALLBACK,
 	NO BEFORE JOURNAL,
 	NO AFTER JOURNAL,
 	CHECKSUM = DEFAULT,
