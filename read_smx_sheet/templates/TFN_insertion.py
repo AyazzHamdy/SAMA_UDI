@@ -79,6 +79,7 @@ def TFN_insertion(cf, source_output_path, secondary_output_path_TFN, SMX_SHEET):
         Record_id = record_id
 
         Source_name = TFN_record_id_df['Stg_Schema'].unique()[0]
+        from_Source_name = Source_name
 
         fsdm_table_name = TFN_record_id_df['Entity'].unique()[0]
         ld_table_name = fsdm_table_name + "_R" + str(Record_id)
@@ -99,25 +100,33 @@ def TFN_insertion(cf, source_output_path, secondary_output_path_TFN, SMX_SHEET):
 
         # src_table = funcs.get_Rid_Source_Table(TFN_record_id_df)
         src_table = TFN_record_id_df['From_Rule'].unique()[0]
-
+        STG_tbl_alias = src_table
         join_clause = TFN_record_id_df['Join_Rule'].unique()[0]
 
         where_clause = TFN_record_id_df['Filter_Rule'].unique()[0]
 
-        if where_clause.split(' ', 2)[0].upper() == 'GROUP' and where_clause.split(' ', 2)[1].upper() == 'BY':
-            where_clause_comment = '-- smx menationed : ' + where_clause + ' so it was repalced by distinct grouping'
-            columns_Count = len(TFN_record_id_df.index)
-            where_clause = 'GROUP BY '
-            for i in range(columns_Count):
-                j = i+1
-                where_clause = where_clause + str(j) + ', '
 
-            where_clause = where_clause[0:len(where_clause)-2]
-            where_clause = where_clause + where_clause_comment
+      #  if where_clause.split(' ', 2)[0].upper() == 'GROUP' and where_clause.split(' ', 2)[1].upper() == 'BY':
+      #      where_clause_comment = '-- smx menationed : ' + where_clause + ' so it was repalced by distinct grouping'
+      #      columns_Count = len(TFN_record_id_df.index)
+      #      where_clause = 'GROUP BY '
+      #      for i in range(columns_Count):
+      #          j = i+1
+      #          where_clause = where_clause + str(j) + ', '
 
-        if where_clause.split(' ', 1)[0].upper() not in ['QUALIFY', 'GROUP', 'WHERE'] and where_clause != "":
+      #      where_clause = where_clause[0:len(where_clause)-2]
+      #      where_clause = where_clause + where_clause_comment
+
+        if where_clause.split(' ', 1)[0].upper() not in ['QUALIFY', 'GROUP', 'WHERE'] and where_clause != "" and 'GROUP BY ' not in where_clause.upper():
             where_clause = 'WHERE' + ' ' + where_clause
 
+
+        if 'GROUP BY ' in where_clause.upper():
+            STG_db_prefix = '(Select * from ' + STG_prefix
+            STG_tbl_alias = where_clause + ')' + STG_tbl_alias
+            where_clause = ' '
+        else:
+            STG_db_prefix = STG_prefix
         left_joins = funcs.rule_col_analysis_sgk(TFN_record_id_df)
         left_joins = "\n" + left_joins if left_joins != "" else left_joins
 
@@ -126,12 +135,14 @@ def TFN_insertion(cf, source_output_path, secondary_output_path_TFN, SMX_SHEET):
                                              ld_prefix=ld_prefix,
                                              FSDM_tbl_Name=fsdm_table_name,
                                              Source_name=Source_name,
+                                             from_Source_name=from_Source_name,
                                              Record_Id=Record_id,
                                              ld_tbl_name=ld_table_name,
                                              ld_tbl_cols=ld_tbl_columns,
                                              Column_Mapping=col_mapping,
-                                             STG_prefix=STG_prefix,
+                                             STG_prefix=STG_db_prefix,
                                              STG_tbl=src_table,
+                                             STG_tbl_alias=STG_tbl_alias,
                                              possible_left_joins=join_clause,
                                              possible_filters=where_clause
                                              )
@@ -143,12 +154,13 @@ def TFN_insertion(cf, source_output_path, secondary_output_path_TFN, SMX_SHEET):
                                              ld_tbl_name=ld_table_name,
                                              ld_tbl_cols=ld_tbl_columns,
                                              Column_Mapping=col_mapping,
-                                             STG_prefix=STG_prefix,
+                                             STG_prefix=STG_db_prefix,
                                              STG_tbl=src_table,
                                              possible_left_joins=left_joins
                                              )
 
         bteq_script = bteq_script.upper()
+
         f.write(bteq_script.replace('Â', ' '))
         f_c.write(concat_bteq_script.replace('Â', ' ') + "\n")
         f.close()
