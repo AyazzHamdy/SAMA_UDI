@@ -22,7 +22,7 @@ def TFN_insertion(cf, source_output_path, secondary_output_path_TFN, SMX_SHEET):
     #     SMX_SHEET = SMX_SHEET[SMX_SHEET['Ssource'] == Source_name]
 
     SMX_SHEET = funcs.get_apply_processes(SMX_SHEET, "TFN")
-
+    # print(SMX_SHEET['Column'])
     template_string = ""
     template_head = ""
     concat_template_string = ""
@@ -75,7 +75,7 @@ def TFN_insertion(cf, source_output_path, secondary_output_path_TFN, SMX_SHEET):
     for record_id in record_ids_list:
 
         TFN_record_id_df = funcs.get_sama_fsdm_record_id(SMX_SHEET, record_id)
-
+        # print(TFN_record_id_df['Column'])
         Record_id = record_id
 
         Source_name = TFN_record_id_df['Stg_Schema'].unique()[0]
@@ -104,7 +104,7 @@ def TFN_insertion(cf, source_output_path, secondary_output_path_TFN, SMX_SHEET):
         join_clause = TFN_record_id_df['Join_Rule'].unique()[0]
 
         where_clause = TFN_record_id_df['Filter_Rule'].unique()[0]
-
+        where_clause = where_clause.upper()
 
       #  if where_clause.split(' ', 2)[0].upper() == 'GROUP' and where_clause.split(' ', 2)[1].upper() == 'BY':
       #      where_clause_comment = '-- smx menationed : ' + where_clause + ' so it was repalced by distinct grouping'
@@ -121,8 +121,10 @@ def TFN_insertion(cf, source_output_path, secondary_output_path_TFN, SMX_SHEET):
             where_clause = 'WHERE' + ' ' + where_clause
 
 
-        if 'GROUP BY ' in where_clause.upper():
-            STG_db_prefix = '(Select * from ' + STG_prefix
+        if 'GROUP BY ' in where_clause:
+            print('ll', where_clause.split('GROUP BY', 1))
+            group_by_columns = where_clause.split('GROUP BY', 1)[1]
+            STG_db_prefix = '(Select {} from '.format(group_by_columns) + STG_prefix
             STG_tbl_alias = where_clause + ')' + STG_tbl_alias
             where_clause = ' '
         else:

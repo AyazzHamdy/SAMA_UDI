@@ -31,6 +31,8 @@ def read_excel(file_path, sheet_name, filter=None, reserved_words_validation=Non
             else:
                 df = pd.DataFrame(columns=df_cols)
 
+        # df = pre_process_history_and_Legacy_rids(df)
+
         if reserved_words_validation is not None:
             df = rename_sheet_reserved_word(df, reserved_words_validation[0], reserved_words_validation[1],
                                             reserved_words_validation[2])
@@ -83,11 +85,11 @@ def get_file_name(file):
 
 
 def get_history_load_types(smx_sheet_df):
-    load_types_list = smx_sheet_df['Load Type'].unique()
-    hist_load_types = []
-    for i in range(len(load_types_list)):
-        if 'History'.upper() in load_types_list[i].upper():
-            hist_load_types.append(load_types_list[i])
+ #   load_types_list = smx_sheet_df['Load Type'].unique()
+  #  hist_load_types = []
+  #  for i in range(len(load_types_list)):
+   #     if 'History'.upper() in load_types_list[i].upper():
+    #        hist_load_types.append(load_types_list[i])
     hist_load_types = ['HISTORY']
     return hist_load_types
 
@@ -143,7 +145,7 @@ def get_apply_processes(smx_sheet, apply_type):
 
     # apply_processes = apply_tfns[(apply_tfns['Source_System'] != 'EMDAD_M')]
     emdad_Rids_list = get_EMDAD_Rids_list(apply_tfns)
-    print("get_tfn r ids emdad r ids", emdad_Rids_list)
+    # print("get_tfn r ids emdad r ids", emdad_Rids_list)
     apply_processes = apply_tfns[~apply_tfns.Record_ID.isin(emdad_Rids_list)]
     apply_processes = apply_processes[~apply_processes['Entity'].str.endswith(str('_SGK'))]
     return apply_processes
@@ -174,9 +176,11 @@ def get_sama_stg_table_columns(STG_tables, Table_name):
 
 
 def get_sama_fsdm_record_id(SMX_SHEET, R_id):
+    # print(SMX_SHEET['Column'])
     smx_Rid = SMX_SHEET.loc[
         (SMX_SHEET['Record_ID'] == R_id)
     ].reset_index()
+    # print(smx_Rid['Column'])
     return smx_Rid.drop_duplicates()
 
 
@@ -230,6 +234,7 @@ def get_TFN_column_mapping(smx_Rid_df):
 
         col_source = tfn_Rid_row['Source_Table'].upper()
         col_name = tfn_Rid_row['Column'].upper()
+        # print("col_name", col_name)
         col_dtype = tfn_Rid_row['Datatype'].upper()
         col_dtype = handle_default_col_dtype(col_dtype)
         src_tbl = tfn_Rid_row['Source_Table'].upper()
@@ -272,7 +277,7 @@ def get_TFN_column_mapping(smx_Rid_df):
         final_rule_comment = "/*{}*/".format(rule_Comment) if rule_Comment != "" else ""
 
         if src_tbl == 'HCV' and src_col == 'HCV' and ("_END_" not in col_name
-                                                      or ("_END_"  in col_name and load_type == 'UPSERT')):
+                                                      or ("_END_" in col_name and load_type == 'UPSERT')):
             if rule == 'NULL':
                 HCV = 'NULL'
                 column_clause = "{} AS {} {}".format(HCV, col_name, final_rule_comment)
@@ -282,7 +287,7 @@ def get_TFN_column_mapping(smx_Rid_df):
                 applied_rule = applied_rule if col_dtype in numeric_dtypes else "'" + applied_rule + "'"
                 HCV = applied_rule
                 column_clause = "CAST( {} AS {}) AS {} {}".format(HCV, col_dtype, col_name, final_rule_comment)
-
+                # print("column_clause ", column_clause, '\n')
         elif rule == "1:1" and src_tbl not in ('JOB', 'ETL'):
             rule = " "
             # column_clause = "CAST( {}{} AS {}) AS {} {}".format(stg_alias, src_col, col_dtype, col_name,
@@ -396,6 +401,34 @@ def rule_cell_analysis_sgk(i_rule_cell_value, sgk_cntr):
 def get_current_date():
     return date.today().strftime("%Y-%m-%d")
 
+
+def pre_process_history_and_Legacy_rids(smx_sheet):
+    rids_to_convert_to_hist_legacy = []
+    history_handeled_df = get_apply_processes(smx_sheet, "Apply_History")
+    # history_handeled_df = smx_sheet.loc[smx_sheet['Load Type'].str.upper() == 'HISTORY']
+
+    record_ids_list = history_handeled_df['Record_ID'].unique()
+
+    for r_id in record_ids_list:
+        history_df = get_sama_fsdm_record_id(history_handeled_df, r_id)
+        strt_date_job_column_flg = is_strt_date_job_column(history_df)
+        if strt_date_job_column_flg is False:
+            print('here is false')
+            print(r_id)
+            rids_to_convert_to_hist_legacy.append(r_id)
+            print('rids_to_convert_to_hist_legacy', rids_to_convert_to_hist_legacy)
+    #smx_sheet_tmp = smx_sheet[smx_sheet['Record_ID'].isin(rids_to_convert_to_hist_legacy)]
+
+    smx_sheet_tmp = smx_sheet.loc[smx_sheet['Record_ID'].isin(rids_to_convert_to_hist_legacy), 'Load Type'] = 'HISTORY_LEGACY'
+
+    return smx_sheet_tmp
+
+def is_strt_date_job_column(history_df):
+    strt_dt_source = history_df[history_df['Historization_Column'].str.upper() == 'S']['Source_Table'].tolist()[0]
+    if strt_dt_source.upper() == 'JOB':
+        return True
+    else:
+        return False
 
 def get_history_variables(smx_sheet, rid, table_name):
     smx_TFN_Rid = smx_sheet[smx_sheet['Record_ID'] == rid]

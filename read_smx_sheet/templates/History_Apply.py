@@ -2,6 +2,7 @@ from read_smx_sheet.app_Lib import functions as funcs
 from read_smx_sheet.Logging_Decorator import Logging_decorator
 from read_smx_sheet.parameters import parameters as pm
 from os import path, makedirs
+import pandas as pd
 
 @Logging_decorator
 def history_apply(cf, source_output_path, secondary_output_path_HIST, smx_table):
@@ -35,16 +36,19 @@ def history_apply(cf, source_output_path, secondary_output_path_HIST, smx_table)
         if i != "":
             template_string = template_string + i
 
-    # history_handeled_df = funcs.get_history_handled_processes(smx_table, hist_load_types)
     history_handeled_df = funcs.get_apply_processes(smx_table, "Apply_History")
 
     record_ids_list = history_handeled_df['Record_ID'].unique()
+
 
     for r_id in record_ids_list:
         history_df = funcs.get_sama_fsdm_record_id(history_handeled_df, r_id)
 
         record_id = r_id
         table_name = history_df['Entity'].unique()[0]
+
+
+
         SOURCENAME = history_df['Stg_Schema'].unique()[0]
         filename = table_name + '_R' + str(record_id)
         BTEQ_file_name = "UDI_{}_{}".format(SOURCENAME, filename)
@@ -56,17 +60,18 @@ def history_apply(cf, source_output_path, secondary_output_path_HIST, smx_table)
         else:
             f = funcs.WriteFile(secondary_output_path_HIST, BTEQ_file_name, "bteq")
 
-
-
         filename = filename + '.bteq'
 
         fsdm_tbl_alias = funcs.get_fsdm_tbl_alias(table_name)
         ld_tbl_alias = funcs.get_ld_tbl_alias(fsdm_tbl_alias, record_id)
         fsdm_tbl_alias = fsdm_tbl_alias+"_FSDM"
+
         strt_date, end_date, hist_keys, hist_cols = funcs.get_history_variables(history_df, record_id, table_name)
+
         first_history_key = hist_keys[0]
         strt_date = strt_date[0]
         end_date = end_date[0]
+
 
         hist_keys_aliased = funcs.get_aliased_columns(hist_keys, ld_tbl_alias)
         COALESCED_history_col_LD_EQL_DATAMODEL = funcs.get_comparison_columns(history_df, table_name,
