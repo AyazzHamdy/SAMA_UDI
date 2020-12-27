@@ -122,7 +122,7 @@ def TFN_insertion(cf, source_output_path, secondary_output_path_TFN, SMX_SHEET):
 
 
         if 'GROUP BY ' in where_clause:
-            print('ll', where_clause.split('GROUP BY', 1))
+           #print('ll', where_clause.split('GROUP BY', 1))
             group_by_columns = where_clause.split('GROUP BY', 1)[1]
             STG_db_prefix = '(Select {} from '.format(group_by_columns) + STG_prefix
             STG_tbl_alias = where_clause + ')' + STG_tbl_alias

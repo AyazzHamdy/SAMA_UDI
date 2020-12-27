@@ -14,6 +14,8 @@ import datetime as dt
 import psutil
 from datetime import date
 
+import traceback
+
 
 def read_excel(file_path, sheet_name, filter=None, reserved_words_validation=None, nan_to_empty=True):
     try:
@@ -31,11 +33,15 @@ def read_excel(file_path, sheet_name, filter=None, reserved_words_validation=Non
             else:
                 df = pd.DataFrame(columns=df_cols)
 
-        # df = pre_process_history_and_Legacy_rids(df)
 
         if reserved_words_validation is not None:
             df = rename_sheet_reserved_word(df, reserved_words_validation[0], reserved_words_validation[1],
                                             reserved_words_validation[2])
+
+        if sheet_name == pm.smx_sht:
+            df = pre_process_history_TO_Legacy_rids(df)
+
+
 
     except:
         df = pd.DataFrame()
@@ -402,7 +408,7 @@ def get_current_date():
     return date.today().strftime("%Y-%m-%d")
 
 
-def pre_process_history_and_Legacy_rids(smx_sheet):
+def pre_process_history_TO_Legacy_rids(smx_sheet):
     rids_to_convert_to_hist_legacy = []
     history_handeled_df = get_apply_processes(smx_sheet, "Apply_History")
     # history_handeled_df = smx_sheet.loc[smx_sheet['Load Type'].str.upper() == 'HISTORY']
@@ -413,15 +419,20 @@ def pre_process_history_and_Legacy_rids(smx_sheet):
         history_df = get_sama_fsdm_record_id(history_handeled_df, r_id)
         strt_date_job_column_flg = is_strt_date_job_column(history_df)
         if strt_date_job_column_flg is False:
-            print('here is false')
-            print(r_id)
+            # print('here is false')
+            # print(r_id)
             rids_to_convert_to_hist_legacy.append(r_id)
-            print('rids_to_convert_to_hist_legacy', rids_to_convert_to_hist_legacy)
+    print('\nrids_to_convert_to_hist_legacy', rids_to_convert_to_hist_legacy)
     #smx_sheet_tmp = smx_sheet[smx_sheet['Record_ID'].isin(rids_to_convert_to_hist_legacy)]
 
-    smx_sheet_tmp = smx_sheet.loc[smx_sheet['Record_ID'].isin(rids_to_convert_to_hist_legacy), 'Load Type'] = 'HISTORY_LEGACY'
 
-    return smx_sheet_tmp
+    smx_sheet["Record_ID"] = pd.to_numeric(smx_sheet["Record_ID"])
+    smx_sheet.loc[smx_sheet['Record_ID'].isin(rids_to_convert_to_hist_legacy), 'Load Type'] = 'HISTORY_LEGACY'
+    return smx_sheet
+
+def histLegacy_To_hist_for_subsequent_runs_df(smx_sheet):
+    hist_legacy_df = get_apply_processes(smx_sheet, "APPLY_HISTORY_LEGACY")
+    return hist_legacy_df
 
 def is_strt_date_job_column(history_df):
     strt_dt_source = history_df[history_df['Historization_Column'].str.upper() == 'S']['Source_Table'].tolist()[0]

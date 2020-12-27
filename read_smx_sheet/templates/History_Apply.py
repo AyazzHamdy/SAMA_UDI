@@ -5,13 +5,7 @@ from os import path, makedirs
 import pandas as pd
 
 @Logging_decorator
-def history_apply(cf, source_output_path, secondary_output_path_HIST, smx_table):
-
-    hist_load_types = funcs.get_history_load_types(smx_table)
-
-    folder_name = 'Apply_History'
-    apply_folder_path = path.join(source_output_path, folder_name)
-    makedirs(apply_folder_path)
+def history_apply(cf, source_output_path, secondary_output_path_HIST, smx_table, pure_history_flag):
 
     template_path = cf.templates_path + "/" + pm.default_history_apply_template_file_name
     template_smx_path = cf.smx_path + "/" + "Templates" + "/" + pm.default_history_apply_template_file_name
@@ -20,11 +14,6 @@ def history_apply(cf, source_output_path, secondary_output_path_HIST, smx_table)
     MODEL_DUP_SCHEMA_NAME = cf.modelDup_prefix
     bteq_run_file = cf.bteq_run_file
     current_date = funcs.get_current_date()
-
-    # SOURCENAME = cf.sgk_source
-
-    # if SOURCENAME != 'ALL':
-    #     smx_table = smx_table[smx_table['Ssource'] == SOURCENAME]
 
     template_string = ""
     try:
@@ -36,7 +25,19 @@ def history_apply(cf, source_output_path, secondary_output_path_HIST, smx_table)
         if i != "":
             template_string = template_string + i
 
-    history_handeled_df = funcs.get_apply_processes(smx_table, "Apply_History")
+    if pure_history_flag is True:
+        folder_name = 'Apply_History'
+        apply_folder_path = path.join(source_output_path, folder_name)
+        makedirs(apply_folder_path)
+
+        history_handeled_df = funcs.get_apply_processes(smx_table, "Apply_History")
+    else:
+        folder_name = 'Apply_History_LEGACY'
+        subfolder_name = 'SUBSEQUENT_LOADS'
+        apply_folder_path = path.join(source_output_path, folder_name, subfolder_name)
+        if not path.exists(apply_folder_path):
+            makedirs(apply_folder_path)
+        history_handeled_df = smx_table
 
     record_ids_list = history_handeled_df['Record_ID'].unique()
 
@@ -47,8 +48,6 @@ def history_apply(cf, source_output_path, secondary_output_path_HIST, smx_table)
         record_id = r_id
         table_name = history_df['Entity'].unique()[0]
 
-
-
         SOURCENAME = history_df['Stg_Schema'].unique()[0]
         filename = table_name + '_R' + str(record_id)
         BTEQ_file_name = "UDI_{}_{}".format(SOURCENAME, filename)
@@ -58,7 +57,18 @@ def history_apply(cf, source_output_path, secondary_output_path_HIST, smx_table)
         if special_handling_flag.upper() == "N":
             f = funcs.WriteFile(apply_folder_path, BTEQ_file_name, "bteq")
         else:
-            f = funcs.WriteFile(secondary_output_path_HIST, BTEQ_file_name, "bteq")
+            if pure_history_flag is False:  #not pure history but history legacy subsequent loads
+                folder_name_Sapecial = 'Special_Apply_History_LEGACY/SUBSEQUENT_LOADS'
+                apply_folder_path_Sapecial = path.join(secondary_output_path_HIST, folder_name_Sapecial)
+                if not path.exists(apply_folder_path_Sapecial):
+                    makedirs(apply_folder_path_Sapecial)
+                f = funcs.WriteFile(apply_folder_path_Sapecial, BTEQ_file_name, "bteq")
+            else:  #pure history
+                folder_name_Sapecial = 'Apply_History'
+                apply_folder_path_Sapecial = path.join(secondary_output_path_HIST, folder_name_Sapecial)
+                if not path.exists(apply_folder_path_Sapecial):
+                    makedirs(apply_folder_path_Sapecial)
+                f = funcs.WriteFile(apply_folder_path_Sapecial, BTEQ_file_name, "bteq")
 
         filename = filename + '.bteq'
 
