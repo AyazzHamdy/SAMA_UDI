@@ -13,9 +13,10 @@ from read_smx_sheet.parameters import parameters as pm
 import datetime as dt
 import psutil
 from datetime import date
-
+from fuzzywuzzy import fuzz
 import traceback
 
+global original_smx
 
 def read_excel(file_path, sheet_name, filter=None, reserved_words_validation=None, nan_to_empty=True):
     try:
@@ -45,6 +46,10 @@ def read_excel(file_path, sheet_name, filter=None, reserved_words_validation=Non
 
     except:
         df = pd.DataFrame()
+
+    global original_smx
+    original_smx = df.copy()
+    print('original_smx.shape', original_smx.shape)
     return df
 
 
@@ -226,6 +231,61 @@ def get_TFN_rid_no_tech_cols(smx_Rid_df):  # remove the rows that have the tech 
     tech_cols = get_fsdm_tech_cols_list()
     TFN_df = smx_Rid_df[~smx_Rid_df.Column.isin(tech_cols)]
     return TFN_df
+
+def enject_alias_in_TFN_join(df, r_id):
+    #r_id = df[df['Record_ID'] == 30522]
+
+    r_id = df[df['Record_ID'] == r_id].reset_index().drop('index', axis=1)
+    join_column = r_id.iloc[0]['Join_Rule']
+    join_column = join_column.upper()
+    join_split_lines = join_column.splitlines()
+
+
+    join_split_lines.append("\n")
+    join_split_lines = [join_split_lines[i].replace('\n', ' ') for i in range(len(join_split_lines))]
+
+    for lineid in range(len(join_split_lines)):
+        next_lineid = lineid
+        if join_split_lines[lineid].find('_SGK') != -1:
+            sgk_alias = join_split_lines[lineid].split('_SGK ')[1]
+            stg_alias = r_id.iloc[0]['From_Rule']
+            stg_alias = stg_alias.upper()
+            next_lineid = lineid + 1
+            while join_split_lines[next_lineid].find('JOIN') == -1 and next_lineid in range(len(join_split_lines) - 1):
+                next_line = join_split_lines[next_lineid]
+                #print('next line: ', next_line)
+                # if next_line.find('_ON') != -1  or next_line.find('_AND') != -1:
+                if next_line.find('SGK_ID') == -1:
+                    eq_split = next_line.split('=')
+                    eq_right_column = eq_split[1].upper().strip() if len(eq_split) > 1 else ''
+                    #print('eq_right_column', eq_right_column)
+                    eq_right_column = 'MASTER_PARTY_ID' if eq_right_column == 'MSTR_PRTY_ID' else eq_right_column
+                    #print('eq_right_column2', eq_right_column)
+                    max_fuzz_ratio = np.array([fuzz.ratio(eq_right_column.upper().strip(), item.upper().strip()) for item in original_smx['Column']]).max()
+                    #print('max_fuzz_ratio', max_fuzz_ratio)
+                    if eq_right_column in df['Column'] or max_fuzz_ratio >= 85:
+                        right_sgk_flag = True
+                    else:
+                        right_sgk_flag = False
+                    if right_sgk_flag is True:
+                        next_line_aliases = next_line.replace('ON ', 'ON {}.'.format(stg_alias)).replace('= ',
+                                                                                                         '= {}.'.format(
+                                                                                                             sgk_alias)).replace(
+                            'AND ', 'AND {}.'.format(stg_alias))
+                        #print('right_flag_true', next_line_aliases)
+                    else:
+                        next_line_aliases = next_line.replace('ON ', 'ON {}.'.format(sgk_alias)).replace('= ',
+                                                                                                         '= {}.'.format(
+                                                                                                             stg_alias)).replace(
+                            'AND ', 'AND {}.'.format(sgk_alias))
+                        #print('right_flag_false', next_line_aliases)
+                else:
+                    next_line_aliases = next_line.replace('AND ', 'AND {}.'.format(sgk_alias))
+                join_split_lines[next_lineid] = next_line_aliases
+                next_lineid += 1
+    output_join_clause = '\n'.join(join_split_lines) #concatenate array content into string with new line breaks
+
+    return output_join_clause
 
 
 def get_TFN_column_mapping(smx_Rid_df):
