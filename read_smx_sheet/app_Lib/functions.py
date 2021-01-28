@@ -13,7 +13,10 @@ from read_smx_sheet.parameters import parameters as pm
 import datetime as dt
 import psutil
 from datetime import date
+from fuzzywuzzy import fuzz
+import traceback
 
+global original_smx
 
 def read_excel(file_path, sheet_name, filter=None, reserved_words_validation=None, nan_to_empty=True):
     try:
@@ -31,12 +34,22 @@ def read_excel(file_path, sheet_name, filter=None, reserved_words_validation=Non
             else:
                 df = pd.DataFrame(columns=df_cols)
 
+
         if reserved_words_validation is not None:
             df = rename_sheet_reserved_word(df, reserved_words_validation[0], reserved_words_validation[1],
                                             reserved_words_validation[2])
 
+        if sheet_name == pm.smx_sht:
+            df = pre_process_history_TO_Legacy_rids(df)
+
+
+
     except:
         df = pd.DataFrame()
+
+    global original_smx
+    original_smx = df.copy()
+    print('original_smx.shape', original_smx.shape)
     return df
 
 
@@ -83,11 +96,11 @@ def get_file_name(file):
 
 
 def get_history_load_types(smx_sheet_df):
-    load_types_list = smx_sheet_df['Load Type'].unique()
-    hist_load_types = []
-    for i in range(len(load_types_list)):
-        if 'History'.upper() in load_types_list[i].upper():
-            hist_load_types.append(load_types_list[i])
+ #   load_types_list = smx_sheet_df['Load Type'].unique()
+  #  hist_load_types = []
+  #  for i in range(len(load_types_list)):
+   #     if 'History'.upper() in load_types_list[i].upper():
+    #        hist_load_types.append(load_types_list[i])
     hist_load_types = ['HISTORY']
     return hist_load_types
 
@@ -143,7 +156,7 @@ def get_apply_processes(smx_sheet, apply_type):
 
     # apply_processes = apply_tfns[(apply_tfns['Source_System'] != 'EMDAD_M')]
     emdad_Rids_list = get_EMDAD_Rids_list(apply_tfns)
-    print("get_tfn r ids emdad r ids", emdad_Rids_list)
+    # print("get_tfn r ids emdad r ids", emdad_Rids_list)
     apply_processes = apply_tfns[~apply_tfns.Record_ID.isin(emdad_Rids_list)]
     apply_processes = apply_processes[~apply_processes['Entity'].str.endswith(str('_SGK'))]
     return apply_processes
@@ -174,9 +187,11 @@ def get_sama_stg_table_columns(STG_tables, Table_name):
 
 
 def get_sama_fsdm_record_id(SMX_SHEET, R_id):
+    # print(SMX_SHEET['Column'])
     smx_Rid = SMX_SHEET.loc[
         (SMX_SHEET['Record_ID'] == R_id)
     ].reset_index()
+    # print(smx_Rid['Column'])
     return smx_Rid.drop_duplicates()
 
 
@@ -217,6 +232,61 @@ def get_TFN_rid_no_tech_cols(smx_Rid_df):  # remove the rows that have the tech 
     TFN_df = smx_Rid_df[~smx_Rid_df.Column.isin(tech_cols)]
     return TFN_df
 
+def enject_alias_in_TFN_join(df, r_id):
+    #r_id = df[df['Record_ID'] == 30522]
+
+    r_id = df[df['Record_ID'] == r_id].reset_index().drop('index', axis=1)
+    join_column = r_id.iloc[0]['Join_Rule']
+    join_column = join_column.upper()
+    join_split_lines = join_column.splitlines()
+
+
+    join_split_lines.append("\n")
+    join_split_lines = [join_split_lines[i].replace('\n', ' ') for i in range(len(join_split_lines))]
+
+    for lineid in range(len(join_split_lines)):
+        next_lineid = lineid
+        if join_split_lines[lineid].find('_SGK') != -1:
+            sgk_alias = join_split_lines[lineid].split('_SGK ')[1]
+            stg_alias = r_id.iloc[0]['From_Rule']
+            stg_alias = stg_alias.upper()
+            next_lineid = lineid + 1
+            while join_split_lines[next_lineid].find('JOIN') == -1 and next_lineid in range(len(join_split_lines) - 1):
+                next_line = join_split_lines[next_lineid]
+                #print('next line: ', next_line)
+                # if next_line.find('_ON') != -1  or next_line.find('_AND') != -1:
+                if next_line.find('SGK_ID') == -1:
+                    eq_split = next_line.split('=')
+                    eq_right_column = eq_split[1].upper().strip() if len(eq_split) > 1 else ''
+                    #print('eq_right_column', eq_right_column)
+                    eq_right_column = 'MASTER_PARTY_ID' if eq_right_column == 'MSTR_PRTY_ID' else eq_right_column
+                    #print('eq_right_column2', eq_right_column)
+                    max_fuzz_ratio = np.array([fuzz.ratio(eq_right_column.upper().strip(), item.upper().strip()) for item in original_smx['Column']]).max()
+                    #print('max_fuzz_ratio', max_fuzz_ratio)
+                    if eq_right_column in df['Column'] or max_fuzz_ratio >= 85:
+                        right_sgk_flag = True
+                    else:
+                        right_sgk_flag = False
+                    if right_sgk_flag is True:
+                        next_line_aliases = next_line.replace('ON ', 'ON {}.'.format(stg_alias)).replace('= ',
+                                                                                                         '= {}.'.format(
+                                                                                                             sgk_alias)).replace(
+                            'AND ', 'AND {}.'.format(stg_alias))
+                        #print('right_flag_true', next_line_aliases)
+                    else:
+                        next_line_aliases = next_line.replace('ON ', 'ON {}.'.format(sgk_alias)).replace('= ',
+                                                                                                         '= {}.'.format(
+                                                                                                             stg_alias)).replace(
+                            'AND ', 'AND {}.'.format(sgk_alias))
+                        #print('right_flag_false', next_line_aliases)
+                else:
+                    next_line_aliases = next_line.replace('AND ', 'AND {}.'.format(sgk_alias))
+                join_split_lines[next_lineid] = next_line_aliases
+                next_lineid += 1
+    output_join_clause = '\n'.join(join_split_lines) #concatenate array content into string with new line breaks
+
+    return output_join_clause
+
 
 def get_TFN_column_mapping(smx_Rid_df):
     # tech_cols = get_fsdm_tech_cols_list()
@@ -230,6 +300,7 @@ def get_TFN_column_mapping(smx_Rid_df):
 
         col_source = tfn_Rid_row['Source_Table'].upper()
         col_name = tfn_Rid_row['Column'].upper()
+        # print("col_name", col_name)
         col_dtype = tfn_Rid_row['Datatype'].upper()
         col_dtype = handle_default_col_dtype(col_dtype)
         src_tbl = tfn_Rid_row['Source_Table'].upper()
@@ -272,7 +343,7 @@ def get_TFN_column_mapping(smx_Rid_df):
         final_rule_comment = "/*{}*/".format(rule_Comment) if rule_Comment != "" else ""
 
         if src_tbl == 'HCV' and src_col == 'HCV' and ("_END_" not in col_name
-                                                      or ("_END_"  in col_name and load_type == 'UPSERT')):
+                                                      or ("_END_" in col_name and load_type == 'UPSERT')):
             if rule == 'NULL':
                 HCV = 'NULL'
                 column_clause = "{} AS {} {}".format(HCV, col_name, final_rule_comment)
@@ -282,7 +353,7 @@ def get_TFN_column_mapping(smx_Rid_df):
                 applied_rule = applied_rule if col_dtype in numeric_dtypes else "'" + applied_rule + "'"
                 HCV = applied_rule
                 column_clause = "CAST( {} AS {}) AS {} {}".format(HCV, col_dtype, col_name, final_rule_comment)
-
+                # print("column_clause ", column_clause, '\n')
         elif rule == "1:1" and src_tbl not in ('JOB', 'ETL'):
             rule = " "
             # column_clause = "CAST( {}{} AS {}) AS {} {}".format(stg_alias, src_col, col_dtype, col_name,
@@ -396,6 +467,39 @@ def rule_cell_analysis_sgk(i_rule_cell_value, sgk_cntr):
 def get_current_date():
     return date.today().strftime("%Y-%m-%d")
 
+
+def pre_process_history_TO_Legacy_rids(smx_sheet):
+    rids_to_convert_to_hist_legacy = []
+    history_handeled_df = get_apply_processes(smx_sheet, "Apply_History")
+    # history_handeled_df = smx_sheet.loc[smx_sheet['Load Type'].str.upper() == 'HISTORY']
+
+    record_ids_list = history_handeled_df['Record_ID'].unique()
+
+    for r_id in record_ids_list:
+        history_df = get_sama_fsdm_record_id(history_handeled_df, r_id)
+        strt_date_job_column_flg = is_strt_date_job_column(history_df)
+        if strt_date_job_column_flg is False:
+            # print('here is false')
+            # print(r_id)
+            rids_to_convert_to_hist_legacy.append(r_id)
+    print('\nrids_to_convert_to_hist_legacy', rids_to_convert_to_hist_legacy)
+    #smx_sheet_tmp = smx_sheet[smx_sheet['Record_ID'].isin(rids_to_convert_to_hist_legacy)]
+
+
+    smx_sheet["Record_ID"] = pd.to_numeric(smx_sheet["Record_ID"])
+    smx_sheet.loc[smx_sheet['Record_ID'].isin(rids_to_convert_to_hist_legacy), 'Load Type'] = 'HISTORY_LEGACY'
+    return smx_sheet
+
+def histLegacy_To_hist_for_subsequent_runs_df(smx_sheet):
+    hist_legacy_df = get_apply_processes(smx_sheet, "APPLY_HISTORY_LEGACY")
+    return hist_legacy_df
+
+def is_strt_date_job_column(history_df):
+    strt_dt_source = history_df[history_df['Historization_Column'].str.upper() == 'S']['Source_Table'].tolist()[0]
+    if strt_dt_source.upper() == 'JOB':
+        return True
+    else:
+        return False
 
 def get_history_variables(smx_sheet, rid, table_name):
     smx_TFN_Rid = smx_sheet[smx_sheet['Record_ID'] == rid]

@@ -5,7 +5,7 @@ from os import path, makedirs
 
 @Logging_decorator
 def history_legacy_apply(cf, source_output_path, secondary_output_path_HIST, smx_table):
-    folder_name = 'Apply_History_LEGACY'
+    folder_name = 'Apply_History_LEGACY/INITIAL_LOAD'
     apply_folder_path = path.join(source_output_path, folder_name)
     makedirs(apply_folder_path)
 
@@ -14,7 +14,6 @@ def history_legacy_apply(cf, source_output_path, secondary_output_path_HIST, smx
 
     ld_schema_name = cf.ld_prefix
     model_Schema_name = cf.modelDB_prefix
-    model_dup_Schema_name = cf.modelDup_prefix
     bteq_run_file = cf.bteq_run_file
     current_date = funcs.get_current_date()
 
@@ -45,7 +44,11 @@ def history_legacy_apply(cf, source_output_path, secondary_output_path_HIST, smx
         if special_handling_flag.upper() == "N":
             f = funcs.WriteFile(apply_folder_path, BTEQ_file_name, "bteq")
         else:
-            f = funcs.WriteFile(secondary_output_path_HIST, BTEQ_file_name, "bteq")
+            folder_name_Sapecial = 'Special_Apply_History_LEGACY/INITIAL_LOAD'
+            apply_folder_path_Sapecial = path.join(secondary_output_path_HIST, folder_name_Sapecial)
+            if not path.exists(apply_folder_path_Sapecial):
+                makedirs(apply_folder_path_Sapecial)
+            f = funcs.WriteFile(apply_folder_path_Sapecial, BTEQ_file_name, "bteq")
 
         fsdm_tbl_alias = funcs.get_fsdm_tbl_alias(table_name)
         ld_tbl_alias = funcs.get_ld_tbl_alias(fsdm_tbl_alias, record_id)

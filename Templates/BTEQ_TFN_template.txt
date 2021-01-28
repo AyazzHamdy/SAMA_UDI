@@ -46,7 +46,7 @@ SELECT
     ,CURRENT_TIMESTAMP(6) AS INSRT_DTTM
     ,CURRENT_TIMESTAMP(6) AS UPDT_DTTM
 
-FROM {STG_prefix}{Source_name}.{STG_tbl} {STG_tbl}
+FROM {STG_prefix}{from_Source_name}.{STG_tbl} {STG_tbl_alias}
 
 {possible_left_joins}
 
