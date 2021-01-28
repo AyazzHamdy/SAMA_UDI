@@ -745,22 +745,22 @@ def get_sgk_record(SGK_tables, TABLENAME, RECORDID, flag):
             src_key_dt = tables_df_row['Datatype']
             if tables_df_row['Column'].upper() == 'SGK_ID' and flag == 'sgk_id':
                 return rule
-            if flag == 'src_col' and rule == 'SGK':
+            if flag == 'src_col' and rule is not None and rule.upper() == 'SGK':
                 return source_column
-            if flag == 'src_tbl' and rule == 'SGK':
+            if flag == 'src_tbl' and rule is not None and rule.upper() == 'SGK':
                 return source_table
-            if flag == 'join_rule' and rule == 'SGK':
+            if flag == 'join_rule' and rule is not None and rule.upper() == 'SGK':
                 if join_rule is not None:
                     return join_rule + '\n'
                 else:
                     return ''
-            if flag == 'filter_rule' and rule == 'SGK':
+            if flag == 'filter_rule' and rule is not None and rule.upper() == 'SGK':
                 return filter_rule
-            if flag == 'sgk_key' and rule == 'SGK':
+            if flag == 'sgk_key' and rule is not None and rule.upper() == 'SGK':
                 return sgk_key
-            if flag == 'src_key' and rule == 'Natural Key':
+            if flag == 'src_key' and rule is not None and rule.upper() == 'NATURAL KEY':
                 return sgk_key
-            if flag == 'data_type' and rule == 'Natural Key':
+            if flag == 'data_type' and rule is not None and rule.upper() == 'NATURAL KEY':
                 return src_key_dt
 
 
