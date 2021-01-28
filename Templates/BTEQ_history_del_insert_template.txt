@@ -30,7 +30,7 @@
 ############################################################################*/
 
  BT;
-
+{possible_special_handling_comments}
 UPDATE {ld_Schema_name}{source_system}.{table_name}_R{record_id} SET FLAG = 'DI' ;
 
 /*############################################################################

@@ -46,6 +46,9 @@ def history_delete_insert_apply(cf, source_output_path, secondary_output_path_HI
         else:
             f = funcs.WriteFile(secondary_output_path_HIST, BTEQ_file_name, "bteq")
 
+        possible_special_handling_comments = ""
+        if special_handling_flag.upper() == "Y":
+            possible_special_handling_comments = "/* Please refer to the SMX for this record id to check the comments in the Rule column*/"
 
         tbl_columns = funcs.get_sama_table_columns_comma_separated(history_df, table_name, None, record_id)
 
@@ -57,7 +60,8 @@ def history_delete_insert_apply(cf, source_output_path, secondary_output_path_HI
                                               bteq_run_file=bteq_run_file,
                                               ld_Schema_name=LD_SCHEMA_NAME,
                                               model_schema_name=MODEL_SCHEMA_NAME,
-                                              table_columns=tbl_columns)
+                                              table_columns=tbl_columns,
+                                             possible_special_handling_comments=possible_special_handling_comments)
         bteq_script = bteq_script.upper()
         f.write(bteq_script.replace('Â', ' '))
         f.close()

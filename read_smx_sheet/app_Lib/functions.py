@@ -14,6 +14,7 @@ import datetime as dt
 import psutil
 from datetime import date
 from fuzzywuzzy import fuzz
+import re
 import traceback
 
 global original_smx
@@ -41,6 +42,7 @@ def read_excel(file_path, sheet_name, filter=None, reserved_words_validation=Non
 
         if sheet_name == pm.smx_sht:
             df = pre_process_history_TO_Legacy_rids(df)
+
 
 
 
@@ -234,7 +236,7 @@ def get_TFN_rid_no_tech_cols(smx_Rid_df):  # remove the rows that have the tech 
 
 def enject_alias_in_TFN_join(df, r_id):
     #r_id = df[df['Record_ID'] == 30522]
-
+    record_id = r_id
     r_id = df[df['Record_ID'] == r_id].reset_index().drop('index', axis=1)
     join_column = r_id.iloc[0]['Join_Rule']
     join_column = join_column.upper()
@@ -243,11 +245,27 @@ def enject_alias_in_TFN_join(df, r_id):
 
     join_split_lines.append("\n")
     join_split_lines = [join_split_lines[i].replace('\n', ' ') for i in range(len(join_split_lines))]
-
+    if record_id in [30547]:
+        print('join_split_lines:::' , join_split_lines)
     for lineid in range(len(join_split_lines)):
         next_lineid = lineid
-        if join_split_lines[lineid].find('_SGK') != -1:
-            sgk_alias = join_split_lines[lineid].split('_SGK ')[1]
+        if record_id in [30547]:
+            print("lineeeeee:::",lineid,'...', join_split_lines[lineid])
+        if join_split_lines[lineid].find('_SGK') != -1 and join_split_lines[lineid].find('=') == -1:
+            if record_id in [30547]:
+                print('****', join_split_lines[lineid], '***', join_split_lines[lineid].split('.'))
+            try:
+                sgk_alias = join_split_lines[lineid].split('.')[1]
+                try:
+                    sgk_alias = sgk_alias.split(' ')[1]
+                except:
+                    sgk_alias = sgk_alias
+
+                if record_id in [30547]:
+                    print('sgk_alias', sgk_alias)
+            except:
+                sgk_alias = re.findall('\w*_SGK', join_split_lines[lineid])[0]
+
             stg_alias = r_id.iloc[0]['From_Rule']
             stg_alias = stg_alias.upper()
             next_lineid = lineid + 1
@@ -488,6 +506,10 @@ def pre_process_history_TO_Legacy_rids(smx_sheet):
 
     smx_sheet["Record_ID"] = pd.to_numeric(smx_sheet["Record_ID"])
     smx_sheet.loc[smx_sheet['Record_ID'].isin(rids_to_convert_to_hist_legacy), 'Load Type'] = 'HISTORY_LEGACY'
+    #drop the emdad rids
+    emdad_Rids_list = get_EMDAD_Rids_list(smx_sheet)
+    # print("get_tfn r ids emdad r ids", emdad_Rids_list)
+    smx_sheet = smx_sheet[~smx_sheet.Record_ID.isin(emdad_Rids_list)]
     return smx_sheet
 
 def histLegacy_To_hist_for_subsequent_runs_df(smx_sheet):

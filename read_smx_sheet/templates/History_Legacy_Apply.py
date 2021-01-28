@@ -50,6 +50,11 @@ def history_legacy_apply(cf, source_output_path, secondary_output_path_HIST, smx
                 makedirs(apply_folder_path_Sapecial)
             f = funcs.WriteFile(apply_folder_path_Sapecial, BTEQ_file_name, "bteq")
 
+        possible_special_handling_comments = ""
+        if special_handling_flag.upper() == "Y":
+            #possible_special_handling_comments = history_df[history_df['Historization_Column'].str.upper() == 'E']['Rule'].values
+            possible_special_handling_comments = "/* Please refer to the SMX for this record id to check the comments in the Rule column*/"
+
         fsdm_tbl_alias = funcs.get_fsdm_tbl_alias(table_name)
         ld_tbl_alias = funcs.get_ld_tbl_alias(fsdm_tbl_alias, record_id)
         fsdm_tbl_alias = fsdm_tbl_alias + "_FSDM"
@@ -126,7 +131,9 @@ def history_legacy_apply(cf, source_output_path, secondary_output_path_HIST, smx
                                              end_date=end_date,
 
                                              high_date=high_date,
-                                             end_date_dtype=end_date_dtype
+                                             end_date_dtype=end_date_dtype,
+
+                                             possible_special_handling_comments=possible_special_handling_comments
                                               )
         bteq_script = bteq_script.upper()
         f.write(bteq_script.replace('Â', ' ').replace('\t', '    '))

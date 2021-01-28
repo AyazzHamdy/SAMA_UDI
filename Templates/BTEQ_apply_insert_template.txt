@@ -1,5 +1,5 @@
 /* ############################################################################
-#  FILE-NAME   : {filename}.bteq
+#  FILE-NAME   : UDI_{source_system}_{table_name}_R{record_id}.BTEQ
 #  PURPOSE     : TRANSFORMATION SCRIPT FROM LOAD READY TABLE with Load Strategy - INSERT
 #  -------------------------------------------------------------------------
 #  DB-VERSION  : TD 16.20.32.11

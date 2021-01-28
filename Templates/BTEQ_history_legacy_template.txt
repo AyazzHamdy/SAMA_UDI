@@ -1,5 +1,5 @@
 /* ############################################################################
-#  FILE-NAME   : : UDI_{source_system}_{table_name}_R{record_id}.bteq
+#  FILE-NAME   : UDI_{source_system}_{table_name}_R{record_id}.bteq
 #  PURPOSE     : TRANSFORMATION SCRIPT FROM LOAD READY TO TAGET TABLE HISTORY HANDLED LEGACY...
 #  -------------------------------------------------------------------------
 #  DB-VERSION  : TD 16.20.32.11
@@ -29,7 +29,7 @@
 #  UPDATE FLAG ACCORDING TO HISTORY ALGORITHM
 ############################################################################*/
 BT;
-
+ {possible_special_handling_comments}
 --QUERY 1
 DELETE FROM {ld_schema_name}{source_system}.{table_name}_HH_R{record_id};
 
@@ -82,8 +82,7 @@ FROM(
 
     SELECT
      {table_columns}
-    {max_history_columns_clause}
-
+{max_history_columns_clause}
 
     FROM  {ld_schema_name}{source_system}.{table_name}_HH_R{record_id}
 ){table_name}_HH

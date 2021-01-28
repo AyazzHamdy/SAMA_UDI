@@ -120,7 +120,10 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
                 # COALESCED_TABLE_PK_COLUMNS_LD_EQL_FSDM = funcs.get_comparison_columns(smx_record_id_df, Table_name, "INSERT"
                 #                                                                       , '=', ld_tbl_alias, fsdm_tbl_alias,
                 #                                                                       Record_id)
-                bteq_script = template_string.format(filename=BTEQ_file_name,#versionnumber=pm.ver_no,
+                bteq_script = template_string.format(#filename=BTEQ_file_name,#versionnumber=pm.ver_no,
+                                                     source_system=schema_name,
+                                                     table_name=Table_name,
+                                                     record_id=str(Record_id),
                                                      currentdate=current_date,
                                                      bteq_run_file=bteq_run_file,
                                                      ld_prefix=ld_prefix,
@@ -149,7 +152,10 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
                                                                          "=", None, ld_tbl_alias, Record_id)
                 non_pk_cols_eql_ld_cols = non_pk_cols_eql_ld_cols.replace(' and ', ',')
 
-                bteq_script = template_string.format(filename=BTEQ_file_name, #versionnumber=pm.ver_no,
+                bteq_script = template_string.format(#filename=BTEQ_file_name, #versionnumber=pm.ver_no,
+                                                     source_system=schema_name,
+                                                     table_name=Table_name,
+                                                     record_id=str(Record_id),
                                                      currentdate=current_date,
                                                      bteq_run_file=bteq_run_file,
                                                      ld_prefix=ld_prefix,
@@ -172,7 +178,10 @@ def apply_insert_upsert(cf, source_output_path, SMX_SHEET, script_flag):
                                                      duplicate_then=duplicate_then
                                                      )
             else:
-                bteq_script = template_string.format(filename=BTEQ_file_name,  # versionnumber=pm.ver_no,
+                bteq_script = template_string.format(#filename=BTEQ_file_name,  # versionnumber=pm.ver_no,
+                                                     source_system=schema_name,
+                                                     table_name=Table_name,
+                                                     #record_id=str(Record_id),
                                                      currentdate=current_date,
                                                      bteq_run_file=bteq_run_file,
                                                      ld_prefix=ld_prefix,
