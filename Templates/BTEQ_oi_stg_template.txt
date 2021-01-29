@@ -1,4 +1,4 @@
-
+INSERT INTO {oi_prefix}{schema_name}
 select
 	{stg_columns}
 from {stg_prefix}{schema_name}.{table_name} 
