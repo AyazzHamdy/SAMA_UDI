@@ -11,11 +11,13 @@ import dask.dataframe as dd
 from read_smx_sheet.app_Lib import manage_directories as md
 from read_smx_sheet.parameters import parameters as pm
 import datetime as dt
+from fuzzywuzzy import fuzz
 import psutil
 from datetime import date
 import re
 import traceback
-
+# import warnings
+# warnings. filterwarnings("ignore")
 global original_smx
 
 def read_excel(file_path, sheet_name, filter=None, reserved_words_validation=None, nan_to_empty=True):
@@ -50,7 +52,7 @@ def read_excel(file_path, sheet_name, filter=None, reserved_words_validation=Non
 
     global original_smx
     original_smx = df.copy()
-    print('original_smx.shape', original_smx.shape)
+
     return df
 
 
@@ -244,58 +246,96 @@ def enject_alias_in_TFN_join(df, r_id):
 
     join_split_lines.append("\n")
     join_split_lines = [join_split_lines[i].replace('\n', ' ') for i in range(len(join_split_lines))]
-    if record_id in [30547]:
-        print('join_split_lines:::' , join_split_lines)
+    # if record_id in [30547]:
+    #     print('join_split_lines:::' , join_split_lines)
     for lineid in range(len(join_split_lines)):
         next_lineid = lineid
-        if record_id in [30547]:
-            print("lineeeeee:::",lineid,'...', join_split_lines[lineid])
+        # if record_id in [30547]:
+        #     print("lineeeeee:::",lineid,'...', join_split_lines[lineid])
         if join_split_lines[lineid].find('_SGK') != -1 and join_split_lines[lineid].find('=') == -1:
-            if record_id in [30547]:
-                print('****', join_split_lines[lineid], '***', join_split_lines[lineid].split('.'))
+            # if record_id in [30547]:
+            #     print('****', join_split_lines[lineid], '***', join_split_lines[lineid].split('.'))
             try:
                 sgk_alias = join_split_lines[lineid].split('.')[1]
+                sgk_tbl_name = sgk_alias
+
                 try:
+                    sgk_tbl_name = sgk_alias.split(' ')[0]
                     sgk_alias = sgk_alias.split(' ')[1]
+
                 except:
                     sgk_alias = sgk_alias
+                    sgk_tbl_name = sgk_alias
 
-                if record_id in [30547]:
-                    print('sgk_alias', sgk_alias)
+                # if record_id in [30547]:
+                #     print('sgk_alias', sgk_alias)
             except:
-                sgk_alias = re.findall('\w*_SGK', join_split_lines[lineid])[0]
+                sgk_alias = re.findall('\w*_SGK', join_split_lines[lineid].upper())[0]
+                sgk_tbl_name = sgk_alias
 
             stg_alias = r_id.iloc[0]['From_Rule']
             stg_alias = stg_alias.upper()
+
+            whole_smx = original_smx.copy()
+            sgk_df = whole_smx[['Entity', 'Column']].set_index('Entity')
+            sgk_df = sgk_df.loc[sgk_tbl_name]
+            print('sgk df shape ', sgk_df.shape)
+
             next_lineid = lineid + 1
             while join_split_lines[next_lineid].find('JOIN') == -1 and next_lineid in range(len(join_split_lines) - 1):
-                next_line = join_split_lines[next_lineid]
+                next_line = join_split_lines[next_lineid].upper()
                 #print('next line: ', next_line)
                 # if next_line.find('_ON') != -1  or next_line.find('_AND') != -1:
                 if next_line.find('SGK_ID') == -1:
                     eq_split = next_line.split('=')
                     eq_right_column = eq_split[1].upper().strip() if len(eq_split) > 1 else ''
+                    eq_left_column = eq_split[0].upper().strip() if len(eq_split) > 1 else ''
+                    try:
+                        eq_left_column = eq_left_column.split('JOIN')[1]
+                        eq_left_column = eq_left_column.strip()
+                    except:
+                        eq_left_column = eq_left_column
+
                     #print('eq_right_column', eq_right_column)
                     eq_right_column = 'MASTER_PARTY_ID' if eq_right_column == 'MSTR_PRTY_ID' else eq_right_column
+                    eq_left_column = 'MASTER_PARTY_ID' if eq_left_column == 'MSTR_PRTY_ID' else eq_left_column
                     #print('eq_right_column2', eq_right_column)
-                    max_fuzz_ratio = np.array([fuzz.ratio(eq_right_column.upper().strip(), item.upper().strip()) for item in original_smx['Column']]).max()
+                    max_fuzz_ratio_right = np.array([fuzz.ratio(eq_right_column.upper().strip(), item.upper().strip()) for item in original_smx['Column']]).max()
+                    max_fuzz_ratio_left = np.array([fuzz.ratio(eq_left_column.upper().strip(), item.upper().strip()) for item in original_smx['Column']]).max()
                     #print('max_fuzz_ratio', max_fuzz_ratio)
-                    if eq_right_column in df['Column'] or max_fuzz_ratio >= 85:
+                    right_sgk_flag = False
+                    left_sgk_flag = False
+                    if eq_right_column in df['Column'] or max_fuzz_ratio_right >= 85:
                         right_sgk_flag = True
+                        #left_sgk_flag = False
+
+                    elif eq_right_column in list(sgk_df['Column'].drop_duplicates()):
+                        right_sgk_flag = True
+                        #left_sgk_flag = False
+
+                    elif eq_left_column in list(sgk_df['Column'].drop_duplicates()) or max_fuzz_ratio_left >= 85:
+                        left_sgk_flag = True
+                        #right_sgk_flag = False
+
                     else:
                         right_sgk_flag = False
+                        left_sgk_flag = False
+
                     if right_sgk_flag is True:
                         next_line_aliases = next_line.replace('ON ', 'ON {}.'.format(stg_alias)).replace('= ',
                                                                                                          '= {}.'.format(
                                                                                                              sgk_alias)).replace(
                             'AND ', 'AND {}.'.format(stg_alias))
                         #print('right_flag_true', next_line_aliases)
-                    else:
+                    elif left_sgk_flag is True:
                         next_line_aliases = next_line.replace('ON ', 'ON {}.'.format(sgk_alias)).replace('= ',
                                                                                                          '= {}.'.format(
                                                                                                              stg_alias)).replace(
                             'AND ', 'AND {}.'.format(sgk_alias))
                         #print('right_flag_false', next_line_aliases)
+                    else:
+                        next_line_aliases = next_line
+
                 else:
                     next_line_aliases = next_line.replace('AND ', 'AND {}.'.format(sgk_alias))
                 join_split_lines[next_lineid] = next_line_aliases
