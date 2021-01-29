@@ -26,6 +26,7 @@ def bteq_temp_script(cf, source_output_path, STG_tables,script_flag):
         template_file = open(template_path, "r")
     except:
         template_file = open(template_smx_path, "r")
+
     for i in template_file.readlines():
         if i != "":
             template_string = template_string + i
@@ -56,11 +57,23 @@ def bteq_temp_script(cf, source_output_path, STG_tables,script_flag):
         use_leftjoin_dm_template = funcs.is_all_tbl_cols_pk(STG_tables, Table_name)
         dm_first_pk = funcs.get_stg_tbl_first_pk(STG_tables, Table_name)
 
-        if use_leftjoin_dm_template and script_flag == 'from stg to datamart':  #overwrite the template paths if tbl cols are all pk
-            template_string = template_string_all_pks
+        # if use_leftjoin_dm_template and script_flag == 'from stg to datamart':  #overwrite the template paths if tbl cols are all pk
+        #     template_string = template_string_all_pks
 
         if script_flag == 'from stg to datamart':
-            bteq_script = template_string.format(currentdate=today, versionnumber=pm.ver_no,
+            if use_leftjoin_dm_template is False:
+                bteq_script = template_string.format(currentdate=today, versionnumber=pm.ver_no,
+                                                         filename=filename,
+                                                         bteq_run_file=bteq_run_file, stg_prefix=stg_prefix,
+                                                         dm_prefix=data_mart_prefix,
+                                                         schema_name=schema_name,
+                                                         table_name=Table_name, stg_columns=stg_columns,
+                                                         stg_equal_datamart_pk=stg_equal_datamart_pk,
+                                                         stg_equal_updt_cols=stg_equal_updt_cols,
+                                                         table_columns=table_columns
+                                                         )
+            else:
+                bteq_script = template_string_all_pks.format(currentdate=today, versionnumber=pm.ver_no,
                                                      filename=filename,
                                                      bteq_run_file=bteq_run_file, stg_prefix=stg_prefix,
                                                      dm_prefix=data_mart_prefix,
@@ -81,5 +94,5 @@ def bteq_temp_script(cf, source_output_path, STG_tables,script_flag):
                                                  table_name=Table_name, stg_columns=table_columns
                                                  )
         bteq_script = bteq_script.upper()
-        f.write(bteq_script)
+        f.write(bteq_script.replace('Â', ' '))
         f.close()

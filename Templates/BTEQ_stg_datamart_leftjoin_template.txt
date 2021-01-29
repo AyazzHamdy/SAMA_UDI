@@ -31,18 +31,18 @@
 
 INSERT INTO {dm_prefix}{schema_name}.{table_name} dm
 (
-{table_columns}
-,batch_id
-,insrt_dttm
-,updt_dttm
-,dump_dttm
+        {table_columns}
+        ,batch_id
+        ,insrt_dttm
+        ,updt_dttm
+        ,dump_dttm
 )
 SELECT
-{stg_columns}
-,stg."batch_id" batch_id
-,current_timestamp(0) insrt_dttm
-,NULL
-,stg."dump_dttm"
+        {stg_columns}
+        ,stg."batch_id" batch_id
+        ,current_timestamp(0) insrt_dttm
+        ,NULL
+        ,stg."dump_dttm"
 
 FROM {stg_prefix}{schema_name}.{table_name} stg
 
