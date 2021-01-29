@@ -1,5 +1,45 @@
+/* ############################################################################
+#  FILE-NAME   : {filename}.bteq
+#  PURPOSE     : TRANSFORMATION SCRIPT FROM STAGE TO OI ....
+#  -------------------------------------------------------------------------
+#  DB-VERSION  : TD 16.20.32.11
+#  OS-VERSION  : MS WINDOWS SERVER 2012 R2
+#  -------------------------------------------------------------------------
+#
+#  AUTHOR      : Scripts Generator
+#  DEPARTMENT  : TERADATA
+#  VERSION     : {versionnumber}
+#  DATE        : {currentdate}
+#
+#  COPYRIGHT © 2020, TERADATA KSA
+#  -------------------------------------------------------------------------
+#  HISTORY:
+#
+#  DATE [YYYY-MM-DD]              VERSION                                DEVELOPER
+#  -------                        ------                                 --------
+#  {currentdate}                  {versionnumber}                    Scripts Generator
+############################################################################*/
+
+/*########################################################################
+# LOGGIN ON
+#########################################################################*/
+.run FILE={bteq_run_file};
+
+/*############################################################################
+#  MOVE DATA FROM STAGE TO OI
+############################################################################*/
+
+
+
 INSERT INTO {oi_prefix}{schema_name}
 select
 	{stg_columns}
-from {stg_prefix}{schema_name}.{table_name} 
+from {stg_prefix}{schema_name}.{table_name} ;
+
+/*############################################################################
+#  CLOSING THE BTEQ SCRIPT, SESSION CLOSED AND LOGGING OFF
+############################################################################*/
+
+.LOGOFF;
+.QUIT;
 
