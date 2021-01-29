@@ -5,7 +5,7 @@ from os import path, makedirs
 
 @Logging_decorator
 def history_legacy_apply(cf, source_output_path, secondary_output_path_HIST, smx_table):
-    folder_name = 'Apply_History_LEGACY/INITIAL_LOAD'
+    folder_name = 'Apply_History_Legacy/INITIAL_LOAD'
     apply_folder_path = path.join(source_output_path, folder_name)
     makedirs(apply_folder_path)
 
@@ -44,7 +44,7 @@ def history_legacy_apply(cf, source_output_path, secondary_output_path_HIST, smx
         if special_handling_flag.upper() == "N":
             f = funcs.WriteFile(apply_folder_path, BTEQ_file_name, "bteq")
         else:
-            folder_name_Sapecial = 'Special_Apply_History_LEGACY/INITIAL_LOAD'
+            folder_name_Sapecial = 'Apply_History_Legacy/INITIAL_LOAD'
             apply_folder_path_Sapecial = path.join(secondary_output_path_HIST, folder_name_Sapecial)
             if not path.exists(apply_folder_path_Sapecial):
                 makedirs(apply_folder_path_Sapecial)

@@ -32,7 +32,7 @@ def history_apply(cf, source_output_path, secondary_output_path_HIST, smx_table,
 
         history_handeled_df = funcs.get_apply_processes(smx_table, "Apply_History")
     else:
-        folder_name = 'Apply_History_LEGACY'
+        folder_name = 'Apply_History_Legacy'
         subfolder_name = 'SUBSEQUENT_LOADS'
         apply_folder_path = path.join(source_output_path, folder_name, subfolder_name)
         if not path.exists(apply_folder_path):
@@ -58,7 +58,7 @@ def history_apply(cf, source_output_path, secondary_output_path_HIST, smx_table,
             f = funcs.WriteFile(apply_folder_path, BTEQ_file_name, "bteq")
         else:
             if pure_history_flag is False:  #not pure history but history legacy subsequent loads
-                folder_name_Sapecial = 'Special_Apply_History_LEGACY/SUBSEQUENT_LOADS'
+                folder_name_Sapecial = 'Apply_History_Legacy/SUBSEQUENT_LOADS'
                 apply_folder_path_Sapecial = path.join(secondary_output_path_HIST, folder_name_Sapecial)
                 if not path.exists(apply_folder_path_Sapecial):
                     makedirs(apply_folder_path_Sapecial)

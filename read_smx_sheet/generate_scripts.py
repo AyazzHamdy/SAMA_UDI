@@ -118,7 +118,7 @@ class GenerateScripts:
                         main_output_path_TFN = home_output_path + "/" + "TFN"
                         secondary_output_path_TFN = home_output_path + "/" + "SPECIAL_ATTENTION" + "/" + "TFN"
                         secondary_output_path_HIST = home_output_path + "/" + "SPECIAL_ATTENTION"
-                        historyLegacy_subsequent_histLoads_path = home_output_path + "/" + "APPLY_SCRIPTS" + "/" + "Apply_History_LEGACY/SUBSEQUENT_LOADS"
+                        historyLegacy_subsequent_histLoads_path = home_output_path + "/" + "APPLY_SCRIPTS" + "/" + "Apply_History_Legacy/SUBSEQUENT_LOADS"
                         #historyLegacy_subsequent_histLoads_path_secondary = home_output_path + "/" + "SPECIAL_ATTENTION"
                         source_name = self.cf.sgk_source
                         self.parallel_create_output_source_path.append(delayed(md.create_folder)(main_output_path_apply))
