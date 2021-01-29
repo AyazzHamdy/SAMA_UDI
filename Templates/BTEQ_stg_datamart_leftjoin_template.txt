@@ -48,7 +48,7 @@ FROM {stg_prefix}{schema_name}.{table_name} stg
 
 LEFT JOIN {dm_prefix}{schema_name}.{table_name} dm
 
-ON {stg_equal_datamart_pk}
+{stg_equal_datamart_pk}
 
 WHERE dm.{dm_first_pk} IS NULL;
 

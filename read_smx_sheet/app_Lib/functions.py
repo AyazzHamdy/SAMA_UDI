@@ -13,7 +13,6 @@ from read_smx_sheet.parameters import parameters as pm
 import datetime as dt
 import psutil
 from datetime import date
-from fuzzywuzzy import fuzz
 import re
 import traceback
 
@@ -797,16 +796,21 @@ def is_all_tbl_cols_pk(tables_sheet, Table_name):
     else:
         return False
 
+
 def get_stg_tbl_first_pk(tables_sheet, Table_name):
     tbl_pk_cols_df = get_sama_stg_table_columns_pk(tables_sheet, Table_name, None, None)
     pk_list = tbl_pk_cols_df['PRIMARY_KEY_FLAG'].tolist()
-    first_pk = pk_list[0]
+    first_pk = ''
+    if len(pk_list) != 0:
+        first_pk = tbl_pk_cols_df['COLUMN_NAME'][0]
     return first_pk
+
 
 def get_stg_tbl_df(tables_sheet, Table_name):
     table_df = tables_sheet.loc[(tables_sheet['TABLE_NAME'].str.upper() == Table_name.upper())].reset_index()
 
     return table_df
+
 
 def get_sama_stg_table_columns_minus_pk(tables_sheet, Table_name, record_id=None):
     if record_id is None:
