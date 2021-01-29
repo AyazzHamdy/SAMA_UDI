@@ -101,11 +101,11 @@ def TFN_insertion(cf, source_output_path, secondary_output_path_TFN, SMX_SHEET):
         # src_table = funcs.get_Rid_Source_Table(TFN_record_id_df)
         src_table = TFN_record_id_df['From_Rule'].unique()[0]
         STG_tbl_alias = src_table
-        join_clause = TFN_record_id_df['Join_Rule'].unique()[0]
-        #try:
-        join_clause = funcs.enject_alias_in_TFN_join(SMX_SHEET, Record_id)
-        # except:
-        #     join_clause = TFN_record_id_df['Join_Rule'].unique()[0]
+        # join_clause = TFN_record_id_df['Join_Rule'].unique()[0]
+        try:
+            join_clause = funcs.enject_alias_in_TFN_join(SMX_SHEET, Record_id)
+        except:
+            join_clause = TFN_record_id_df['Join_Rule'].unique()[0]
 
         where_clause = TFN_record_id_df['Filter_Rule'].unique()[0]
         where_clause = where_clause.upper()
